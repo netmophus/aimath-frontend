@@ -4,9 +4,7 @@ import {
   Tabs,
   Tab,
   Typography,
-  Card,
-  CardContent,
-  CardActions,
+ 
   Button,
   TextField,
   CircularProgress,
@@ -16,9 +14,13 @@ import {
 import PageLayout from "../components/PageLayout";
 
 import API from "../api"; // Assure-toi que le chemin est correct
-import BookCard from "../components/BookCard"; // ajuste le chemin si besoin
-import { useNavigate } from "react-router-dom"; // tout en haut
 
+import { useNavigate } from "react-router-dom"; // tout en haut
+import BookCardGratuit from "../components/gratuit/BookCardGratuit";
+import ExamCardGratuit from "../components/gratuit/ExamCardGratuit";
+import VideoCardGratuit from "../components/gratuit/VideoCardGratuit";
+import LockIcon from "@mui/icons-material/Lock";
+import SupportAgentIcon from "@mui/icons-material/SupportAgent";
 
 const GratuitPage = () => {
   const [tabIndex, setTabIndex] = useState(0);
@@ -26,13 +28,35 @@ const [livres, setLivres] = useState([]);
 const [exams, setExams] = useState([]);
 const navigate = useNavigate();
 const [videos, setVideos] = useState([]);
-const [question, setQuestion] = useState("");
+
 
 
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [response, setResponse] = useState("");
   const [message, setMessage] = useState("");
+const [messages, setMessages] = useState([]);
+
+  const [typedResponse, setTypedResponse] = useState("");
+
+
+ useEffect(() => {
+  const last = messages[messages.length - 1];
+
+  if (!last || last.role !== "ia") return;
+
+  let index = 0;
+  setTypedResponse("");
+
+  const interval = setInterval(() => {
+    setTypedResponse((prev) => prev + last.text.charAt(index));
+    index++;
+    if (index >= last.text.length) clearInterval(interval);
+  }, 15);
+
+  return () => clearInterval(interval);
+}, [messages]);
+
 
   const handleTabChange = (event, newValue) => {
     setTabIndex(newValue);
@@ -43,7 +67,7 @@ const [question, setQuestion] = useState("");
 useEffect(() => {
   const fetchLivres = async () => {
     try {
-      const res = await API.get("/admin/books");
+      const res = await API.get("/ia/gratuit");
       setLivres(res.data);
     } catch (err) {
       console.error("Erreur lors du chargement des livres :", err.message);
@@ -78,23 +102,29 @@ useEffect(() => {
 const handleSubmit = async () => {
   if (!input.trim()) return;
 
+  setMessages((prev) => [...prev, { role: "user", text: input }]);
   setLoading(true);
   setMessage("");
   setResponse("");
+  setInput("");
 
   try {
     const res = await API.post("/ia/gratuit", { input });
 
-    setResponse(res.data.response);
+    setMessages((prev) => [...prev, { role: "ia", text: res.data.response }]);
   } catch (err) {
     const errorMessage = err.response?.data?.message || "Erreur lors de l'analyse.";
     setMessage(errorMessage);
 
-    // 🚨 Rediriger si limite atteinte
+    setMessages((prev) => [
+      ...prev,
+      { role: "ia", text: "❌ Une erreur est survenue. Essaie plus tard." },
+    ]);
+
     if (err.response?.data?.redirectTo) {
       setTimeout(() => {
         window.location.href = err.response.data.redirectTo;
-      }, 2500); // petite pause avant la redirection
+      }, 2500);
     }
   } finally {
     setLoading(false);
@@ -104,6 +134,82 @@ const handleSubmit = async () => {
 
   return (
 <PageLayout>
+
+
+
+<Box
+  sx={{
+    display: "flex",
+    flexDirection: { xs: "column", md: "row" },
+    justifyContent: "center",
+    gap: 3,
+    mt: 11,
+    px: 2,
+  }}
+>
+  {/* Carte 1 */}
+  <Box
+    sx={{
+      flex: 1,
+      background: "#FFD54F",
+      p: 3,
+      borderRadius: 3,
+      boxShadow: 3,
+      textAlign: "center",
+    }}
+  >
+    <LockIcon sx={{ fontSize: 50, color: "#000" }} />
+    <Typography variant="h6" fontWeight="bold" color="text.primary" mt={1} gutterBottom>
+      Assistance complète
+    </Typography>
+    <Typography variant="body1" color="text.primary" mb={2}>
+      Soumettez vos exercices, posez vos questions en texte, audio ou visio et recevez une assistance personnalisée.
+    </Typography>
+    <Button
+      variant="contained"
+      color="primary"
+      onClick={() => navigate("/pricing")} // Ou "#pricing" si c'est une ancre dans la même page
+    >
+      Abonnez-vous
+    </Button>
+  </Box>
+
+  {/* Carte 2 */}
+  <Box
+    sx={{
+      flex: 1,
+      background: "#4FC3F7",
+      p: 3,
+      borderRadius: 3,
+      boxShadow: 3,
+      textAlign: "center",
+    }}
+  >
+    <SupportAgentIcon sx={{ fontSize: 50, color: "#fff" }} />
+    <Typography variant="h6" fontWeight="bold" color="white" mt={1} gutterBottom>
+      Accompagnement 24h/24
+    </Typography>
+    <Typography variant="body1" color="white" mb={2}>
+      Accédez à l’IA et aux enseignants qualifiés à toute heure, pour un soutien continu dans votre apprentissage en mathematiques.
+    </Typography>
+    <Button
+      variant="contained"
+      sx={{ backgroundColor: "#1565C0" }}
+      onClick={() => navigate("/pricing")}
+    >
+      Abonnez-vous
+    </Button>
+  </Box>
+</Box>
+
+
+
+
+
+
+
+
+
   {/* ➤ Bloc IA en haut */}
 <Box
   sx={{
@@ -132,15 +238,42 @@ const handleSubmit = async () => {
         Vous pouvez poser vos questions en mathematiques 
       </Typography>
 
-      <TextField
-        label="Pose ta question"
-        fullWidth
-        multiline
-        rows={4}
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
-        sx={{ mt: 3 }}
-      />
+
+<TextField
+  label="💬 Pose ta question ici..."
+  fullWidth
+  multiline
+  rows={4}
+  variant="outlined"
+  value={input}
+  onChange={(e) => setInput(e.target.value)}
+  sx={{
+    mt: 3,
+    backgroundColor: "#ffffff",
+    borderRadius: 2,
+    boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
+    '& .MuiOutlinedInput-root': {
+      '& fieldset': {
+        borderColor: "#90caf9",
+        borderWidth: "2px",
+      },
+      '&:hover fieldset': {
+        borderColor: "#1976d2",
+      },
+      '&.Mui-focused fieldset': {
+        borderColor: "#1565c0",
+      },
+    },
+    '& .MuiInputLabel-root': {
+      color: '#1565c0',
+      fontWeight: 'bold',
+    },
+  }}
+/>
+
+
+
+
 
       {/* ✅ Exemple en bas, petit et centré */}
 <Typography
@@ -175,14 +308,35 @@ const handleSubmit = async () => {
         </Alert>
       )}
 
-      {response && (
-        <Box mt={4}>
-          <Typography variant="h6">📚 Réponse de l'IA :</Typography>
-          <Typography mt={2} sx={{ whiteSpace: "pre-line" }}>
-            {response}
-          </Typography>
-        </Box>
-      )}
+{messages.length > 0 && (
+  <Box mt={4}>
+    {messages.map((msg, index) => (
+      <Box
+        key={index}
+        sx={{
+          backgroundColor: msg.role === "user" ? "#e3f2fd" : "#0d47a1",
+          color: msg.role === "user" ? "#000" : "#fff",
+          p: 2,
+          borderRadius: 2,
+          mb: 2,
+          fontFamily: "Courier New, monospace",
+          boxShadow: 2,
+          whiteSpace: "pre-line",
+        }}
+      >
+        <Typography variant="subtitle2" gutterBottom>
+          {msg.role === "user" ? "🙋‍♂️ Toi :" : "Fahimta AI :"}
+        </Typography>
+        <Typography>
+  {msg.role === "ia" && index === messages.length - 1
+    ? typedResponse
+    : msg.text}
+</Typography>
+
+      </Box>
+    ))}
+  </Box>
+)}
 
 
 
@@ -234,148 +388,60 @@ const handleSubmit = async () => {
     </Tabs>
 
     {/* ➤ Section de contenu dynamique selon l’onglet */}
-    {tabIndex === 0 && (
-      <Grid container spacing={3}>
-        {livres.map((livre, i) => (
-          <Grid item xs={12} sm={6} md={4} key={i}>
-            <BookCard book={livre} />
-          </Grid>
-        ))}
-      </Grid>
-    )}
-
-    {tabIndex === 1 && (
-      <Grid container spacing={3}>
-        {exams.map((exam) => (
-          <Grid item xs={12} sm={6} md={4} key={exam._id}>
-            {/* moderniser la card avec elevation douce, contenu centré */}
-
-            
-{tabIndex === 1 && (
-  <Grid container spacing={2}>
-    {exams.map((exam) => (
-      <Grid item xs={12} md={6} lg={4} key={exam._id}>
-        <Card elevation={3} sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
-          <CardContent sx={{ flexGrow: 1 }}>
-            <Typography variant="h6" fontWeight="bold" gutterBottom>
-              {exam.title}
-            </Typography>
-
-            <Typography variant="body2" color="text.secondary">
-              Niveau : {exam.level.toUpperCase()}
-            </Typography>
-
-            <Typography variant="body2" sx={{ mt: 1 }}>
-              {exam.description.length > 400
-                ? exam.description.substring(0, 400) + "..."
-                : exam.description}
-            </Typography>
-
-            <Box mt={1}>
-              <Typography variant="caption" color="text.secondary">
-                📅 Publié le : {new Date(exam.createdAt).toLocaleDateString("fr-FR")}
-              </Typography>
-              <br />
-              <Typography variant="caption" color="text.secondary">
-                🏷️ Accès :{" "}
-                <span style={{ color: exam.badge === "gratuit" ? "green" : "orange", fontWeight: "bold" }}>
-                  {exam.badge === "gratuit" ? "Gratuit" : "Prenuim"}
-                </span>
-              </Typography>
-            </Box>
-          </CardContent>
-
-          <CardActions sx={{ justifyContent: "space-between", px: 2 }}>
-            <Button
-              variant="outlined"
-              size="small"
-              onClick={() => {
-                exam.badge === "prenuim"
-                  ? navigate("/pricing")
-                  : window.open(exam.subjectUrl, "_blank");
-              }}
-            >
-              📄 Sujet
-            </Button>
-            <Button
-              variant="contained"
-              color="success"
-              size="small"
-              onClick={() => {
-                exam.badge === "prenuim"
-                  ? navigate("/pricing")
-                  : window.open(exam.correctionUrl, "_blank");
-              }}
-            >
-              ✅ Correction
-            </Button>
-          </CardActions>
-        </Card>
+  {tabIndex === 0 && (
+  <Grid container spacing={3}>
+    {livres.map((livre, i) => (
+      <Grid item xs={12} sm={6} md={4} key={i}>
+        <BookCardGratuit book={livre} />
       </Grid>
     ))}
   </Grid>
 )}
-            
-          </Grid>
-        ))}
-      </Grid>
-    )}
 
-    {tabIndex === 2 && (
-      <Grid container spacing={3}>
-        {videos.map((video, i) => (
-          <Grid item xs={12} sm={6} md={4} key={i}>
-            {/* moderniser carte vidéo */}
-            
-{tabIndex === 2 && (
-  <Grid container spacing={2}>
-    {videos.map((video, index) => (
-      <Grid item xs={12} md={6} lg={4} key={index}>
-        <Card>
-          {video.thumbnail && (
-            <img
-              src={video.thumbnail}
-              alt="Miniature"
-              style={{ width: "100%", height: 180, objectFit: "cover" }}
-            />
-          )}
-          <CardContent>
-            <Typography variant="h6">{video.title}</Typography>
-            <Typography variant="body2" color="text.secondary">
-              Niveau : {video.level?.toUpperCase()}
-            </Typography>
-            <Typography variant="body2" mt={1}>
-              {video.description.length > 200
-                ? video.description.substring(0, 200) + "..."
-                : video.description}
-            </Typography>
-            <Typography variant="caption" display="block" mt={1}>
-              Accès : {video.badge === "gratuit" ? "🎁 Gratuit" : "🔒 Prenuim"}
-            </Typography>
-          </CardContent>
 
-          <Box sx={{ px: 2, pb: 2 }}>
-            <iframe
-              src={video.videoUrl}
-              title={video.title}
-              width="60%"
-              height="400"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-              style={{ border: 0 }}
-            ></iframe>
-          </Box>
-        </Card>
+{tabIndex === 1 && (
+  <Grid container spacing={3}>
+    {exams.map((exam) => (
+      <Grid item xs={12} sm={6} md={4} key={exam._id}>
+        <ExamCardGratuit exam={exam} />
       </Grid>
     ))}
   </Grid>
-)} 
+)}
 
-          
+{tabIndex === 2 && (
+  <Box display="flex" justifyContent="center" px={2}>
+    <Box
+      width="100%"
+      maxWidth="1400px"
+      sx={{
+        px: { xs: 1, sm: 2, md: 4 },
+        mt: 2,
+      }}
+    >
+      <Grid container spacing={{ xs: 2, sm: 3 }}>
+        {videos.map((video, index) => (
+          <Grid
+            item
+            xs={12}         // ✅ 1 carte par ligne sur mobile
+            sm={6}          // ✅ 2 cartes par ligne en small
+            md={4}          // ✅ 3 cartes par ligne en medium+
+            key={index}
+          >
+            <VideoCardGratuit video={video} />
           </Grid>
         ))}
       </Grid>
-    )}
+    </Box>
+  </Box>
+)}
+
+
+
+
+
+
+
   </Box>
 </PageLayout>
 

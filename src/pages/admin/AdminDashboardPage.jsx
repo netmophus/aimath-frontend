@@ -1,110 +1,48 @@
-// import React, { useState } from "react";
-// import { Tabs, Tab, Box } from "@mui/material";
-// import PageLayout from "../../components/PageLayout";
-// import RechargeCodeForm from "../../components/RechargeCodeForm"; // ton form existant
-// import BookForm from "../../components/BookForm"; // nouveau
-// import ChapterForm from "../../components/ChapterForm"; // nouveau
-
-// import QrCodeIcon from "@mui/icons-material/QrCode";
-// import MenuBookIcon from "@mui/icons-material/MenuBook";
-// import BookmarkAddIcon from "@mui/icons-material/BookmarkAdd";
-
-// const AdminDashboardPage = () => {
-//   const [tab, setTab] = useState(0);
-
-//   const handleChange = (event, newValue) => {
-//     setTab(newValue);
-//   };
-
-//   return (
-//     <PageLayout>
-    
-// <Tabs
-//   value={tab}
-//   onChange={handleChange}
-//   centered
-//   textColor="inherit"
-//   TabIndicatorProps={{
-//     style: { backgroundColor: "#1976d2", height: 4, borderRadius: 2 },
-//   }}
-//   sx={{
-//     mb: 3,
-//     backgroundColor: "#f5f5f5",
-//     borderRadius: 2,
-//     px: 2,
-//     boxShadow: "0px 2px 5px rgba(0,0,0,0.1)",
-//   }}
-// >
-//   <Tab
-//     icon={<QrCodeIcon />}
-//     label="Codes"
-//     iconPosition="start"
-//     sx={{
-//       color: tab === 0 ? "white" : "#000",
-//       backgroundColor: tab === 0 ? "#388e3c" : "transparent", // Vert foncé
-//       borderRadius: 2,
-//       mx: 1,
-//       fontWeight: "bold",
-//       transition: "all 0.3s ease",
-//       "&:hover": { backgroundColor: "#c8e6c9" },
-//     }}
-//   />
-//   <Tab
-//     icon={<MenuBookIcon />}
-//     label="Livres"
-//     iconPosition="start"
-//     sx={{
-//       color: tab === 1 ? "white" : "#000",
-//       backgroundColor: tab === 1 ? "#0288d1" : "transparent", // Bleu
-//       borderRadius: 2,
-//       mx: 1,
-//       fontWeight: "bold",
-//       transition: "all 0.3s ease",
-//       "&:hover": { backgroundColor: "#b3e5fc" },
-//     }}
-//   />
-//   <Tab
-//     icon={<BookmarkAddIcon />}
-//     label="Chapitres"
-//     iconPosition="start"
-//     sx={{
-//       color: tab === 2 ? "white" : "#000",
-//       backgroundColor: tab === 2 ? "#f57c00" : "transparent", // Orange
-//       borderRadius: 2,
-//       mx: 1,
-//       fontWeight: "bold",
-//       transition: "all 0.3s ease",
-//       "&:hover": { backgroundColor: "#ffe0b2" },
-//     }}
-//   />
-// </Tabs>
 
 
-
-//       <Box hidden={tab !== 0}><RechargeCodeForm /></Box>
-//       <Box hidden={tab !== 1}><BookForm /></Box>
-//       <Box hidden={tab !== 2}><ChapterForm /></Box>
-//     </PageLayout>
-//   );
-// };
-
-// export default AdminDashboardPage;
-
-
-
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Grid,
   Typography,
   Paper,
   Button,
+  TextField,
+  MenuItem,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import PageLayout from "../../components/PageLayout";
+import API from "../../api";
+import AdminUserTable from "../../components/admin/AdminUserTable";
 
 const AdminDashboardPage = () => {
   const navigate = useNavigate();
+
+  const [stats, setStats] = useState(null);
+const [selectedBatchId, setSelectedBatchId] = useState("");
+const [teacherCount, setTeacherCount] = useState(0);
+
+// useEffect(() => {
+//   const fetchStats = async () => {
+//     const res = await API.get("/payments/stats");
+//     setStats(res.data);
+//   };
+//   fetchStats();
+// }, []);
+
+
+
+useEffect(() => {
+  const fetchStats = async () => {
+    const res = await API.get("/payments/stats");
+    setStats(res.data);
+
+    // Nouveau : récupérer le nombre d'enseignants
+    const teacherRes = await API.get("/admin/stats");
+    setTeacherCount(teacherRes.data.totalTeachers);
+  };
+  fetchStats();
+}, []);
 
   const cards = [
     {
@@ -125,6 +63,25 @@ const AdminDashboardPage = () => {
       buttonLabel: "Créer un sujet",
       onClick: () => navigate("/admin/exams/create"),
     },
+
+{
+  title: "Générer des codes d’accès 🔐",
+  description: "Générez des cartes d'abonnement à gratter ou à vendre.",
+  buttonLabel: "Générer des codes",
+  onClick: () => navigate("/admin/codes"), // ✅ route corrigée
+},
+
+
+{
+  title: "Créer un enseignant 👨‍🏫",
+  description: "Ajoutez un enseignant et gérez ses informations.",
+  buttonLabel: "Gérer les enseignants",
+  onClick: () => navigate("/admin/teachers"),
+}
+
+
+
+  
   ];
 
   return (
@@ -133,6 +90,97 @@ const AdminDashboardPage = () => {
       <Typography variant="h4" fontWeight="bold" mb={4}>
         🎛️ Tableau de bord Admin
       </Typography>
+
+      {stats && (
+  <Grid container spacing={3} mb={4}>
+    <Grid item xs={12} md={4}>
+      <Paper sx={{ p: 3, borderRadius: 2 }}>
+        <Typography variant="h6">👥 Élèves connectés</Typography>
+        <Typography variant="h5" fontWeight="bold">{stats.connectedUsers}</Typography>
+      </Paper>
+    </Grid>
+    <Grid item xs={12} md={4}>
+      <Paper sx={{ p: 3, borderRadius: 2 }}>
+        <Typography variant="h6">❌ Sans abonnement</Typography>
+        <Typography variant="h5" fontWeight="bold">{stats.registeredWithoutSubscription}</Typography>
+      </Paper>
+    </Grid>
+    <Grid item xs={12} md={4}>
+      <Paper sx={{ p: 3, borderRadius: 2 }}>
+        <Typography variant="h6">✅ Abonnés</Typography>
+        <Typography variant="h5" fontWeight="bold">{stats.registeredWithSubscription}</Typography>
+      </Paper>
+    </Grid>
+
+
+    <Grid item xs={12} md={4}>
+  <Paper sx={{ p: 3, borderRadius: 2 }}>
+    <Typography variant="h6">👨‍🏫 Enseignants inscrits</Typography>
+    <Typography variant="h5" fontWeight="bold">{teacherCount}</Typography>
+  </Paper>
+</Grid>
+
+  </Grid>
+)}
+
+
+{stats && (
+  <Box my={4}>
+    <Typography variant="h6" mb={2}>📦 Statistiques par lot</Typography>
+
+    <TextField
+      select
+      label="Choisir un lot"
+      value={selectedBatchId}
+      onChange={(e) => setSelectedBatchId(e.target.value)}
+      sx={{ width: 300, mb: 2 }}
+    >
+      {stats.batches.map((batch) => (
+        <MenuItem key={batch.batchId} value={batch.batchId}>
+          {batch.batchId}
+        </MenuItem>
+      ))}
+    </TextField>
+
+    {selectedBatchId && (
+      <Grid container spacing={2}>
+        {(() => {
+          const selected = stats.batches.find(b => b.batchId === selectedBatchId);
+          return (
+            <>
+              <Grid item xs={12} md={3}>
+                <Paper sx={{ p: 2 }}>
+                  <Typography variant="body2">Total cartes</Typography>
+                  <Typography variant="h6">{selected.totalCards}</Typography>
+                </Paper>
+              </Grid>
+              <Grid item xs={12} md={3}>
+                <Paper sx={{ p: 2 }}>
+                  <Typography variant="body2">Montant total</Typography>
+                  <Typography variant="h6">{selected.totalAmount} FCFA</Typography>
+                </Paper>
+              </Grid>
+              <Grid item xs={12} md={3}>
+                <Paper sx={{ p: 2 }}>
+                  <Typography variant="body2">Cartes utilisées</Typography>
+                  <Typography variant="h6">{selected.usedCards} ({selected.totalUsedAmount} FCFA)</Typography>
+                </Paper>
+              </Grid>
+              <Grid item xs={12} md={3}>
+                <Paper sx={{ p: 2 }}>
+                  <Typography variant="body2">Cartes non utilisées</Typography>
+                  <Typography variant="h6">{selected.unusedCards} ({selected.totalUnusedAmount} FCFA)</Typography>
+                </Paper>
+              </Grid>
+            </>
+          );
+        })()}
+      </Grid>
+    )}
+  </Box>
+)}
+
+
 
       <Grid container spacing={3}>
         {cards.map((card, index) => (
@@ -151,7 +199,21 @@ const AdminDashboardPage = () => {
           </Grid>
         ))}
       </Grid>
+        <Grid item xs={12}>
+  <Paper sx={{ p: 3, mt: 4, borderRadius: 2 }}>
+  
+    <Typography variant="body2" color="text.secondary" mb={2}>
+      Recherchez, activez ou désactivez les comptes d’élèves ou d’enseignants.
+    </Typography>
+    
+    {/* 👇 Table des utilisateurs */}
+    <AdminUserTable />
+  </Paper>
+</Grid>
+
     </Box>
+
+  
     </PageLayout>
   );
 };

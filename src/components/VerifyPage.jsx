@@ -23,7 +23,7 @@ const { refreshUser } = useContext(AuthContext);
       await refreshUser(); // <-- ici
 
 
-      setTimeout(() => navigate("/gratuit"), 1000); // redirection après succès
+      setTimeout(() => navigate("/login"), 1000); // redirection après succès
     } catch (err) {
       setMessage(err.response?.data?.message || "❌ Échec de la vérification.");
     }

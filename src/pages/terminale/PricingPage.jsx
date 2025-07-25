@@ -26,6 +26,9 @@ const PricingPage = () => {
     const [paymentMethod, setPaymentMethod] = useState("nita"); // "nita" ou "visa"
     const [nitaNumber, setNitaNumber] = useState("");
 
+    const [openCodeDialog, setOpenCodeDialog] = useState(false);
+const [accessCode, setAccessCode] = useState("");
+
   return (
      <PageLayout>
    <Box p={4} mt={8}  sx={{ backgroundColor: "#ECEFF1" }}>
@@ -48,23 +51,31 @@ const PricingPage = () => {
   sx={{
     maxWidth: "800px",
     mx: "auto",
-    backgroundColor: "#0d1117", // fond sombre stylisé
+    backgroundColor: "#0d1117",
     border: "4px solid #1976D2",
     borderRadius: 4,
     textAlign: "center",
     boxShadow: 3,
-    color: "#fff", // texte blanc
+    color: "#fff",
   }}
 >
   <Typography variant="h6" fontWeight="bold" mb={2}>
-    Merci de faire un dépôt via <strong style={{ color: "#90caf9" }}>NITA</strong>.
+    Merci de faire un dépôt via <strong style={{ color: "#90caf9" }}>NITA</strong>
+    <br />ou en achetant une <strong style={{ color: "#ffc107" }}>carte à gratter</strong>.
   </Typography>
+
   <Typography mb={2}>
-     Numéro de dépôt : <strong style={{ color: "#90caf9" }}>+227 123456</strong><br />
-     Support : <strong style={{ color: "#90caf9" }}>+227 80 64 83 83</strong>
+    Numéro de dépôt : <strong style={{ color: "#90caf9" }}>+227 123456</strong><br />
+    Support : <strong style={{ color: "#90caf9" }}>+227 80 64 83 83</strong>
   </Typography>
+
+  <Typography mb={2}>
+    Les cartes à gratter sont disponibles auprès des <strong style={{ color: "#ffc107" }}>revendeurs agréés</strong> <br />
+    ou au niveau de la <strong style={{ color: "#ffc107" }}>scolarité de votre établissement</strong>.
+  </Typography>
+
   <Typography fontWeight="bold">
-    Votre code d’activation vous sera envoyé <strong style={{ color: "#90caf9" }}>instantanément</strong> après le paiement.
+    Votre abonnement sera validé <strong style={{ color: "#90caf9" }}>instantanément</strong> après le paiement.
   </Typography>
 </Box>
 
@@ -87,11 +98,19 @@ const PricingPage = () => {
         Basic
       </Typography>
       <Typography variant="h6" gutterBottom>$0 FCFA</Typography>
-      <ul style={{ listStyle: "none", padding: 0, textAlign: "left", color: "#ccc" }}>
-        <li style={{ color: "#fff" }}>✔️ Explications simples</li>
-        <li style={{ textDecoration: "line-through" }}>Aides visuelles</li>
-        <li style={{ textDecoration: "line-through" }}>Conseils supplémentaires</li>
-      </ul>
+     <ul style={{ listStyle: "none", padding: 0, textAlign: "left", color: "#ccc" }}>
+  <li style={{ color: "#fff" }}>✔️ Inscription au site</li>
+  <li style={{ color: "#fff" }}>✔️ Accès basique à Fahimta</li>
+  <li style={{ textDecoration: "line-through" }}>✔️ Tous les services Fahimta</li>
+  <li style={{ textDecoration: "line-through" }}>✔️ Livres numériques</li>
+  <li style={{ textDecoration: "line-through" }}>✔️ Vidéos pédagogiques</li>
+  <li style={{ textDecoration: "line-through" }}>✔️ Annales corrigées</li>
+  <li style={{ textDecoration: "line-through" }}>✔️ Examens BAC + Corrections</li>
+  <li style={{ textDecoration: "line-through" }}>✔️ Examens BEPC + Corrections</li>
+  <li style={{ textDecoration: "line-through" }}>✔️ Accès aux enseignants 7j/7</li>
+  <li style={{ textDecoration: "line-through" }}>✔️ Priorité de réponse</li>
+</ul>
+
       <Button variant="contained" sx={{ mt: 2, borderRadius: 5 }} onClick={() => navigate(user ? "/gratuit" : "/register")}>
         Accéder
       </Button>
@@ -131,11 +150,19 @@ const PricingPage = () => {
         Annuelle
       </Typography>
       <Typography variant="h6" gutterBottom>20 000 FCFA / an</Typography>
-      <ul style={{ listStyle: "none", padding: 0, textAlign: "left", color: "#ccc" }}>
-        <li style={{ color: "#fff" }}>✔️ Explications simples</li>
-        <li style={{ color: "#fff" }}>✔️ Aides visuelles</li>
-        <li style={{ color: "#fff" }}>✔️ Conseils supplémentaires</li>
-      </ul>
+     <ul style={{ listStyle: "none", padding: 0, textAlign: "left", color: "#ccc" }}>
+      <li style={{ color: "#fff" }}>✔️ Inscription au site</li>
+      <li style={{ color: "#fff" }}>✔️ Accès basique à Fahimta</li>
+      <li style={{ color: "#fff" }}>✔️ Tous les services Fahimta</li>
+      <li style={{ color: "#fff" }}>✔️ Livres numériques</li>
+      <li style={{ color: "#fff" }}>✔️ Vidéos pédagogiques</li>
+      <li style={{ color: "#fff" }}>✔️ Annales corrigées</li>
+      <li style={{ color: "#fff" }}>✔️ Examens BAC + Corrections</li>
+      <li style={{ color: "#fff" }}>✔️ Examens BEPC + Corrections</li>
+      <li style={{ color: "#fff" }}>✔️ Accès aux enseignants 7j/7</li>
+      <li style={{ color: "#fff" }}>✔️ Priorité de réponse</li>
+    </ul>
+
       <Button
         variant="contained"
         color="error"
@@ -163,11 +190,21 @@ const PricingPage = () => {
         Mensuelle
       </Typography>
       <Typography variant="h6" gutterBottom>2 000 FCFA / mois</Typography>
+      
       <ul style={{ listStyle: "none", padding: 0, textAlign: "left", color: "#ccc" }}>
-        <li style={{ color: "#fff" }}>✔️ Explications simples</li>
-        <li style={{ color: "#fff" }}>✔️ Aides visuelles</li>
-        <li style={{ color: "#fff" }}>✔️ Conseils supplémentaires</li>
-      </ul>
+      <li style={{ color: "#fff" }}>✔️ Inscription au site</li>
+      <li style={{ color: "#fff" }}>✔️ Accès basique à Fahimta</li>
+      <li style={{ color: "#fff" }}>✔️ Tous les services Fahimta</li>
+      <li style={{ color: "#fff" }}>✔️ Livres numériques</li>
+      <li style={{ color: "#fff" }}>✔️ Vidéos pédagogiques</li>
+      <li style={{ color: "#fff" }}>✔️ Annales corrigées</li>
+      <li style={{ color: "#fff" }}>✔️ Examens BAC + Corrections</li>
+      <li style={{ color: "#fff" }}>✔️ Examens BEPC + Corrections</li>
+      <li style={{ color: "#fff" }}>✔️ Accès aux enseignants 7j/7</li>
+      <li style={{ color: "#fff" }}>✔️ Priorité de réponse</li>
+     
+    </ul>
+
       <Button
         variant="contained"
         sx={{ mt: 2, borderRadius: 5 }}
@@ -217,6 +254,19 @@ const PricingPage = () => {
       >
         📱 NITA
       </Button>
+
+
+
+
+      <Button
+  variant="outlined"
+  fullWidth
+  sx={{ mt: 2 }}
+  onClick={() => setOpenCodeDialog(true)}
+>
+  🎫 J’ai un code d’accès
+</Button>
+
     </Box>
 
     {paymentMethod === "nita" && (
@@ -275,6 +325,42 @@ const PricingPage = () => {
 </Dialog>
 
 
+<Dialog open={openCodeDialog} onClose={() => setOpenCodeDialog(false)}>
+  <DialogTitle>Entrer votre code d'accès</DialogTitle>
+  <DialogContent>
+    <Typography mb={2}>
+      Saisissez le code inscrit sur votre carte à gratter pour activer votre abonnement.
+    </Typography>
+    <input
+      type="text"
+      value={accessCode}
+      onChange={(e) => setAccessCode(e.target.value)}
+      placeholder="Ex: FAH-XYZ8KL21"
+      style={{ width: "100%", padding: "10px", fontSize: "16px" }}
+    />
+  </DialogContent>
+  <DialogActions>
+    <Button onClick={() => setOpenCodeDialog(false)}>Annuler</Button>
+    <Button
+      variant="contained"
+      disabled={accessCode.trim() === ""}
+      onClick={async () => {
+        try {
+          //const res = await API.post("/subscription/redeem-code", { code: accessCode });
+          API.post("/payments/redeem-code", { code: accessCode });
+          alert("✅ Code validé ! Abonnement activé.");
+          await refreshUser(); // recharge les données utilisateur
+          navigate("/login");
+        } catch (error) {
+          alert("❌ Échec : " + (error.response?.data?.message || "Code invalide."));
+        }
+        setOpenCodeDialog(false);
+      }}
+    >
+      Valider
+    </Button>
+  </DialogActions>
+</Dialog>
 
 
     </Box>

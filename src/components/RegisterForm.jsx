@@ -1,127 +1,3 @@
-// import React, { useState } from "react";
-// import {
-//   TextField,
-//   Button,
-//   Typography,
-//   Box,
-//   Select,
-//   MenuItem,
-//   InputLabel,
-//   FormControl,
-//   Grid,
-//   useMediaQuery,
-//   Paper
-// } from "@mui/material";
-// import { useTheme } from "@mui/material/styles";
-// import { useNavigate } from "react-router-dom";
-// import API from "../api";
-// import fahimtaImg from "../assets/logo.png";
-
-// const RegisterForm = () => {
-//   const [phone, setPhone] = useState("");
-//   const [password, setPassword] = useState("");
-//   const [classLevel, setClassLevel] = useState("");
-//   const [message, setMessage] = useState("");
-
-//   const navigate = useNavigate();
-//   const theme = useTheme();
-//   const isSmallScreen = useMediaQuery(theme.breakpoints.down("md"));
-
-//   const handleRegister = async (e) => {
-//     e.preventDefault();
-//     setMessage("");
-
-//     try {
-//       await API.post("/auth/register", { phone, password, classLevel });
-//       setMessage("✅ Inscription réussie. Un code vous a été envoyé par SMS.");
-
-//       setTimeout(() => {
-//         navigate("/verify", { state: { phone } });
-//       }, 1000);
-//     } catch (err) {
-//       setMessage(err.response?.data?.message || "❌ Erreur lors de l'inscription.");
-//     }
-//   };
-
-//   return (
-//     <Grid
-//       container
-//       justifyContent="center"
-//       alignItems="center"
-//       spacing={4}
-//       sx={{ minHeight: "85vh", mt: 2 }}
-//     >
-//       {/* 📷 Logo à gauche ou au-dessus */}
-//       <Grid item xs={12} md={4} textAlign="center">
-//         <img src={fahimtaImg} alt="Fahimta" style={{ width: isSmallScreen ? 100 : 160 }} />
-//       </Grid>
-
-//       {/* 📝 Formulaire encadré */}
-//       <Grid item xs={12} md={5}>
-//         <Paper elevation={4} sx={{ borderRadius: 3, p: 4, backgroundColor: "#f9f9f9" }}>
-//           <Box component="form" onSubmit={handleRegister}>
-//             <Typography variant="h5" mb={2} fontWeight="bold" textAlign="center">
-//               📝 Inscription
-//             </Typography>
-
-//             <TextField
-//               fullWidth
-//               label="Téléphone"
-//               value={phone}
-//               onChange={(e) => setPhone(e.target.value)}
-//               margin="normal"
-//               required
-//             />
-
-//             <TextField
-//               fullWidth
-//               label="Mot de passe"
-//               type="password"
-//               value={password}
-//               onChange={(e) => setPassword(e.target.value)}
-//               margin="normal"
-//               required
-//             />
-
-//             <FormControl fullWidth margin="normal" required>
-//               <InputLabel>Niveau scolaire</InputLabel>
-//               <Select
-//                 value={classLevel}
-//                 label="Niveau scolaire"
-//                 onChange={(e) => setClassLevel(e.target.value)}
-//               >
-//                 {[
-//                   "6eme", "5eme", "4eme", "3eme",
-//                   "seconde-a", "seconde-c",
-//                   "premiere-a", "premiere-c", "premiere-d",
-//                   "terminale-a", "terminale-c", "terminale-d",
-//                 ].map((niveau) => (
-//                   <MenuItem key={niveau} value={niveau}>
-//                     {niveau.toUpperCase().replace("-", " ")}
-//                   </MenuItem>
-//                 ))}
-//               </Select>
-//             </FormControl>
-
-//             <Button variant="contained" type="submit" sx={{ mt: 2 }} fullWidth>
-//               S'inscrire
-//             </Button>
-
-//             {message && (
-//               <Typography color="secondary" sx={{ mt: 2 }} textAlign="center">
-//                 {message}
-//               </Typography>
-//             )}
-//           </Box>
-//         </Paper>
-//       </Grid>
-//     </Grid>
-//   );
-// };
-
-// export default RegisterForm;
-
-
 
 import React, { useState } from "react";
 import {
@@ -129,49 +5,44 @@ import {
   Button,
   Typography,
   Box,
-  Select,
-  MenuItem,
-  InputLabel,
-  FormControl,
   Paper,
-  useMediaQuery
+  InputAdornment,
 } from "@mui/material";
-import { useTheme } from "@mui/material/styles";
 import { useNavigate } from "react-router-dom";
 import API from "../api";
-import fahimtaImg from "../assets/logocc.jpg";
+import fahimtaImg from "../assets/logocc.png";
 
 const RegisterForm = () => {
   const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
-const [fullName, setFullName] = useState("");
-const [schoolName, setSchoolName] = useState("");
-const [city, setCity] = useState("");
-
-
-
+  const [fullName, setFullName] = useState("");
+  const [schoolName, setSchoolName] = useState("");
+  const [city, setCity] = useState("");
   const [message, setMessage] = useState("");
-
+  const [phoneError, setPhoneError] = useState(false);
   const navigate = useNavigate();
-  // const theme = useTheme();
-  // const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
   const handleRegister = async (e) => {
     e.preventDefault();
     setMessage("");
 
+    if (phone.length !== 8) {
+      setPhoneError(true);
+      return;
+    }
+
     try {
-      await API.post("/auth/register", {
-        phone,
+      const response = await API.post("/auth/register", {
+        phone: `+227${phone}`,
+        email,
         password,
         fullName,
         schoolName,
         city,
       });
 
-      setMessage("✅ Inscription réussie. Un code vous a été envoyé par SMS.");
-
+      setMessage(response.data.message);
       setTimeout(() => {
         navigate("/verify", { state: { phone } });
       }, 1000);
@@ -183,121 +54,186 @@ const [city, setCity] = useState("");
   return (
     <Box
       sx={{
-        minHeight: "calc(100vh - 128px)", // Hauteur entre navbar et footer
-     
+        minHeight: "100vh",
         display: "grid",
-        gridTemplateColumns: { xs: "1fr", md: "4fr 6fr" },
-        padding: 0,
-        margin: 0,
+        gridTemplateColumns: { xs: "1fr", md: "1fr 1.2fr" },
+        backgroundColor: "#fff9f0",
       }}
     >
-      {/* Partie gauche : logo + texte */}
+      {/* 🎓 Partie gauche colorée */}
       <Box
         sx={{
-          px: 4,
-          py: 6,
+          backgroundColor: "#1976D2",
+          color: "#fff",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
+          px: 4,
+          py: 6,
           textAlign: "center",
-                 backgroundColor: "#ECEFF1",
         }}
       >
         <img
           src={fahimtaImg}
-          alt="Logo Fahimta"
-          style={{ width: 220, height: "auto", marginBottom: 16 }}
+          alt="Fahimta Logo"
+          style={{ width: 150, marginBottom: 24, borderRadius: 12 }}
         />
-        <Typography variant="h4" fontWeight="bold" gutterBottom>
-         Les maths simplifiées 
+        <Typography variant="h4" fontWeight="bold">
+          Les maths, c’est facile !
         </Typography>
-        <Typography variant="body1" color="text.secondary" maxWidth={300}>
-        Votre alliée numérique pour briller en mathématiques, du collège à l’université.
+        <Typography variant="body1" sx={{ mt: 2, maxWidth: 300 }}>
+          Rejoins des milliers d’élèves et d'étudiants qui apprennent avec Fahimta, ton alliée mathématique 
         </Typography>
       </Box>
 
-      {/* Partie droite : formulaire */}
-    <Box
-  sx={{
-    px: 2,
-    py: 12,
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#D27C19",
-  }}
->
-  <Paper elevation={4} sx={{ borderRadius: 3, p: 4, width: "100%", maxWidth: 600 }}>
-    <Box component="form" onSubmit={handleRegister}>
-      <Typography variant="h5" mb={2} fontWeight="bold" textAlign="center">
-        📝 Inscription
+      {/* 📄 Partie droite formulaire */}
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          p: { xs: 3, sm: 6 },
+          marginTop:6,
+        }}
+      >
+        <Paper
+          elevation={4}
+          sx={{
+            borderRadius: 4,
+            p: { xs: 3, sm: 4 },
+            width: "100%",
+            maxWidth: 600,
+            backgroundColor: "#ffffff",
+          }}
+        >
+          <Typography
+            variant="h5"
+            textAlign="center"
+            fontWeight="bold"
+            sx={{ mb: 3, color: "#1976D2" }}
+          >
+            Crée ton compte gratuitement
+          </Typography>
+
+       <Box component="form" onSubmit={handleRegister} sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
+  <TextField
+    label="Téléphone"
+    value={phone}
+    onChange={(e) => {
+      const value = e.target.value.replace(/\D/g, "");
+      if (value.length <= 8) {
+        setPhone(value);
+        setPhoneError(false);
+      }
+    }}
+    InputProps={{
+      startAdornment: <InputAdornment position="start">🇳🇪 +227</InputAdornment>,
+    }}
+    required
+    error={phoneError}
+    helperText={phoneError ? "Entrez les 8 chiffres du numéro." : ""}
+    fullWidth
+    sx={{ flex: { xs: "1 1 100%", sm: "1 1 48%" } }}
+  />
+
+  <TextField
+    label="Email"
+    type="email"
+    value={email}
+    onChange={(e) => setEmail(e.target.value)}
+    fullWidth
+    sx={{ flex: { xs: "1 1 100%", sm: "1 1 48%" } }}
+  />
+
+  <TextField
+    label="Mot de passe"
+    type="password"
+    value={password}
+    onChange={(e) => setPassword(e.target.value)}
+    fullWidth
+    sx={{ flex: { xs: "1 1 100%", sm: "1 1 48%" } }}
+  />
+
+  <TextField
+    label="Nom complet"
+    value={fullName}
+    onChange={(e) => setFullName(e.target.value)}
+    required
+    fullWidth
+    sx={{ flex: { xs: "1 1 100%", sm: "1 1 48%" } }}
+  />
+
+  <TextField
+    label="École"
+    value={schoolName}
+    onChange={(e) => setSchoolName(e.target.value)}
+    required
+    fullWidth
+    sx={{ flex: { xs: "1 1 100%", sm: "1 1 48%" } }}
+  />
+
+  <TextField
+    label="Ville"
+    value={city}
+    onChange={(e) => setCity(e.target.value)}
+    required
+    fullWidth
+    sx={{ flex: { xs: "1 1 100%", sm: "1 1 48%" } }}
+  />
+
+  <Box sx={{ flex: "1 1 100%" }}>
+    <Button
+      type="submit"
+      variant="contained"
+      fullWidth
+      sx={{
+        mt: 2,
+        py: 1.5,
+        backgroundColor: "#FFB300",
+        color: "#000",
+        fontWeight: "bold",
+        fontSize: "1rem",
+        ":hover": {
+          backgroundColor: "#FFA000",
+        },
+      }}
+    >
+      🚀 S'inscrire maintenant
+    </Button>
+
+    {message && (
+      <Typography color="error" textAlign="center" mt={2}>
+        {message}
       </Typography>
+    )}
 
-      <Box display="flex" gap={2} flexWrap="wrap">
-        <TextField
-          label="Téléphone"
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-          margin="normal"
-          required
-          fullWidth
-          sx={{ flex: { xs: "1 1 100%", sm: "1 1 48%" } }}
-        />
-        <TextField
-          label="Mot de passe"
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          margin="normal"
-          required
-          fullWidth
-          sx={{ flex: { xs: "1 1 100%", sm: "1 1 48%" } }}
-        />
 
-        <TextField
-          label="Nom complet"
-          value={fullName}
-          onChange={(e) => setFullName(e.target.value)}
-          margin="normal"
-          required
-          fullWidth
-          sx={{ flex: { xs: "1 1 100%", sm: "1 1 48%" } }}
-        />
-        <TextField
-          label="École"
-          value={schoolName}
-          onChange={(e) => setSchoolName(e.target.value)}
-          margin="normal"
-          required
-          fullWidth
-          sx={{ flex: { xs: "1 1 100%", sm: "1 1 48%" } }}
-        />
+    {message && (
+  <Typography color="error" textAlign="center" mt={2}>
+    {message}
+  </Typography>
+)}
 
-        <TextField
-          label="Ville"
-          value={city}
-          onChange={(e) => setCity(e.target.value)}
-          margin="normal"
-          required
-          fullWidth
-          sx={{ flex: "1 1 100%" }}
-        />
-      </Box>
+<Typography
+  variant="body2"
+  sx={{ mt: 2, textAlign: "center" }}
+>
+  Tu as déjà un compte ?{" "}
+  <Box
+    component="span"
+    sx={{ color: "#1976D2", fontWeight: "bold", cursor: "pointer" }}
+    onClick={() => navigate("/login")}
+  >
+    Se connecter
+  </Box>
+</Typography>
 
-      <Button variant="contained" type="submit" sx={{ mt: 3 }} fullWidth>
-        S'inscrire
-      </Button>
-
-      {message && (
-        <Typography color="secondary" sx={{ mt: 2 }} textAlign="center">
-          {message}
-        </Typography>
-      )}
-    </Box>
-  </Paper>
+  </Box>
 </Box>
 
+        </Paper>
+      </Box>
     </Box>
   );
 };

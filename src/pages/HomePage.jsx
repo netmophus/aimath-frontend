@@ -8,6 +8,15 @@ import fahimtaImg3 from "../assets/fahimtaallier3.jpg";
 import fahimtaImg4 from "../assets/fahimtaallier4.jpg";
 import headerImage from "../assets/head.png"; // Ton image IA
 
+import MenuBookIcon from "@mui/icons-material/MenuBook";
+import AssignmentTurnedInIcon from "@mui/icons-material/AssignmentTurnedIn";
+import VideoLibraryIcon from "@mui/icons-material/VideoLibrary";
+import SmartToyIcon from "@mui/icons-material/SmartToy";
+import ForumIcon from "@mui/icons-material/Forum";
+import SchoolIcon from "@mui/icons-material/School";
+
+
+
 
 const HomePage = () => {
   const images = [
@@ -70,18 +79,45 @@ const HomePage = () => {
   fontWeight="bold"
   mb={2}
   sx={{
-    fontSize: { xs: "1.4rem", md: "2rem" },
+    fontSize: {
+      xs: "1.4rem",
+      md: "2rem",
+    },
     textAlign: "center",
+    "@media (max-width:521px)": {
+      fontSize: "1.1rem",
+    },
+    "@media (max-width:453px)": {
+      fontSize: "0.95rem",
+    },
   }}
 >
   Offre Spéciale pour les Nouveaux Inscrits
 </Typography>
 
+
 <Typography
   variant="h2"
   mb={3}
   sx={{
-    fontSize: { xs: "1.2rem", sm: "1.5rem", md: "2.2rem" },
+    fontSize: {
+      xs: "1.2rem",
+      sm: "1.5rem",
+      md: "2.2rem",
+    },
+    "@media (max-width:521px)": {
+      fontSize: "1rem",
+    },
+    "@media (max-width:453px)": {
+      fontSize: "0.75rem",
+    },
+
+     "@media (max-width:345px)": {
+      display:'none',
+    },
+
+
+    
     fontWeight: 500,
     textAlign: "center",
     maxWidth: 800,
@@ -89,6 +125,7 @@ const HomePage = () => {
 >
   Téléchargez gratuitement des livres et des annales en mathématiques.
 </Typography>
+
 
 <Button
   variant="contained"
@@ -119,73 +156,104 @@ const HomePage = () => {
     px: 2,
   }}
 >
-
-
-  
-  <Box
-    sx={{
-      backgroundColor: "#42A5F5",
+  {[
+    {
+      bg: "#42A5F5",
       color: "white",
-      borderRadius: 2,
-      p: 2,
-      boxShadow: 3,
-      mx: "auto",
-      width: "100%",
-      maxWidth: 350, // ✅ largeur max de chaque carte
-    }}
-  >
-    <Typography variant="h6" fontWeight="bold">📘 Livres</Typography>
-    <Typography variant="body2">Accédez à des manuels numériques gratuitement.</Typography>
-  </Box>
-
-  <Box
-    sx={{
-      backgroundColor: "#66BB6A",
+      title: "Livres",
+      desc: "Plus de 150 livres et annales en mathématiques.",
+      icon: <MenuBookIcon fontSize="large" />,
+    },
+    {
+      bg: "#66BB6A",
       color: "white",
-      borderRadius: 2,
-      p: 2,
-      boxShadow: 3,
-      mx: "auto",
-      width: "100%",
-      maxWidth: 350,
-    }}
-  >
-    <Typography variant="h6" fontWeight="bold">📄 Annales</Typography>
-    <Typography variant="body2">Sujets d'examen corrigés des années passées.</Typography>
-  </Box>
-
-  <Box
-    sx={{
-      backgroundColor: "#FFB74D",
+      title: "Examens corrigés",
+      desc: "Plus de 100 sujets de BAC et BEPC corrigés.",
+      icon: <AssignmentTurnedInIcon fontSize="large" />,
+    },
+    {
+      bg: "#FFB74D",
       color: "#000",
-      borderRadius: 2,
-      p: 2,
-      boxShadow: 3,
-      mx: "auto",
-      width: "100%",
-      maxWidth: 350,
-    }}
-  >
-    <Typography variant="h6" fontWeight="bold">🎓 Cours ciblés</Typography>
-    <Typography variant="body2">Contenus pédagogiques adaptés à votre niveau.</Typography>
-  </Box>
-
-  <Box
-    sx={{
-      backgroundColor: "#AB47BC",
+      title: "Vidéos en ligne",
+      desc: "Plus de 150 vidéos pédagogiques organisées par chapitre.",
+      icon: <VideoLibraryIcon fontSize="large" />,
+    },
+    {
+      bg: "#AB47BC",
       color: "white",
-      borderRadius: 2,
-      p: 2,
-      boxShadow: 3,
-      mx: "auto",
-      width: "100%",
-      maxWidth: 350,
-    }}
-  >
-    <Typography variant="h6" fontWeight="bold">🤖 IA personnalisée</Typography>
-    <Typography variant="body2">Un accompagnement intelligent pour réussir.</Typography>
-  </Box>
+      title: "IA personnalisée",
+      desc: "Posez vos questions ou téléversez un exercice à résoudre.",
+      icon: <SmartToyIcon fontSize="large" />,
+    },
+    {
+      bg: "#26C6DA",
+      color: "white",
+      title: "Assistance en direct",
+      desc: "Échangez avec des professeurs de maths (texte, voix, fichiers).",
+      icon: <ForumIcon fontSize="large" />,
+    },
+    {
+      bg: "#FFA726",
+      color: "#000",
+      title: "Du collège à l’université",
+      desc: "Contenus adaptés à tous les niveaux scolaires.",
+      icon: <SchoolIcon fontSize="large" />,
+    },
+  ].map((item, index) => (
+    <Box
+      key={index}
+      sx={{
+        backgroundColor: item.bg,
+        color: item.color,
+        borderRadius: 2,
+        p: 2,
+        boxShadow: 3,
+        mx: "auto",
+        width: "100%",
+        maxWidth: 350,
+        '@media (max-width:430px)': {
+          maxWidth: 300,
+          p: 1.5,
+        },
+        '@media (max-width:390px)': {
+          maxWidth: 200,
+          p: 1.5,
+        },
+      }}
+    >
+      <Box mb={1}>{item.icon}</Box>
+      <Typography
+        variant="h6"
+        fontWeight="bold"
+        sx={{
+          '@media (max-width:430px)': {
+            fontSize: '1rem',
+          },
+          '@media (max-width:390px)': {
+            fontSize: '0.65rem',
+          },
+        }}
+      >
+        {item.title}
+      </Typography>
+      <Typography
+        variant="body2"
+        sx={{
+          '@media (max-width:430px)': {
+            fontSize: '0.85rem',
+          },
+          '@media (max-width:390px)': {
+            fontSize: '0.65rem',
+          },
+        }}
+      >
+        {item.desc}
+      </Typography>
+    </Box>
+  ))}
 </Box>
+
+
 
 
 

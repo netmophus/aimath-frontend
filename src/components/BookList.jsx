@@ -1,9 +1,13 @@
 import React, { useEffect, useState } from "react";
 import {
   Table, TableBody, TableCell, TableContainer,
-  TableHead, TableRow, Paper, Typography, Link, Avatar
+  TableHead, TableRow, Paper, Typography, Link, Stack
 } from "@mui/material";
 import API from "../api"; // ou ton chemin vers axios
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import DownloadIcon from "@mui/icons-material/Download";
+
+
 
 const BookList = () => {
   const [books, setBooks] = useState([]);
@@ -43,13 +47,52 @@ const BookList = () => {
               <TableCell>{book.level}</TableCell>
               <TableCell>{book.badge}</TableCell>
               <TableCell>
-                <Avatar variant="square" src={book.coverImage} alt="Couverture" sx={{ width: 56, height: 56 }} />
+<img
+  src={book.coverImage}
+  alt="Couverture"
+  style={{ width: 56, height: 56, objectFit: "cover", borderRadius: 4 }}
+  onError={(e) => {
+    e.target.onerror = null;
+    e.target.src = "https://via.placeholder.com/56x56?text=N/A"; // fallback en cas d'erreur
+  }}
+/>
+
+
+
+
               </TableCell>
-              <TableCell>
-                <Link href={book.fileUrl} target="_blank" rel="noopener">
-                  📄 Télécharger
-                </Link>
-              </TableCell>
+             
+<TableCell>
+  <Stack direction="column" spacing={0.5}>
+    <Link
+      href={book.fileUrl}
+      target="_blank"
+      rel="noopener"
+      underline="hover"
+      color="primary"
+      display="flex"
+      alignItems="center"
+      gap={0.5}
+    >
+      <VisibilityIcon fontSize="small" />
+      Lire en ligne
+    </Link>
+    <Link
+      href={book.fileUrl}
+      target="_blank"
+      rel="noopener"
+      underline="hover"
+      color="secondary"
+      display="flex"
+      alignItems="center"
+      gap={0.5}
+    >
+      <DownloadIcon fontSize="small" />
+      Télécharger
+    </Link>
+  </Stack>
+</TableCell>
+
               <TableCell>{new Date(book.createdAt).toLocaleDateString()}</TableCell>
             </TableRow>
           ))}
