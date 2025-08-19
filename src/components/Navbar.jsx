@@ -106,8 +106,8 @@ if (!user) {
   menuItems = [
     { label: "Accueil", path: "/" },
     { label: "Tableau de bord", path: "/teacher/dashboard" },
-    { label: "Nos Prix", path: "/pricing" },
-    { label: "Fahimta Gratuit", path: "/gratuit" },
+    // { label: "Nos Prix", path: "/pricing" },
+    // { label: "Fahimta Gratuit", path: "/gratuit" },
     { label: "Déconnexion", action: handleLogout },
   ];
 } else if (!user.isSubscribed) {

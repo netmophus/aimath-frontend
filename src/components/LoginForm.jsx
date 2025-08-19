@@ -32,6 +32,7 @@ const LoginForm = () => {
   const navigate = useNavigate();
   const { login } = useContext(AuthContext);
   const formattedPhone = phone ? `+227${phone}` : null;
+const GOOGLE_LOGIN_ENABLED = false;
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -204,15 +205,7 @@ setTimeout(() => {
         />
 
 
-         <TextField
-          label="Email"
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          disabled={phone.length > 0} // ✅ désactiver si téléphone rempli
-          fullWidth
-          sx={{ flex: { xs: "1 1 100%", sm: "1 1 48%" } }}
-        />
+      
 
 
            <TextField
@@ -257,14 +250,19 @@ setTimeout(() => {
                 🔓 Se connecter
               </Button>
 
-              <Box sx={{ mt: 3, display: "flex", justifyContent: "center" }}>
-                <GoogleLogin
-                  onSuccess={handleGoogleSuccess}
-                  onError={() => setMessage("❌ Connexion Google échouée.")}
-                />
+<Box sx={{ mt: 3, display: "flex", justifyContent: "center" }}>
+  {GOOGLE_LOGIN_ENABLED ? (
+    <GoogleLogin
+      onSuccess={handleGoogleSuccess}
+      onError={() => setMessage("❌ Connexion Google échouée.")}
+    />
+  ) : (
+    <Button variant="outlined" disabled sx={{ textTransform: "none" }}>
+      Connexion Google (désactivée)
+    </Button>
+  )}
+</Box>
 
-                
-              </Box>
 
 
               
