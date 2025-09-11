@@ -29,12 +29,14 @@
     "serve": "^14.2.4",
     "web-vitals": "^2.1.4"
   },
-"scripts": {
+ 
+ "scripts": {
   "start": "serve -s build",
   "build": "react-scripts build",
   "test": "react-scripts test",
   "eject": "react-scripts eject"
 },
+
 
   "eslintConfig": {
     "extends": [

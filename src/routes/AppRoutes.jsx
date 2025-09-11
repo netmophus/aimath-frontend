@@ -26,11 +26,7 @@ import ExerciceExemplePage from "../pages/ExerciceExemplePage";
 
 
 import TerminalDashboard from "../pages/terminale/DashboardPage";
-// import TerminalCProgrammePage from "../pages/terminale/ProgrammePage";
 
-
-// import TerminalDDashboard from "../pages/terminale-d/DashboardPage";
-// import TerminalADashboard from "../pages/terminale-a/DashboardPage";
 import FreeAIAssistantTCPage from "../pages/terminale/FreeAIAssistantTCPage";
 
 import IATCPremiumPage from '../pages/terminale/IATCPremiumPage';
@@ -49,8 +45,16 @@ import TeacherChatPage from "../pages/teacher/TeacherChatPage";
 import StudentChatPage from "../pages/student/StudentChatPage";
 import SupportRequestFormPage from "../pages/student/SupportRequestFormPage";
 import StudentChatHistory from "../components/student/StudentChatHistory";
+import PartnerDashboardPage from "../pages/admin/PartnerDashboardPage";
 
 
+import PartnerManagementPage from "../pages/admin/PartnerManagementPage";
+
+
+import PartnerCodesPage from "../pages/admin/PartnerCodesPage";
+
+
+import AdminDistributorsPage from "../pages/admin/AdminDistributorsPage";
 
 
 
@@ -119,6 +123,14 @@ const AppRoutes = () => {
 <Route path="/student/chat-history" element={<StudentChatHistory />} />
 
 
+
+
+
+<Route path="/partner/dashboard" element={<PartnerDashboardPage />} />
+
+<Route path="/admin/partners/manage" element={<PartnerManagementPage />} />
+
+
 <Route path="/exercice-gratuit" element={<ProtectedRoute><ExerciceGratuitPage /></ProtectedRoute>} />
 
 {/* <Route path="/programme-terminal-c" element={<ProtectedRoute><TerminalCProgrammePage /></ProtectedRoute>} />
@@ -139,15 +151,7 @@ const AppRoutes = () => {
 
 
 
-{/* 
-<Route
-  path="/dashboard/terminale-c"
-  element={
-    <ProtectedActiveRoute>
-      <TerminalCDashboard />
-    </ProtectedActiveRoute>
-  }
-/> */}
+
 
 
 <Route
@@ -160,14 +164,7 @@ const AppRoutes = () => {
 />
 
 
-{/* <Route
-  path="/programme/terminale-c"
-  element={
-    <ProtectedActiveRoute>
-      <TerminalCProgrammePage />
-    </ProtectedActiveRoute>
-  }
-/> */}
+
 
  {/* 🤖 Assistant IA gratuit Terminale C */}
       <Route path="/terminal-c/ia-gratuit" element={<FreeAIAssistantTCPage />} />
@@ -199,9 +196,16 @@ const AppRoutes = () => {
   }
 />
 
+<Route
+  path="/admin/distributors"
+  element={
+    <ProtectedRoute allowedRoles={["admin"]}>
+      <AdminDistributorsPage />
+    </ProtectedRoute>
+  }
+/>
 
-
-
+<Route path="/admin/partner-codes" element={<PartnerCodesPage />} />
 
       {/* 📝 Création Sujet d’Examen */}
       <Route
@@ -215,25 +219,6 @@ const AppRoutes = () => {
 
 <Route path="/premium" element={<PremiumFahimtaPage />} />
 
-{/* <Route
-  path="/dashboard/terminale-d"
-  element={
-    <ProtectedActiveRoute>
-      <TerminalDDashboard />
-    </ProtectedActiveRoute>
-  }
-/> */}
-
-
-
-{/* <Route
-  path="/dashboard/terminale-a"
-  element={
-    <ProtectedActiveRoute>
-      <TerminalADashboard />
-    </ProtectedActiveRoute>
-  }
-/> */}
 
 
     </Routes>

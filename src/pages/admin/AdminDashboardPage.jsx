@@ -77,9 +77,26 @@ useEffect(() => {
   description: "Ajoutez un enseignant et gérez ses informations.",
   buttonLabel: "Gérer les enseignants",
   onClick: () => navigate("/admin/teachers"),
-}
+},
 
 
+
+
+
+ {
+  title: "Partenaires distributeurs 🤝",
+  description:
+    "Créez des partenaires/vendeurs, assignez des lots de cartes et suivez activations & commissions.",
+  buttonLabel: "Gérer les partenaires",
+  onClick: () => navigate("/admin/partners/manage"),
+},
+
+{
+  title: "Distributeurs Fahimta 💳",
+  description: "Créer & gérer les distributeurs de cartes (édition, suppression).",
+  buttonLabel: "Gérer les distributeurs",
+  onClick: () => navigate("/admin/distributors"),
+},
 
   
   ];
