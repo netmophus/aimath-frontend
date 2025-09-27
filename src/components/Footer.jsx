@@ -174,7 +174,7 @@ const Footer = () => {
       Contact
     </Typography>
    <Typography variant="body2" sx={{ color: "#bbdefb", mb: 1 }}>
-  📞 +227 90 00 00 00  
+  📞 +22780648383 
   <br />
   📧 contact@softlink-groupe.com  
   <br />

@@ -39,15 +39,10 @@ const HomePage = () => {
   const premiumActive = useMemo(() => hasActiveSub(user), [user]);
   const [openDist, setOpenDist] = useState(false);
 
-  const images = [
-    { src: fahimtaImg, alt: "Fahimta 1" },
-    { src: fahimtaImg2, alt: "Fahimta 2" },
-    { src: fahimtaImg3, alt: "Fahimta 3" },
-    { src: fahimtaImg4, alt: "Fahimta 4" },
-  ];
+
 
   const onRegisterClick = () => {
-    if (!user) return navigate("/register");
+    if (!user) return navigate("/login");
     return navigate(premiumActive ? "/premium" : "/gratuit");
   };
 
@@ -115,24 +110,6 @@ const FeatureCard = ({ icon, title, description, accent = ["#22d3ee", "#3b82f6"]
 {/* Bandeau */}
 <Box sx={{ position: "relative", height: "auto", mt:3, overflow: "hidden" }}>
   {/* fond image très léger */}
-  {/* <Box
-    component="img"
-    src={headerImage}
-    alt="IA background"
-    sx={{
-      position: "absolute",
-      inset: 0,
-      width: "100%",
-      height: "100%",
-      objectFit: "cover",
-      opacity: 0.06,            // un peu plus discret
-      zIndex: 1,
-      filter: "saturate(0.9)",
-    }}
-
-
-  /> */}
-
 
   <Box
   component="img"
@@ -258,7 +235,7 @@ const FeatureCard = ({ icon, title, description, accent = ["#22d3ee", "#3b82f6"]
                   "&:hover": { bgcolor: "#fb8c00" },
                 }}
               >
-                S’inscrire maintenant
+                Se connecter maintenant
               </Button>
             )}
 
