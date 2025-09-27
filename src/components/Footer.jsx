@@ -190,7 +190,7 @@ const Footer = () => {
       mt={2}
     >
       <IconButton
-        href="https://facebook.com"
+        href="https://www.facebook.com/profile.php?id=61581495210190"
         target="_blank"
         sx={{
           color: "#fff",
@@ -206,7 +206,7 @@ const Footer = () => {
       </IconButton>
 
       <IconButton
-        href="https://youtube.com"
+        href="https://www.youtube.com/@softlink-technologies"
         target="_blank"
         sx={{
           color: "#fff",
@@ -222,7 +222,7 @@ const Footer = () => {
       </IconButton>
 
       <IconButton
-        href="https://twitter.com"
+        href="https://x.com/MyFahimta"
         target="_blank"
         sx={{
           color: "#fff",
@@ -238,7 +238,7 @@ const Footer = () => {
       </IconButton>
 
       <IconButton
-        href="https://linkedin.com"
+        href="https://www.linkedin.com/in/my-fahimta-49500a371/"
         target="_blank"
         sx={{
           color: "#fff",
