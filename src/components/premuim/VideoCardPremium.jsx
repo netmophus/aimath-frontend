@@ -1,214 +1,6 @@
-
-
-// import React, { useState } from "react";
-// import {
-//   Card,
-//   CardContent,
-//   Typography,
-//   Box,
-//   Button,
-//   Divider,
-// } from "@mui/material";
-// import VisibilityIcon from "@mui/icons-material/Visibility";
-// import { useNavigate } from "react-router-dom";
-
-// const getEmbedUrl = (url) => {
-//   const match = url.match(/(?:youtu\.be\/|v=)([^&?/]+)/);
-//   return match ? `https://www.youtube.com/embed/${match[1]}` : null;
-// };
-
-// const VideoCardPremium = ({ video, isPremiumUser }) => {
-//   const navigate = useNavigate();
-//   const [showMainIframe, setShowMainIframe] = useState(false);
-//   const [shownParts, setShownParts] = useState([]);
-
-//   const hasAccess = video.badge === "gratuit" || isPremiumUser;
-
-//   const handleMainToggle = () => {
-//     setShowMainIframe(!showMainIframe);
-//   };
-
-//   const handlePartToggle = (index) => {
-//     setShownParts((prev) =>
-//       prev.includes(index)
-//         ? prev.filter((i) => i !== index)
-//         : [...prev, index]
-//     );
-//   };
-
-//   return (
-//     <Card sx={{ mb: 3, borderRadius: 3, boxShadow: 3 }}>
-//       {video.thumbnail && (
-//         <img
-//           src={video.thumbnail}
-//           alt="Miniature"
-//           style={{
-//             width: "100%",
-//             height: 180,
-//             objectFit: "cover",
-//             borderTopLeftRadius: "12px",
-//             borderTopRightRadius: "12px",
-//           }}
-//         />
-//       )}
-
-//       <CardContent>
-//         <Typography variant="h6" fontWeight="bold" gutterBottom>
-//           {video.title}
-//           {showMainIframe && (
-//             <Typography
-//               variant="caption"
-//               color="success.main"
-//               sx={{ ml: 1, fontWeight: "normal" }}
-//             >
-//               🎬 Lecture en cours
-//             </Typography>
-//           )}
-//         </Typography>
-
-//         <Typography variant="body2" color="text.secondary">
-//           Niveau : {video.level?.toUpperCase()}
-//         </Typography>
-
-//         <Typography variant="body2" mt={1}>
-//           {video.description.length > 200
-//             ? video.description.substring(0, 200) + "..."
-//             : video.description}
-//         </Typography>
-
-//         <Typography variant="caption" display="block" mt={1}>
-//           Accès : {video.badge === "gratuit" ? "🎁 Gratuit" : "🔒 Premium"}
-//         </Typography>
-
-//         <Box display="flex" alignItems="center" mt={1}>
-//           <VisibilityIcon sx={{ fontSize: 18, color: "#999", mr: 0.5 }} />
-//           <Typography variant="caption" color="text.secondary">
-//             {video.viewCount || 0} visualisation{video.viewCount > 1 ? "s" : ""}
-//           </Typography>
-//         </Box>
-
-//         {/* ✅ Vidéo principale */}
-//         <Box mt={2} textAlign="center">
-//           {hasAccess ? (
-//             <>
-//               <Button
-//                 variant="contained"
-//                 color={showMainIframe ? "error" : "success"}
-//                 onClick={handleMainToggle}
-//               >
-//                 {showMainIframe
-//                   ? "🔽 Masquer l’introduction"
-//                   : "▶️ Visualiser l’introduction"}
-//               </Button>
-//               {showMainIframe && (
-//                 <Box mt={2}>
-//                   <iframe
-//                     width="100%"
-//                     height="250"
-//                     src={getEmbedUrl(video.videoUrl)}
-//                     title={video.title}
-//                     frameBorder="0"
-//                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-//                     allowFullScreen
-//                     style={{ borderRadius: "8px" }}
-//                   ></iframe>
-//                 </Box>
-//               )}
-//             </>
-//           ) : (
-//             <>
-//               <Typography variant="body2" color="error" gutterBottom>
-//                 Cette vidéo est réservée aux membres Premium.
-//               </Typography>
-//               <Button
-//                 variant="contained"
-//                 color="primary"
-//                 onClick={() => navigate("/pricing")}
-//               >
-//                 🔓 Débloquer l'accès
-//               </Button>
-//             </>
-//           )}
-//         </Box>
-
-//         {/* 🔽 Vidéos secondaires */}
-//         {Array.isArray(video.videosSupplementaires) &&
-//           video.videosSupplementaires.length > 0 && hasAccess && (
-//             <Box mt={4}>
-//               <Divider sx={{ mb: 2 }} />
-//               <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-//                 📚 Parties du cours :
-//               </Typography>
-
-//               {video.videosSupplementaires.map((part, index) => {
-//                 const isOpen = shownParts.includes(index);
-//                 return (
-//                   <Box
-//                     key={index}
-//                     sx={{
-//                       border: "1px solid #ddd",
-//                       borderRadius: 2,
-//                       p: 2,
-//                       mb: 2,
-//                       backgroundColor: "#f9f9f9",
-//                     }}
-//                   >
-//                     <Typography variant="body2" fontWeight="bold">
-//                       🔹 {part.title || `Partie ${index + 1}`}{" "}
-//                       {isOpen && (
-//                         <Typography
-//                           variant="caption"
-//                           component="span"
-//                           color="success.main"
-//                           sx={{ ml: 1 }}
-//                         >
-//                           🎬 Lecture en cours
-//                         </Typography>
-//                       )}
-//                     </Typography>
-
-//                     <Button
-//                       variant="outlined"
-//                       color={isOpen ? "error" : "success"}
-//                       size="small"
-//                       sx={{ mt: 1 }}
-//                       onClick={() => handlePartToggle(index)}
-//                     >
-//                       {isOpen ? "🔽 Masquer" : "▶️ Visualiser"}
-//                     </Button>
-
-//                     {isOpen && (
-//                       <Box mt={2}>
-//                         <iframe
-//                           width="100%"
-//                           height="220"
-//                           src={getEmbedUrl(part.videoUrl)}
-//                           title={part.title}
-//                           frameBorder="0"
-//                           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-//                           allowFullScreen
-//                           style={{ borderRadius: "8px" }}
-//                         ></iframe>
-//                       </Box>
-//                     )}
-//                   </Box>
-//                 );
-//               })}
-//             </Box>
-//           )}
-//       </CardContent>
-//     </Card>
-//   );
-// };
-
-// export default VideoCardPremium;
-
-
-
-
-
 // components/premuim/VideoCardPremium.jsx
-import React, { useMemo, useState, useCallback } from "react";
+// import React, { useMemo, useState, useCallback } from "react";
+import React, { useMemo, useState, useCallback, useEffect, useRef } from "react";
 import {
   Card,
   CardContent,
@@ -225,6 +17,7 @@ import {
   IconButton,
   CardActions,
   Badge,
+  Paper,
 } from "@mui/material";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
@@ -235,6 +28,8 @@ import OpenInNewRoundedIcon from "@mui/icons-material/OpenInNewRounded";
 import ShareRoundedIcon from "@mui/icons-material/ShareRounded";
 import PlaylistAddRoundedIcon from "@mui/icons-material/PlaylistAddRounded";
 import { useNavigate } from "react-router-dom";
+
+import { styled, alpha } from "@mui/material/styles";
 
 /* ---------------- utils ---------------- */
 const getYouTubeId = (url = "") => {
@@ -254,14 +49,95 @@ const getFallbackThumb = (url) => {
 const pluralize = (n, one, many) => `${n} ${n > 1 ? many : one}`;
 const fmtLevel = (x) =>
   (String(x || "").trim().toUpperCase() || "NIVEAU N/D");
-const SafeText = ({ text = "", max = 260 }) => {
-  const t = String(text || "");
+
+
+
+
+const ExpandableText = ({ text = "", clampLines = 3, disabled = false, stopTogglePropagation = false }) => {
+  const [expanded, setExpanded] = useState(false);
+  const t = String(text || "").trim();
+  if (!t) return null;
+
+  const handleToggle = (e) => {
+    if (stopTogglePropagation) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    setExpanded((s) => !s);
+  };
+
   return (
-    <Typography variant="body2" sx={{ mt: 1, color: "text.secondary" }}>
-      {t.length > max ? `${t.slice(0, max)}…` : t}
-    </Typography>
+    <Box sx={{ mt: 1.0 }}>
+      <Typography
+        variant="body2"
+        sx={{
+          color: "text.secondary",
+          wordBreak: "break-word",
+          ...(expanded || disabled
+            ? {}
+            : {
+                display: "-webkit-box",
+                WebkitLineClamp: clampLines,
+                WebkitBoxOrient: "vertical",
+                overflow: "hidden",
+              }),
+        }}
+      >
+        {t}
+      </Typography>
+
+      {!disabled && t.length > 120 && (
+        <Button
+          size="small"
+          variant="text"
+          onClick={handleToggle}
+          sx={{ mt: 0.5, px: 0, textTransform: "none", fontWeight: 600 }}
+        >
+          {expanded ? "Voir moins" : "Voir plus"}
+        </Button>
+      )}
+    </Box>
   );
 };
+
+
+
+
+
+
+
+
+
+
+const BubbleTooltip = styled(({ className, ...props }) => (
+  <Tooltip {...props} arrow classes={{ popper: className }} />
+))(({ theme }) => ({
+  // Contenu de la bulle
+  "& .MuiTooltip-tooltip": {
+    backgroundColor: theme.palette.background.paper,
+    color: theme.palette.text.primary,
+    borderRadius: 12,
+    padding: theme.spacing(1.25, 1.5),
+    boxShadow: "0 10px 28px rgba(2,16,40,.16)",
+    border: `1px solid ${alpha(theme.palette.common.black, .08)}`,
+    maxWidth: 520,
+    fontSize: 14,
+    lineHeight: 1.45,
+  },
+  // Flèche
+  "& .MuiTooltip-arrow": {
+    color: theme.palette.background.paper,
+    "&:before": {
+      boxShadow: "0 2px 6px rgba(2,16,40,.12)",
+      border: `1px solid ${alpha(theme.palette.common.black, .08)}`,
+    },
+  },
+}));
+
+
+
+
+
 
 const VideoCardPremium = ({ video = {}, isPremiumUser }) => {
   const navigate = useNavigate();
@@ -270,6 +146,31 @@ const VideoCardPremium = ({ video = {}, isPremiumUser }) => {
   const [showMain, setShowMain] = useState(false);
   const [openParts, setOpenParts] = useState({});
   const [copied, setCopied] = useState(false);
+
+const [expanded, setExpanded] = useState(false);
+
+
+// titre long plié/déplié par partie
+const [openPartTitles, setOpenPartTitles] = useState({});
+
+
+// Mesure de la hauteur réelle de la colonne média (gauche)
+const mediaRef = useRef(null);
+const [mainHeight, setMainHeight] = useState(0);
+
+useEffect(() => {
+  if (!mediaRef.current) return;
+  const ro = new ResizeObserver(([entry]) => {
+    setMainHeight(entry.contentRect.height || 0);
+  });
+  ro.observe(mediaRef.current);
+  return () => ro.disconnect();
+}, []);
+
+
+
+
+
 
   // ---------- dérivés ----------
   const isFree = useMemo(
@@ -326,6 +227,7 @@ const VideoCardPremium = ({ video = {}, isPremiumUser }) => {
       sx={{
         display: "grid",
         gridTemplateColumns: { xs: "1fr", md: "1.6fr 1fr" },
+        alignItems: "start",
         borderRadius: 3,
         overflow: "hidden",
         background:
@@ -345,6 +247,7 @@ const VideoCardPremium = ({ video = {}, isPremiumUser }) => {
     >
       {/* ---- Colonne média ---- */}
       <Box
+      ref={mediaRef}     
         sx={{
           position: "relative",
           bgcolor: "#0b1220",
@@ -375,14 +278,23 @@ const VideoCardPremium = ({ video = {}, isPremiumUser }) => {
           </Box>
         ) : (
           <>
-            {thumbnail ? (
+           {thumbnail ? (
+            <Box
+              sx={{
+                position: "relative",
+                width: "100%",
+                aspectRatio: "16/9",   // ⬅️ fixe la hauteur de la zone
+                overflow: "hidden",
+              }}
+            >
               <img
                 src={thumbnail}
                 alt={video?.title || "Miniature vidéo"}
-                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
                 loading="lazy"
               />
-            ) : (
+            </Box>
+          ) : (
               <Box
                 sx={{
                   color: "#cbd5e1",
@@ -529,7 +441,55 @@ const VideoCardPremium = ({ video = {}, isPremiumUser }) => {
               ))}
           </Stack>
 
-          {!!video?.description && <SafeText text={video.description} />}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<Box sx={{ mt: 1 }}>
+  <Typography
+    variant="body2"
+    color="text.secondary"
+    sx={{
+      wordBreak: "break-word",
+      ...(expanded
+        ? {}
+        : {
+            display: "-webkit-box",
+            WebkitLineClamp: 3,          // ← 3 lignes visibles
+            WebkitBoxOrient: "vertical",
+            overflow: "hidden",
+          }),
+    }}
+  >
+    {video?.description || "—"}
+  </Typography>
+
+  {video?.description && video.description.length > 120 && (
+    <Button
+      size="small"
+      onClick={() => setExpanded((v) => !v)}
+      sx={{ mt: 0.5, px: 0, textTransform: "none" }}
+    >
+      {expanded ? "Voir moins" : "Voir plus"}
+    </Button>
+  )}
+</Box>
+
+
+
+
+
 
           {/* Vue + actions rapides */}
           <Stack
@@ -630,84 +590,153 @@ const VideoCardPremium = ({ video = {}, isPremiumUser }) => {
                   </Box>
                 )}
 
-                {video.videosSupplementaires.map((part, index) => {
-                  const open = !!openParts[index];
-                  const embed = getEmbedUrl(part?.videoUrl);
-                  return (
-                    <Accordion
-                      key={index}
-                      expanded={open && hasAccess}
-                      onChange={() => togglePart(index)}
-                      disableGutters
-                      sx={{
-                        border: "1px solid #eee",
-                        borderRadius: 2,
-                        mb: 1.2,
-                        "&:before": { display: "none" },
-                        opacity: hasAccess ? 1 : 0.6,
-                        overflow: "hidden",
-                      }}
-                    >
-                      <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                        <Typography
-                          variant="body2"
-                          fontWeight={700}
-                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                        >
-                          {!hasAccess && <LockRoundedIcon fontSize="small" />}
-                          <Chip
-                            size="small"
-                            label={`Partie ${index + 1}`}
-                            sx={{ mr: 0.5 }}
-                          />
-                          {part?.title || `Chapitre ${index + 1}`}
-                        </Typography>
-                        {open && hasAccess && (
-                          <Chip
-                            label="Lecture en cours"
-                            size="small"
-                            color="success"
-                            sx={{ ml: 1 }}
-                          />
-                        )}
-                      </AccordionSummary>
-                      <AccordionDetails>
-                        {hasAccess ? (
-                          embed ? (
-                            <Box
-                              sx={{
-                                position: "relative",
-                                width: "100%",
-                                aspectRatio: "16/9",
-                                borderRadius: 1,
-                                overflow: "hidden",
-                              }}
-                            >
-                              <iframe
-                                src={embed}
-                                title={part?.title || `Partie ${index + 1}`}
-                                frameBorder="0"
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                                allowFullScreen
-                                loading="lazy"
-                                referrerPolicy="no-referrer-when-downgrade"
-                                style={{ width: "100%", height: "100%" }}
-                              />
-                            </Box>
-                          ) : (
-                            <Typography variant="body2" color="text.secondary">
-                              Vidéo non disponible.
-                            </Typography>
-                          )
-                        ) : (
-                          <Typography variant="body2" color="text.secondary">
-                            Contenu verrouillé.
-                          </Typography>
-                        )}
-                      </AccordionDetails>
-                    </Accordion>
-                  );
-                })}
+ 
+
+
+ {video.videosSupplementaires.map((part, index) => {
+  const open = !!openParts[index];
+  const embed = getEmbedUrl(part?.videoUrl);
+
+  // ▶︎ on considère "lecture en cours" = accordéon ouvert ET accès autorisé
+  const playing = open && hasAccess;
+
+  return (
+    <Accordion
+      key={index}
+      expanded={open && hasAccess}
+      onChange={() => togglePart(index)}
+      disableGutters
+      sx={{
+        border: "1px solid #eee",
+        borderRadius: 2,
+        mb: 1.2,
+        "&:before": { display: "none" },
+        opacity: hasAccess ? 1 : 0.6,
+        overflow: "hidden",
+      }}
+    >
+   
+
+<AccordionSummary expandIcon={<ExpandMoreIcon />}>
+  <Box sx={{ display: "grid", gap: 0.25, width: "100%" }}>
+    <Typography
+      variant="body2"
+      fontWeight={700}
+      sx={{ display: "flex", alignItems: "center", gap: 1 }}
+    >
+      {!hasAccess && <LockRoundedIcon fontSize="small" />}
+      <Chip size="small" label={`Partie ${index + 1}`} sx={{ mr: 0.5 }} />
+
+      {/* ⬇️ bulle stylisée au survol */}
+      <BubbleTooltip title={part?.title || `Chapitre ${index + 1}`}>
+        <Box
+          component="span"
+          sx={{
+            display: "-webkit-box",
+            WebkitLineClamp: 1,
+            WebkitBoxOrient: "vertical",
+            overflow: "hidden",
+            wordBreak: "break-word",
+            cursor: "help", // indique qu'on peut survoler
+          }}
+        >
+          {part?.title || `Chapitre ${index + 1}`}
+        </Box>
+      </BubbleTooltip>
+    </Typography>
+
+    {/* (optionnel) 2 lignes de description sous le titre */}
+  {!showMain && !!part?.description && (
+  <Paper
+    variant="outlined"
+    sx={{
+      mt: 1,
+      p: 1.25,
+      borderRadius: 2,
+      background: "linear-gradient(135deg,#fff,#f9fbff)",
+      borderColor: "rgba(2,16,40,.08)",
+      boxShadow: "0 6px 14px rgba(2,16,40,.06)",
+    }}
+  >
+    <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: "pre-line" }}>
+      {part.description}
+    </Typography>
+  </Paper>
+)}
+
+  </Box>
+
+  {open && hasAccess && (
+    <Chip label="Lecture en cours" size="small" color="success" sx={{ ml: 1 }} />
+  )}
+</AccordionSummary>
+
+
+
+
+
+
+
+      <AccordionDetails>
+        {hasAccess ? (
+          embed ? (
+            <>
+              <Box
+                sx={{
+                  position: "relative",
+                  width: "100%",
+                  // on garde la même hauteur que la colonne média si connue
+                  height: mainHeight ? `${mainHeight}px` : undefined,
+                  aspectRatio: mainHeight ? "auto" : "16/9",
+                  borderRadius: 1,
+                  overflow: "hidden",
+                  bgcolor: "#000",
+                  mb: 1.25,
+                }}
+              >
+                <iframe
+                  src={embed}
+                  title={part?.title || `Partie ${index + 1}`}
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  style={{ width: "100%", height: "100%" }}
+                />
+              </Box>
+
+              {/* Texte long visible uniquement quand la vidéo n’est PAS en lecture */}
+              {!!part?.description && !playing && (
+                <ExpandableText text={part.description} clampLines={4} />
+              )}
+            </>
+          ) : (
+            <Typography variant="body2" color="text.secondary">
+              Vidéo non disponible.
+            </Typography>
+          )
+        ) : (
+          <Typography variant="body2" color="text.secondary">
+            Contenu verrouillé.
+          </Typography>
+        )}
+      </AccordionDetails>
+    </Accordion>
+  );
+})}
+
+
+
+
+
+
+
+
+
+
+
+
               </Box>
             )}
         </CardContent>

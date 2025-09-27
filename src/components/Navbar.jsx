@@ -1,3 +1,4 @@
+
 import React, { useContext, useMemo, useState } from "react";
 import {
   AppBar, Toolbar, Typography, Button, Box, IconButton, Drawer, List,
@@ -7,27 +8,30 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 import SchoolIcon from "@mui/icons-material/School";
 import MenuIcon from "@mui/icons-material/Menu";
-import { AuthContext } from "../context/AuthContext";
-import useMediaQuery from "@mui/material/useMediaQuery";
-import { useTheme } from "@mui/material/styles";
 import PersonAddAltIcon from "@mui/icons-material/PersonAddAlt";
 import LoginIcon from "@mui/icons-material/Login";
+import AndroidIcon from "@mui/icons-material/Android";
 
-const PLAY_STORE_URL = "https://play.google.com/store/search?q=Fahimta&c=apps";
+
+import StorefrontRoundedIcon from "@mui/icons-material/StorefrontRounded";
+
+
+import useMediaQuery from "@mui/material/useMediaQuery";
+import { useTheme } from "@mui/material/styles";
+
+import { AuthContext } from "../context/AuthContext";
+import DistributeursModal from "../components/DistributeursModal"; // ajuste le chemin si besoin
+
+// Lien direct vers l'APK
+const APK_URL =
+  "https://github.com/netmophus/fahimta-android/releases/download/v1.0.2/fahimta-v1.0.2.apk";
+
 
 // ✅ Abonnement actif : isSubscribed === true OU subscriptionEnd > maintenant
 const hasActiveSub = (u) =>
   !!u && (u.isSubscribed === true || (u?.subscriptionEnd && new Date(u.subscriptionEnd) > new Date()));
 
-const getSubscriptionLabel = (u) => {
-  if (!u?.subscriptionStart || !u?.subscriptionEnd) return "";
-  const start = new Date(u.subscriptionStart);
-  const end = new Date(u.subscriptionEnd);
-  const days = (end - start) / (1000 * 60 * 60 * 24);
-  if (days < 40) return "Mensuel";
-  if (days > 300) return "Annuel";
-  return "Formule spéciale";
-};
+
 
 const Navbar = () => {
   const { user, logout } = useContext(AuthContext);
@@ -37,9 +41,23 @@ const Navbar = () => {
   const isSmallScreen = useMediaQuery(theme.breakpoints.down("md"));
 
   const [openDrawer, setOpenDrawer] = useState(false);
+
+  // Modale "Nos prix / Souscription"
   const [openPricing, setOpenPricing] = useState(false);
   const openPricingModal = () => setOpenPricing(true);
   const closePricingModal = () => setOpenPricing(false);
+
+  // Modale "Inscription"
+  const [openRegisterModal, setOpenRegisterModal] = useState(false);
+  const openRegistrationModal = () => setOpenRegisterModal(true);
+  const closeRegistrationModal = () => setOpenRegisterModal(false);
+
+  // Modale "Distributeurs"
+  const [openDist, setOpenDist] = useState(false);
+
+  const openApkInNewTab = () => {
+    window.open(APK_URL, "_blank", "noopener,noreferrer");
+  };
 
   const handleLogout = () => {
     logout();
@@ -55,19 +73,43 @@ const Navbar = () => {
         { label: "Nos Prix", action: openPricingModal },
         {
           label: (
-            <Box display="flex" alignItems="center" gap={1} px={2} py={0.5}
-              sx={{ backgroundColor: "#81c784", borderRadius: 2, color: "#0d1117", fontWeight: "bold",
-                    transition: "all 0.3s ease", "&:hover": { backgroundColor: "#66bb6a" } }}>
+            <Box
+              display="flex"
+              alignItems="center"
+              gap={1}
+              px={2}
+              py={0.5}
+              sx={{
+                backgroundColor: "#81c784",
+                borderRadius: 2,
+                color: "#0d1117",
+                fontWeight: "bold",
+                transition: "all 0.3s ease",
+                "&:hover": { backgroundColor: "#66bb6a" },
+              }}
+            >
               <PersonAddAltIcon sx={{ fontSize: 24 }} /> Inscription
             </Box>
           ),
-          path: "/register",
+          action: openRegistrationModal, // ✅ ouvre le modal
         },
         {
           label: (
-            <Box display="flex" alignItems="center" gap={1} px={2} py={0.5}
-              sx={{ backgroundColor: "#90caf9", borderRadius: 2, color: "#0d1117", fontWeight: "bold",
-                    transition: "all 0.3s ease", "&:hover": { backgroundColor: "#64b5f6" } }}>
+            <Box
+              display="flex"
+              alignItems="center"
+              gap={1}
+              px={2}
+              py={0.5}
+              sx={{
+                backgroundColor: "#90caf9",
+                borderRadius: 2,
+                color: "#0d1117",
+                fontWeight: "bold",
+                transition: "all 0.3s ease",
+                "&:hover": { backgroundColor: "#64b5f6" },
+              }}
+            >
               <LoginIcon sx={{ fontSize: 24 }} /> Connexion
             </Box>
           ),
@@ -117,33 +159,225 @@ const Navbar = () => {
 
   return (
     <>
-      {/* Modal “Souscription via l’app mobile” */}
-      <Dialog open={openPricing} onClose={closePricingModal} maxWidth="xs" fullWidth>
-        <DialogTitle sx={{ fontWeight: 800 }}>Souscription</DialogTitle>
-        <DialogContent dividers>
-          <Typography>
-            Connectez-vous à votre <strong>application mobile Fahimta</strong> pour vous
-            souscrire à votre abonnement.
-          </Typography>
-          <Typography sx={{ mt: 1 }}>
-            L’application mobile Fahimta est <strong>téléchargeable sur le Play Store</strong>.
-          </Typography>
-        </DialogContent>
-        <DialogActions sx={{ p: 2 }}>
-          <Button onClick={closePricingModal}>Fermer</Button>
-          <Button
-            variant="contained"
-            href={PLAY_STORE_URL}
-            target="_blank"
-            rel="noopener"
-            onClick={closePricingModal}
-          >
-            Ouvrir le Play Store
-          </Button>
-        </DialogActions>
-      </Dialog>
+      {/* Modal “Souscription via l’app mobile (APK)” */}
+     <Dialog
+      open={openPricing} 
+      onClose={closePricingModal} 
+      maxWidth="xs" fullWidth
+  sx={{
+    // Positionne le conteneur du dialog en haut
+    "& .MuiDialog-container": {
+      alignItems: "flex-start",
+    },
+    // Décale légèrement depuis le haut (optionnel)
+    "& .MuiPaper-root": {
+     mt: { xs: "96px", sm: "104px" },          // try 96–112px if your bar is taller
+      maxHeight: "calc(100vh - 112px)",         // 100vh minus that top margin
+      overflowY: "auto",
+    },
+  }}
+>
 
-      <AppBar position="fixed" sx={{ bgcolor: "#1976D2", boxShadow: "none", zIndex: 1300 }}>
+
+      >
+  <DialogTitle sx={{ fontWeight: 800 }}>Souscription</DialogTitle>
+
+  <DialogContent dividers>
+    <Typography gutterBottom>
+      <strong>Abonnement mensuel : 2 000 FCFA.</strong> Le paiement se fait via
+      <strong> NITA</strong> ou <strong>carte à gratter</strong>.
+    </Typography>
+
+    <Typography gutterBottom>
+      Pour en profiter, <strong>téléchargez l’application mobile FAHIMTA</strong>, installez-la,
+      <strong> créez votre compte</strong> puis <strong>faites l’abonnement dans l’app</strong>.
+    </Typography>
+
+    <Typography variant="body2" color="text.secondary">
+      L’installation se fait via notre <strong>APK officiel</strong>. Si Android affiche un message
+      « source inconnue », autorisez l’installation depuis cette source — c’est normal.
+    </Typography>
+  </DialogContent>
+
+  {/* Ligne du haut : Fermer + Télécharger */}
+  <DialogActions sx={{ px: 3, py: 2, justifyContent: "space-between" }}>
+    <Button onClick={closePricingModal}>Fermer</Button>
+
+    <Button
+      variant="contained"
+      color="success"
+      startIcon={<AndroidIcon />}
+      onClick={() => {
+        window.open(APK_URL, "_blank", "noopener,noreferrer");
+        closePricingModal();
+      }}
+      sx={{ fontWeight: 700 }}
+    >
+      Télécharger l’APK
+    </Button>
+  </DialogActions>
+
+  {/* En dessous : bouton distributeurs en pleine largeur */}
+  <Box sx={{ px: 3, pb: 3 }}>
+    <Button
+      variant="outlined"
+      fullWidth
+      startIcon={<StorefrontRoundedIcon />}
+      onClick={() => {
+        setOpenDist(true);
+        closePricingModal();
+      }}
+      sx={{
+        py: 1.1,
+        fontWeight: 700,
+        borderRadius: 2,
+        color: "primary.main",
+        borderColor: "rgba(25,118,210,0.4)",
+        backgroundColor: "rgba(25,118,210,0.06)",
+        "&:hover": {
+          borderColor: "primary.main",
+          backgroundColor: "rgba(25,118,210,0.12)",
+        },
+      }}
+    >
+      Voir nos distributeurs
+    </Button>
+  </Box>
+</Dialog>
+
+
+      {/* Modal “Inscription depuis l’app mobile (APK)” */}
+      
+
+<Dialog 
+open={openRegisterModal} 
+onClose={closeRegistrationModal} 
+maxWidth="xs" fullWidth
+  sx={{
+    "& .MuiDialog-container": {
+      alignItems: "flex-start",                 // stick to the top
+    },
+    "& .MuiPaper-root": {
+      // leave clear space for the AppBar + breathing room
+      mt: { xs: "96px", sm: "104px" },          // try 96–112px if your bar is taller
+      maxHeight: "calc(100vh - 112px)",         // 100vh minus that top margin
+      overflowY: "auto",
+      borderRadius: 2,
+    },
+  }}
+>
+  <DialogTitle sx={{ fontWeight: 700 }}>Inscription depuis l’app mobile</DialogTitle>
+
+  <DialogContent dividers>
+    <Typography gutterBottom>
+      Pour créer votre compte, téléchargez l’application <strong>FAHIMTA</strong> (APK),
+      puis faites l’inscription directement dans l’app.
+    </Typography>
+    {/* Lien APK supprimé comme demandé */}
+  </DialogContent>
+
+  <DialogActions
+    sx={{
+      px: 3,
+      py: 2,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      gap: 1.5,
+      flexWrap: { xs: "wrap", sm: "nowrap" },
+    }}
+  >
+    {/* Gauche : Plus tard + Télécharger sur la même ligne */}
+    <Box sx={{ display: "flex", gap: 1.25, flexWrap: "wrap" }}>
+      <Button
+        type="button"
+        onClick={closeRegistrationModal}
+        sx={{
+          px: 2.4,
+          py: 1.1,
+          fontWeight: 700,
+          borderRadius: 2,
+          bgcolor: "rgba(2,12,27,0.05)",
+          color: "text.primary",
+          border: "1px solid rgba(2,12,27,0.10)",
+          "&:hover": {
+            bgcolor: "rgba(2,12,27,0.09)",
+            borderColor: "rgba(2,12,27,0.18)",
+          },
+        }}
+      >
+        Plus tard
+      </Button>
+
+      <Button
+        type="button"
+        variant="contained"
+        startIcon={<AndroidIcon />}
+        onClick={() => {
+          openApkInNewTab();
+          closeRegistrationModal();
+        }}
+        sx={{
+          px: 2.8,
+          py: 1.15,
+          fontWeight: 800,
+          borderRadius: 2,
+          letterSpacing: 0.2,
+          color: "#fff",
+          background: "linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%)",
+          boxShadow: "0 10px 24px rgba(33,150,83,0.35)",
+          "&:hover": {
+            background: "linear-gradient(135deg, #2a6f2d 0%, #174f1b 100%)",
+            boxShadow: "0 12px 28px rgba(33,150,83,0.45)",
+          },
+        }}
+      >
+        Télécharger
+      </Button>
+    </Box>
+
+    
+  </DialogActions>
+</Dialog>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      {/* Barre de navigation */}
+      {/* <AppBar position="fixed" sx={{ bgcolor: "#1976D2", boxShadow: "none", zIndex: 1300 }}> */}
+
+
+      <AppBar
+  position="fixed"
+  sx={{
+    bgcolor: "#1976D2",
+    boxShadow: "none",
+    zIndex: (t) => t.zIndex.modal + 2, // <-- au-dessus de tous les overlays
+  }}
+>
         <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
           <Box display="flex" alignItems="center" gap={1}>
             <SchoolIcon sx={{ mr: 1, color: "#FFF" }} />
@@ -155,9 +389,6 @@ const Navbar = () => {
             >
               FAHIMTA
             </Typography>
-
-
-
           </Box>
 
           {/* Menu desktop */}
@@ -235,9 +466,11 @@ const Navbar = () => {
           )}
         </List>
       </Drawer>
+
+      {/* Modale des distributeurs (affichée depuis les boutons) */}
+      <DistributeursModal open={openDist} onClose={() => setOpenDist(false)} />
     </>
   );
 };
 
 export default Navbar;
-

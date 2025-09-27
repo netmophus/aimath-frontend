@@ -143,9 +143,14 @@ const Footer = () => {
               <MuiLink component={Link} to="/" sx={{ color: "#ffffff" }}>
                 Accueil
               </MuiLink>
-              <MuiLink component={Link} to="/register" sx={{ color: "#ffffff" }}>
-                Inscription
-              </MuiLink>
+             <MuiLink
+  href="https://www.softlink-groupe.com"
+  target="_blank"
+  rel="noopener noreferrer"
+  sx={{ color: "#ffffff" }}
+>
+  Softlink Tecnologies
+</MuiLink>
               <MuiLink component={Link} to="/login" sx={{ color: "#ffffff" }}>
                 Connexion
               </MuiLink>
