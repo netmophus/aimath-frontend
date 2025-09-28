@@ -1,13 +1,9 @@
 
 import React, { useContext, useMemo, useState } from "react";
 // import { Box, Typography, Button, Card, CardContent, Divider } from "@mui/material";
-import { Box, Typography, Button, Card, CardContent, Divider, Alert, Grid } from "@mui/material";
+import { Box, Typography, Button, Card, CardContent, Divider, Alert } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import PageLayout from "../components/PageLayout";
-import fahimtaImg from "../assets/fahimtaallier.jpg";
-import fahimtaImg2 from "../assets/fahimtaallier2.jpg";
-import fahimtaImg3 from "../assets/fahimtaallier3.jpg";
-import fahimtaImg4 from "../assets/fahimtaallier4.jpg";
 import headerImage from "../assets/head.png";
 
 import StorefrontRoundedIcon from "@mui/icons-material/StorefrontRounded";

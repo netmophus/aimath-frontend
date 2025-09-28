@@ -128,8 +128,7 @@
 // export default BookCardGratuit;
 
 
-
-
+// components/gratuit/BookCardGratuit.jsx
 import React, { useState } from "react";
 import {
   Card,
@@ -142,31 +141,21 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogActions,
 } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 import API from "../../api";
-// import { useNavigate } from "react-router-dom"; // plus utilisé
-
-const PLAY_STORE_URL = "https://play.google.com/store/search?q=Fahimta&c=apps";
 
 const BookCardGratuit = ({ book }) => {
-  const isGratuit = book.badge === "gratuit";
+  const navigate = useNavigate();
+  const isGratuit = String(book?.badge || "").toLowerCase() === "gratuit";
 
   const [viewerUrl, setViewerUrl] = useState("");
   const [openViewer, setOpenViewer] = useState(false);
 
-  // Modal "Pricing → Mobile app"
-  const [openPricing, setOpenPricing] = useState(false);
-  const openPricingModal = () => setOpenPricing(true);
-  const closePricingModal = () => setOpenPricing(false);
-
-  // const navigate = useNavigate();
+  const goPricing = () => navigate("/pricing");
 
   const handleView = async () => {
-    if (!isGratuit) {
-      openPricingModal();
-      return;
-    }
+    if (!isGratuit) return goPricing();
     try {
       const res = await API.get(`/ia/gratuit/${book._id}/view`);
       setViewerUrl(res.data.viewUrl);
@@ -177,15 +166,12 @@ const BookCardGratuit = ({ book }) => {
   };
 
   const handleDownload = async () => {
-    if (!isGratuit) {
-      openPricingModal();
-      return;
-    }
+    if (!isGratuit) return goPricing();
     try {
       const res = await API.get(`/ia/gratuit/${book._id}/download`);
-      window.open(res.data.downloadUrl, "_blank");
+      window.open(res.data.downloadUrl, "_blank", "noopener,noreferrer");
     } catch (err) {
-      alert(err.response?.data?.message || "Erreur lors du téléchargement");
+      alert(err.response?.data?.message || "Erreur lors du téléchargement.");
     }
   };
 
@@ -229,7 +215,7 @@ const BookCardGratuit = ({ book }) => {
             </Typography>
 
             <Typography variant="caption" fontWeight="bold" sx={{ color: "#666" }}>
-              🎓 Niveau : {book.level?.toUpperCase()} | 🎖️ {isGratuit ? "Gratuit" : "Prenuim"}
+              🎓 Niveau : {book.level?.toUpperCase()} | 🎖️ {isGratuit ? "Gratuit" : "Premium"}
             </Typography>
 
             <Typography variant="caption" color="text.secondary" display="block" mt={1}>
@@ -250,7 +236,7 @@ const BookCardGratuit = ({ book }) => {
           </CardActions>
         </Box>
 
-        {/* Aperçu PDF */}
+        {/* Aperçu PDF (uniquement pour Gratuit) */}
         <Dialog open={openViewer} onClose={() => setOpenViewer(false)} maxWidth="lg" fullWidth>
           <DialogTitle>📕 Aperçu du livre</DialogTitle>
           <DialogContent dividers>
@@ -266,31 +252,6 @@ const BookCardGratuit = ({ book }) => {
               <Typography>Chargement...</Typography>
             )}
           </DialogContent>
-        </Dialog>
-
-        {/* Modal d’info pour la souscription via mobile */}
-        <Dialog open={openPricing} onClose={closePricingModal} maxWidth="xs" fullWidth>
-          <DialogTitle sx={{ fontWeight: 800 }}>Souscription</DialogTitle>
-          <DialogContent dividers>
-            <Typography>
-              Connectez-vous à votre <strong>application mobile Fahimta</strong> pour vous souscrire à votre abonnement.
-            </Typography>
-            <Typography sx={{ mt: 1 }}>
-              L’application mobile Fahimta est <strong>téléchargeable sur le Play Store</strong>.
-            </Typography>
-          </DialogContent>
-          <DialogActions sx={{ p: 2 }}>
-            <Button onClick={closePricingModal}>Fermer</Button>
-            <Button
-              variant="contained"
-              href={PLAY_STORE_URL}
-              target="_blank"
-              rel="noopener"
-              onClick={closePricingModal}
-            >
-              Ouvrir le Play Store
-            </Button>
-          </DialogActions>
         </Dialog>
       </Card>
     </>

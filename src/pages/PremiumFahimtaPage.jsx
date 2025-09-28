@@ -588,34 +588,46 @@ const PremiumFahimtaPage = () => {
       mb: 3,
     }}
   >
-    <Tabs
-      value={tabIndex}
-      onChange={(_, v) => setTabIndex(v)}
-      variant="fullWidth"
-      sx={{
-        minHeight: 48,
-        "& .MuiTabs-flexContainer": {
-          gap: 8,
-        },
-        "& .MuiTab-root": {
-          minHeight: 42,
-          textTransform: "none",
-          fontWeight: 800,
-          borderRadius: 999,
-          px: 2,
-          color: "rgba(2,12,27,0.65)",
-          transition: "all .2s ease",
-          "&:hover": {
-            backgroundColor: "rgba(2,12,27,0.06)",
-          },
-        },
-        "& .Mui-selected": {
-          color: "#0b3f8a",
-          backgroundColor: "rgba(13,110,253,0.12)",
-        },
-        "& .MuiTabs-indicator": { display: "none" },
-      }}
-    >
+
+<Tabs
+  value={tabIndex}
+  onChange={(_, v) => setTabIndex(v)}
+  variant={downMd ? "scrollable" : "fullWidth"}
+  scrollButtons
+  allowScrollButtonsMobile
+  sx={{
+    minHeight: 48,
+    "& .MuiTabs-flexContainer": {
+      gap: 8,
+      flexWrap: "nowrap",               // pas de wrap
+    },
+    "& .MuiTabs-scroller": {
+      overflowX: "auto !important",     // défilement horizontal
+      msOverflowStyle: "none",          // IE/Edge
+      scrollbarWidth: "none",           // Firefox
+      touchAction: "pan-x",             // glisser au doigt
+    },
+    "& .MuiTabs-scroller::-webkit-scrollbar": { display: "none" }, // cacher la barre
+    "& .MuiTab-root": {
+      minHeight: 42,
+      minWidth: "auto",                 // évite des tabs trop larges
+      textTransform: "none",
+      whiteSpace: "nowrap",
+      fontWeight: 800,
+      borderRadius: 999,
+      px: 2,
+      color: "rgba(2,12,27,0.65)",
+      transition: "all .2s ease",
+      "&:hover": { backgroundColor: "rgba(2,12,27,0.06)" },
+    },
+    "& .Mui-selected": {
+      color: "#0b3f8a",
+      backgroundColor: "rgba(13,110,253,0.12)",
+    },
+    "& .MuiTabs-indicator": { display: "none" },
+  }}
+>
+
       <Tab
         label={
           <Box display="flex" alignItems="center" gap={1}>

@@ -1,4 +1,181 @@
-import React, { useState , useContext} from "react";
+// import React, { useState , useContext} from "react";
+// import {
+//   Card,
+//   CardMedia,
+//   CardContent,
+//   Typography,
+//   CardActions,
+//   Button,
+//   Box,
+// } from "@mui/material";
+// import API from "../../api"; // ou ton chemin vers axios
+// import {
+//   Dialog,
+//   DialogTitle,
+//   DialogContent,
+// } from "@mui/material";
+
+// import { AuthContext } from "../../context/AuthContext"; // importe le contexte
+
+// const BookCard = ({ book}) => {
+//   const isGratuit = book.badge === "gratuit";
+  
+//   const [viewerUrl, setViewerUrl] = useState("");
+// const [openViewer, setOpenViewer] = useState(false);
+
+//  const { user } = useContext(AuthContext); // ✅ récupère user depuis le contexte
+//   const isPremiumUser = user?.isSubscribed; // ✅ calcule si l'utilisateur est premium
+
+
+
+//   const handleView = async (bookId) => {
+//   try {
+//     const res = await API.get(`/premium/books/${bookId}/view`);
+//     const { viewUrl } = res.data;
+//     setViewerUrl(viewUrl);
+//     setOpenViewer(true);
+//   } catch (err) {
+//     console.error("Erreur affichage livre :", err);
+//     alert(err.response?.data?.message || "Erreur lors de l'affichage.");
+//   }
+// };
+
+
+//   const handleDownload = async (bookId) => {
+//     console.log("📥 Début du téléchargement pour le livre :", bookId);
+//     try {
+//       const res = await API.get(`/premium/books/${bookId}/download`);
+//       const { downloadUrl } = res.data;
+
+//       console.log("📦 Lien Cloudinary reçu :", downloadUrl);
+//       window.open(downloadUrl, "_blank"); // ✅ téléchargement sans CORS
+//     } catch (err) {
+//       console.error("❌ Erreur lors du téléchargement :", err.response?.data?.message || err.message);
+//       alert(err.response?.data?.message || "Erreur lors du téléchargement");
+//     }
+//   };
+
+//   return (
+//     <>
+//       <Card
+//         sx={{
+//           display: "flex",
+//           flexDirection: { xs: "column", sm: "row" },
+//           borderRadius: 3,
+//           boxShadow: 4,
+//           overflow: "hidden",
+//           mb: 3,
+//         }}
+//       >
+//         {/* Couverture */}
+//         <CardMedia
+//           component="img"
+//           image={book.coverImage}
+//           alt={book.title}
+//           sx={{
+//             width: { xs: "100%", sm: 180 },
+//             height: "auto",
+//             objectFit: "cover",
+//           }}
+//         />
+
+//         {/* Détails */}
+//         <Box sx={{ display: "flex", flexDirection: "column", flex: 1 }}>
+//           <CardContent sx={{ p: 2 }}>
+//             <Typography variant="h6" fontWeight="bold" gutterBottom>
+//               📘 {book.title}
+//             </Typography>
+
+//             <Typography
+//               variant="body2"
+//               color="text.secondary"
+//               sx={{
+//                 mb: 1,
+//                 display: "-webkit-box",
+//                 WebkitLineClamp: 3,
+//                 WebkitBoxOrient: "vertical",
+//                 overflow: "hidden",
+//                 textOverflow: "ellipsis",
+//               }}
+//             >
+//               {book.description}
+//             </Typography>
+
+//             <Typography variant="caption" fontWeight="bold" sx={{ color: "#666" }}>
+//               🎓 Niveau : {book.level?.toUpperCase()} | 🎖️ {isGratuit ? "Gratuit" : "Prenuim"}
+//             </Typography>
+
+//             <Typography variant="caption" color="text.secondary" display="block" mt={1}>
+//               📅 Publié le : {new Date(book.createdAt).toLocaleDateString("fr-FR")}
+//             </Typography>
+
+//              <Typography variant="caption" color="text.secondary" display="block" mt={1}>
+//                 👁️ Visualisations : {book.viewCount || 0} | 📥 Téléchargements : {book.downloadCount || 0}
+//               </Typography>
+//           </CardContent>
+
+//           {/* Boutons */}
+//           <CardActions sx={{ px: 2, pb: 2, gap: 1 }}>
+//             {(isGratuit || isPremiumUser) && (
+//               <>
+//                 <Button onClick={() => handleDownload(book._id)} variant="contained">
+//                   📥 Télécharger
+//                 </Button>
+//                <Button
+//   variant="outlined"
+//   color="primary"
+//   onClick={() => handleView(book._id)}
+// >
+//   📖 Visualiser
+// </Button>
+
+//               </>
+//             )}
+//           </CardActions>
+//         </Box>
+
+
+//         <Dialog open={openViewer} onClose={() => setOpenViewer(false)} maxWidth="lg" fullWidth>
+//   <DialogTitle>📕 Aperçu du livre</DialogTitle>
+//   <DialogContent dividers>
+//     {viewerUrl ? (
+//       <iframe
+//         src={viewerUrl}
+//         title="Aperçu PDF"
+//         width="100%"
+//         height="600px"
+//         style={{ border: "none" }}
+//       />
+//     ) : (
+//       <Typography>Chargement...</Typography>
+//     )}
+//   </DialogContent>
+// </Dialog>
+
+//       </Card>
+
+
+
+//     </>
+//   );
+// };
+
+// export default BookCard;
+
+
+
+
+
+
+
+
+
+
+
+
+
+// components/premium/BookCard.jsx
+import React, { useState, useContext, useMemo } from "react";
 import {
   Card,
   CardMedia,
@@ -7,51 +184,61 @@ import {
   CardActions,
   Button,
   Box,
-} from "@mui/material";
-import API from "../../api"; // ou ton chemin vers axios
-import {
   Dialog,
   DialogTitle,
   DialogContent,
 } from "@mui/material";
+import API from "../../api";
+import { AuthContext } from "../../context/AuthContext";
 
-import { AuthContext } from "../../context/AuthContext"; // importe le contexte
+const BookCard = ({ book }) => {
+  const isGratuit = book?.badge === "gratuit";
 
-const BookCard = ({ book}) => {
-  const isGratuit = book.badge === "gratuit";
-  
   const [viewerUrl, setViewerUrl] = useState("");
-const [openViewer, setOpenViewer] = useState(false);
+  const [openViewer, setOpenViewer] = useState(false);
 
- const { user } = useContext(AuthContext); // ✅ récupère user depuis le contexte
-  const isPremiumUser = user?.isSubscribed; // ✅ calcule si l'utilisateur est premium
+  const { user } = useContext(AuthContext);
+  const isPremiumUser = !!user?.isSubscribed;
 
+  // ----- Quotas & droits -----
+  const limit = useMemo(
+    () => (book?.userDownloadLimit ?? book?.downloadLimit ?? null),
+    [book]
+  );
+  const used = useMemo(() => (book?.userDownloadCount ?? 0), [book]);
+  const remaining = useMemo(
+    () => (limit == null ? Infinity : Math.max((book?.userDownloadsRemaining ?? (limit - used)), 0)),
+    [limit, used, book?.userDownloadsRemaining]
+  );
+  const reachedLimit = limit != null && remaining <= 0;
 
+  const canAccess   = isGratuit || isPremiumUser;
+  const canDownload = canAccess && !reachedLimit;
+  const canView     = canAccess && !reachedLimit; // ✅ visualisation désactivée à la limite
 
+  // ----- Actions -----
   const handleView = async (bookId) => {
-  try {
-    const res = await API.get(`/premium/books/${bookId}/view`);
-    const { viewUrl } = res.data;
-    setViewerUrl(viewUrl);
-    setOpenViewer(true);
-  } catch (err) {
-    console.error("Erreur affichage livre :", err);
-    alert(err.response?.data?.message || "Erreur lors de l'affichage.");
-  }
-};
-
+    if (!canView) return; // ⛔ bloqué
+    try {
+      const res = await API.get(`/premium/books/${bookId}/view`);
+      const { viewUrl } = res.data;
+      setViewerUrl(viewUrl);
+      setOpenViewer(true);
+    } catch (err) {
+      console.error("Erreur affichage livre :", err);
+      alert(err?.response?.data?.message || "Erreur lors de l'affichage.");
+    }
+  };
 
   const handleDownload = async (bookId) => {
-    console.log("📥 Début du téléchargement pour le livre :", bookId);
+    if (!canDownload) return; // ⛔ bloqué
     try {
       const res = await API.get(`/premium/books/${bookId}/download`);
       const { downloadUrl } = res.data;
-
-      console.log("📦 Lien Cloudinary reçu :", downloadUrl);
-      window.open(downloadUrl, "_blank"); // ✅ téléchargement sans CORS
+      window.open(downloadUrl, "_blank", "noopener,noreferrer");
     } catch (err) {
-      console.error("❌ Erreur lors du téléchargement :", err.response?.data?.message || err.message);
-      alert(err.response?.data?.message || "Erreur lors du téléchargement");
+      console.error("Erreur lors du téléchargement :", err);
+      alert(err?.response?.data?.message || "Erreur lors du téléchargement");
     }
   };
 
@@ -70,20 +257,16 @@ const [openViewer, setOpenViewer] = useState(false);
         {/* Couverture */}
         <CardMedia
           component="img"
-          image={book.coverImage}
-          alt={book.title}
-          sx={{
-            width: { xs: "100%", sm: 180 },
-            height: "auto",
-            objectFit: "cover",
-          }}
+          image={book?.coverImage}
+          alt={book?.title}
+          sx={{ width: { xs: "100%", sm: 180 }, objectFit: "cover" }}
         />
 
-        {/* Détails */}
-        <Box sx={{ display: "flex", flexDirection: "column", flex: 1 }}>
+        {/* Contenu */}
+        <Box sx={{ flex: 1, display: "flex", flexDirection: "column" }}>
           <CardContent sx={{ p: 2 }}>
             <Typography variant="h6" fontWeight="bold" gutterBottom>
-              📘 {book.title}
+              📘 {book?.title}
             </Typography>
 
             <Typography
@@ -95,67 +278,100 @@ const [openViewer, setOpenViewer] = useState(false);
                 WebkitLineClamp: 3,
                 WebkitBoxOrient: "vertical",
                 overflow: "hidden",
-                textOverflow: "ellipsis",
               }}
             >
-              {book.description}
+              {book?.description}
             </Typography>
 
             <Typography variant="caption" fontWeight="bold" sx={{ color: "#666" }}>
-              🎓 Niveau : {book.level?.toUpperCase()} | 🎖️ {isGratuit ? "Gratuit" : "Prenuim"}
+              🎓 Niveau : {book?.level?.toUpperCase()} | 🎖️ {isGratuit ? "Gratuit" : "Premium"}
             </Typography>
 
             <Typography variant="caption" color="text.secondary" display="block" mt={1}>
-              📅 Publié le : {new Date(book.createdAt).toLocaleDateString("fr-FR")}
+              📅 Publié le : {book?.createdAt ? new Date(book.createdAt).toLocaleDateString("fr-FR") : "—"}
             </Typography>
 
-             <Typography variant="caption" color="text.secondary" display="block" mt={1}>
-                👁️ Visualisations : {book.viewCount || 0} | 📥 Téléchargements : {book.downloadCount || 0}
+            <Typography variant="caption" color="text.secondary" display="block" mt={1}>
+              👁️ Visualisations : {book?.viewCount || 0} | 📥 Téléchargements : {book?.downloadCount || 0}
+            </Typography>
+
+            {/* Info quota */}
+            {limit != null && (
+              <Typography
+                variant="caption"
+                sx={{ mt: 0.5 }}
+                color={reachedLimit ? "error.main" : "text.secondary"}
+                display="block"
+              >
+                {reachedLimit
+                  ? "Limite de téléchargements atteinte."
+                  : `Téléchargements restants : ${remaining}/${limit}`}
               </Typography>
+            )}
           </CardContent>
 
-          {/* Boutons */}
-          <CardActions sx={{ px: 2, pb: 2, gap: 1 }}>
-            {(isGratuit || isPremiumUser) && (
-              <>
-                <Button onClick={() => handleDownload(book._id)} variant="contained">
-                  📥 Télécharger
-                </Button>
-               <Button
+          {/* Actions */}
+          <CardActions sx={{ px: 2, pb: 2, gap: 1, flexWrap: "wrap" }}>
+            <Button
+              onClick={() => handleDownload(book._id)}
+              variant="contained"
+              disabled={!canDownload}
+              title={
+                !canDownload
+                  ? (canAccess ? "Téléchargement indisponible (limite atteinte)" : "Réservé aux membres Premium")
+                  : "Télécharger"
+              }
+            >
+              📥 Télécharger
+            </Button>
+
+            {/* <Button
+              variant="outlined"
+              color="primary"
+              onClick={() => handleView(book._id)}
+              disabled={!canView} // ✅ désactivé si limite atteinte
+              title={
+                !canView
+                  ? (canAccess ? "Visualisation indisponible (limite atteinte)" : "Réservé aux membres Premium")
+                  : "Visualiser"
+              }
+            >
+              📖 Visualiser
+            </Button> */}
+
+
+
+            <Button
   variant="outlined"
   color="primary"
-  onClick={() => handleView(book._id)}
+  disabled
+  title="Visualisation désactivée pour le moment"
+  sx={{ pointerEvents: "none", opacity: 0.6 }}
 >
   📖 Visualiser
 </Button>
 
-              </>
-            )}
           </CardActions>
         </Box>
 
-
+        {/* Aperçu PDF */}
         <Dialog open={openViewer} onClose={() => setOpenViewer(false)} maxWidth="lg" fullWidth>
-  <DialogTitle>📕 Aperçu du livre</DialogTitle>
-  <DialogContent dividers>
-    {viewerUrl ? (
-      <iframe
-        src={viewerUrl}
-        title="Aperçu PDF"
-        width="100%"
-        height="600px"
-        style={{ border: "none" }}
-      />
-    ) : (
-      <Typography>Chargement...</Typography>
-    )}
-  </DialogContent>
-</Dialog>
-
+          <DialogTitle>📕 Aperçu du livre</DialogTitle>
+          <DialogContent dividers>
+            {viewerUrl ? (
+              <iframe
+                src={viewerUrl}
+                title="Aperçu PDF"
+                width="100%"
+                height="600px"
+                style={{ border: "none" }}
+              />
+            ) : (
+              <Typography>Chargement...</Typography>
+            )}
+          </DialogContent>
+        </Dialog>
       </Card>
-
-
-
     </>
   );
 };
