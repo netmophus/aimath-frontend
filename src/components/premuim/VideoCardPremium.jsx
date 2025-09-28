@@ -150,10 +150,6 @@ const VideoCardPremium = ({ video = {}, isPremiumUser }) => {
 const [expanded, setExpanded] = useState(false);
 
 
-// titre long plié/déplié par partie
-const [openPartTitles, setOpenPartTitles] = useState({});
-
-
 // Mesure de la hauteur réelle de la colonne média (gauche)
 const mediaRef = useRef(null);
 const [mainHeight, setMainHeight] = useState(0);
@@ -440,21 +436,6 @@ useEffect(() => {
                 <Chip key={i} size="small" label={`#${t}`} variant="outlined" />
               ))}
           </Stack>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 <Box sx={{ mt: 1 }}>
   <Typography

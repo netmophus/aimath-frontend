@@ -28,7 +28,7 @@ import ExamCard from "../components/premuim/ExamCard";
 import VideoCardPremium from "../components/premuim/VideoCardPremium";
 import { AuthContext } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
-
+import VideoSearchBar from "../components/premuim/VideoSearchBar";
 /* Icons */
 import LockIcon from "@mui/icons-material/Lock";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
@@ -260,6 +260,256 @@ const PremiumFahimtaPage = () => {
       alert(err.response?.data?.message || "Erreur lors du téléchargement");
     }
   };
+
+
+
+
+
+// Recherche texte
+const [videoQuery, setVideoQuery] = useState("");
+
+// Filtres par badges
+const [vf, setVf] = useState({
+  badge: [],   // "gratuit" | "prenuim"
+  level: [],   // "TERMINALE", "SECONDE", etc (en MAJ)
+  matiere: [], // "Maths", "Physique", etc.
+  classe: [],  // "Tle A", "2nde", etc.
+  tags: [],    // ["suite", "derivée", ...]
+});
+
+// Valeurs disponibles (dérivées des vidéos)
+const videoFacets = React.useMemo(() => {
+  const uniq = (arr) => [...new Set(arr.filter(Boolean))];
+  return {
+    badge: uniq((videos || []).map((v) => v?.badge?.toLowerCase())),
+    level: uniq((videos || []).map((v) => String(v?.level || "").toUpperCase())),
+    matiere: uniq((videos || []).map((v) => v?.matiere)),
+    classe: uniq((videos || []).map((v) => v?.classe)),
+    tags: uniq((videos || []).flatMap((v) => Array.isArray(v?.tags) ? v.tags : [])),
+  };
+}, [videos]);
+
+// Toggle/suppression filtres
+const toggleVf = (key, val) => {
+  setVf((prev) => {
+    const set = new Set(prev[key]);
+    set.has(val) ? set.delete(val) : set.add(val);
+    return { ...prev, [key]: [...set] };
+  });
+};
+const clearVf = () =>
+  setVf({ badge: [], level: [], matiere: [], classe: [], tags: [] });
+
+// Petit rendu de groupe de chips
+const FilterGroup = ({ label, options = [], selected = [], onToggle, limit }) => {
+  const opts = typeof limit === "number" ? options.slice(0, limit) : options;
+  if (!opts.length) return null;
+  return (
+    <Box sx={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 1 }}>
+      <Typography variant="body2" sx={{ fontWeight: 700, mr: 0.5 }}>{label} :</Typography>
+      {opts.map((opt) => {
+        const active = selected.includes(opt);
+        return (
+          <Chip
+            key={`${label}-${opt}`}
+            label={opt}
+            clickable
+            size="small"
+            color={active ? "primary" : "default"}
+            variant={active ? "filled" : "outlined"}
+            onClick={() => onToggle(opt)}
+          />
+        );
+      })}
+    </Box>
+  );
+};
+
+
+
+const filteredVideos = React.useMemo(() => {
+  const q = videoQuery.trim().toLowerCase();
+
+  return (videos || []).filter((v) => {
+    // 1) Recherche texte
+    if (q) {
+      const hay = [
+        v?.title, v?.description, v?.matiere, v?.classe, v?.level, v?.badge,
+        ...(Array.isArray(v?.tags) ? v.tags : []),
+      ].filter(Boolean).join(" ").toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+
+    // 2) Filtres par badges (ET logiques entre groupes, OU logique dans un groupe)
+    const badge = (v?.badge || "").toLowerCase();
+    const level = String(v?.level || "").toUpperCase();
+    const matiere = v?.matiere || "";
+    const classe = v?.classe || "";
+    const tags = Array.isArray(v?.tags) ? v.tags : [];
+
+    const match = (key, val) => vf[key].length === 0 || vf[key].includes(val);
+
+    if (!match("badge", badge)) return false;
+    if (!match("level", level)) return false;
+    if (!match("matiere", matiere)) return false;
+    if (!match("classe", classe)) return false;
+
+    // Tags : au moins un tag sélectionné présent
+    if (vf.tags.length > 0 && !tags.some((t) => vf.tags.includes(t))) return false;
+
+    return true;
+  });
+}, [videos, videoQuery, vf]);
+
+
+
+
+
+
+
+
+
+
+
+// --- Recherche texte (livres)
+const [bookQuery, setBookQuery] = useState("");
+
+// --- Filtres (livres)
+const [bf, setBf] = useState({
+  badge: [],   // "gratuit" | "prenuim"
+  level: [],   // "TERMINALE", "SECONDE", ...
+  matiere: [], // "Maths", ...
+  classe: [],  // "Tle A", ...
+  tags: [],    // ["suite", "derivée", ...]
+});
+
+// Valeurs disponibles (livres)
+const bookFacets = React.useMemo(() => {
+  const uniq = (arr) => [...new Set(arr.filter(Boolean))];
+  return {
+    badge:  uniq((livres || []).map((b) => b?.badge?.toLowerCase())),
+    level:  uniq((livres || []).map((b) => String(b?.level || "").toUpperCase())),
+    matiere:uniq((livres || []).map((b) => b?.matiere)),
+    classe: uniq((livres || []).map((b) => b?.classe)),
+    tags:   uniq((livres || []).flatMap((b) => Array.isArray(b?.tags) ? b.tags : [])),
+  };
+}, [livres]);
+
+// Toggle / reset (livres)
+const toggleBf = (key, val) => {
+  setBf((prev) => {
+    const set = new Set(prev[key]);
+    set.has(val) ? set.delete(val) : set.add(val);
+    return { ...prev, [key]: [...set] };
+  });
+};
+const clearBf = () => setBf({ badge: [], level: [], matiere: [], classe: [], tags: [] });
+
+// Résultats filtrés (livres)
+const filteredBooks = React.useMemo(() => {
+  const q = bookQuery.trim().toLowerCase();
+
+  return (livres || []).filter((b) => {
+    // 1) recherche texte
+    if (q) {
+      const hay = [
+        b?.title, b?.description, b?.matiere, b?.classe, b?.level, b?.badge,
+        ...(Array.isArray(b?.tags) ? b.tags : []),
+      ].filter(Boolean).join(" ").toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+
+    // 2) filtres
+    const badge  = (b?.badge || "").toLowerCase();
+    const level  = String(b?.level || "").toUpperCase();
+    const matiere= b?.matiere || "";
+    const classe = b?.classe || "";
+    const tags   = Array.isArray(b?.tags) ? b.tags : [];
+
+    const match = (key, val) => bf[key].length === 0 || bf[key].includes(val);
+
+    if (!match("badge", badge)) return false;
+    if (!match("level", level)) return false;
+    if (!match("matiere", matiere)) return false;
+    if (!match("classe", classe)) return false;
+
+    if (bf.tags.length > 0 && !tags.some((t) => bf.tags.includes(t))) return false;
+
+    return true;
+  });
+}, [livres, bookQuery, bf]);
+
+
+// --- Recherche texte (examens)
+const [examQuery, setExamQuery] = useState("");
+
+// --- Filtres (examens)
+const [ef, setEf] = useState({
+  badge: [],   // "gratuit" | "prenuim" (si tu en as sur tes examens)
+  level: [],   // "TERMINALE", "SECONDE", ...
+  matiere: [], // "Maths", ...
+  classe: [],  // "Tle A", ...
+  tags: [],    // ["suite", "derivée", ...] si présents
+});
+
+// Valeurs disponibles (examens)
+const examFacets = React.useMemo(() => {
+  const uniq = (arr) => [...new Set(arr.filter(Boolean))];
+  return {
+    badge:  uniq((exams || []).map((e) => e?.badge?.toLowerCase())),
+    level:  uniq((exams || []).map((e) => String(e?.level || "").toUpperCase())),
+    matiere:uniq((exams || []).map((e) => e?.matiere)),
+    classe: uniq((exams || []).map((e) => e?.classe)),
+    tags:   uniq((exams || []).flatMap((e) => Array.isArray(e?.tags) ? e.tags : [])),
+  };
+}, [exams]);
+
+// Toggle / reset
+const toggleEf = (key, val) => {
+  setEf((prev) => {
+    const set = new Set(prev[key]);
+    set.has(val) ? set.delete(val) : set.add(val);
+    return { ...prev, [key]: [...set] };
+  });
+};
+const clearEf = () => setEf({ badge: [], level: [], matiere: [], classe: [], tags: [] });
+
+// Résultats filtrés (examens)
+const filteredExams = React.useMemo(() => {
+  const q = examQuery.trim().toLowerCase();
+
+  return (exams || []).filter((e) => {
+    // 1) recherche texte
+    if (q) {
+      const hay = [
+        e?.title, e?.description, e?.matiere, e?.classe, e?.level, e?.badge,
+        ...(Array.isArray(e?.tags) ? e.tags : []),
+      ].filter(Boolean).join(" ").toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+
+    // 2) filtres
+    const badge  = (e?.badge || "").toLowerCase();
+    const level  = String(e?.level || "").toUpperCase();
+    const matiere= e?.matiere || "";
+    const classe = e?.classe || "";
+    const tags   = Array.isArray(e?.tags) ? e.tags : [];
+
+    const match = (key, val) => ef[key].length === 0 || ef[key].includes(val);
+
+    if (!match("badge", badge)) return false;
+    if (!match("level", level)) return false;
+    if (!match("matiere", matiere)) return false;
+    if (!match("classe", classe)) return false;
+
+    if (ef.tags.length > 0 && !tags.some((t) => ef.tags.includes(t))) return false;
+
+    return true;
+  });
+}, [exams, examQuery, ef]);
+
+
+
 
   /* ---------- render ---------- */
   return (
@@ -689,63 +939,262 @@ const PremiumFahimtaPage = () => {
   </Paper>
 
   {/* Livres */}
-  <Box role="tabpanel" hidden={tabIndex !== 0}>
-    {tabIndex === 0 && (
+{/* Livres */}
+<Box role="tabpanel" hidden={tabIndex !== 0}>
+  {tabIndex === 0 && (
+    <>
+      {/* Barre de filtres + recherche (livres) */}
+      <Box sx={{ mb: 2, display: "grid", gap: 1.25 }}>
+        <Stack direction="row" spacing={1.5} useFlexGap flexWrap="wrap">
+          <FilterGroup
+            label="Badge"
+            options={bookFacets.badge}
+            selected={bf.badge}
+            onToggle={(val) => toggleBf("badge", val)}
+          />
+          <FilterGroup
+            label="Niveau"
+            options={bookFacets.level}
+            selected={bf.level}
+            onToggle={(val) => toggleBf("level", val)}
+          />
+          <FilterGroup
+            label="Matière"
+            options={bookFacets.matiere}
+            selected={bf.matiere}
+            onToggle={(val) => toggleBf("matiere", val)}
+          />
+          <FilterGroup
+            label="Classe"
+            options={bookFacets.classe}
+            selected={bf.classe}
+            onToggle={(val) => toggleBf("classe", val)}
+          />
+          <FilterGroup
+            label="Tags"
+            options={bookFacets.tags}
+            selected={bf.tags}
+            onToggle={(val) => toggleBf("tags", val)}
+            limit={10}
+          />
+        </Stack>
+
+        <Stack direction="row" alignItems="center" spacing={1}>
+          <Typography variant="body2" sx={{ opacity: 0.7 }}>
+            {filteredBooks.length} livre(s) trouvé(s)
+          </Typography>
+          {(bf.badge.length || bf.level.length || bf.matiere.length || bf.classe.length || bf.tags.length) > 0 && (
+            <Button size="small" onClick={clearBf}>
+              Effacer les filtres
+            </Button>
+          )}
+        </Stack>
+
+        {/* Tu peux réutiliser VideoSearchBar pour le champ texte (il est générique) */}
+        <VideoSearchBar
+          query={bookQuery}
+          onQueryChange={setBookQuery}
+          activeCount={filteredBooks.length}
+        />
+      </Box>
+
       <Grid container spacing={3}>
-        {livres.map((livre, i) => (
+        {filteredBooks.map((livre, i) => (
           <Grid item xs={12} sm={6} md={4} key={i}>
             <BookCard book={livre} isPremiumUser />
           </Grid>
         ))}
-        {(!livres || livres.length === 0) && (
+        {filteredBooks.length === 0 && (
           <Grid item xs={12}>
-            <Alert severity="info">Aucun livre disponible pour le moment.</Alert>
+            <Alert severity="info">
+              {bookQuery ? "Aucun résultat pour votre recherche." : "Aucun livre disponible pour le moment."}
+            </Alert>
           </Grid>
         )}
       </Grid>
-    )}
-  </Box>
+    </>
+  )}
+</Box>
+
 
   {/* Examens corrigés */}
-  <Box role="tabpanel" hidden={tabIndex !== 1}>
-    {tabIndex === 1 && (
+
+{/* Examens corrigés */}
+<Box role="tabpanel" hidden={tabIndex !== 1}>
+  {tabIndex === 1 && (
+    <>
+      {/* Barre de filtres + recherche (examens) */}
+      <Box sx={{ mb: 2, display: "grid", gap: 1.25 }}>
+        <Stack direction="row" spacing={1.5} useFlexGap flexWrap="wrap">
+          <FilterGroup
+            label="Badge"
+            options={examFacets.badge}
+            selected={ef.badge}
+            onToggle={(val) => toggleEf("badge", val)}
+          />
+          <FilterGroup
+            label="Niveau"
+            options={examFacets.level}
+            selected={ef.level}
+            onToggle={(val) => toggleEf("level", val)}
+          />
+          <FilterGroup
+            label="Matière"
+            options={examFacets.matiere}
+            selected={ef.matiere}
+            onToggle={(val) => toggleEf("matiere", val)}
+          />
+          <FilterGroup
+            label="Classe"
+            options={examFacets.classe}
+            selected={ef.classe}
+            onToggle={(val) => toggleEf("classe", val)}
+          />
+          <FilterGroup
+            label="Tags"
+            options={examFacets.tags}
+            selected={ef.tags}
+            onToggle={(val) => toggleEf("tags", val)}
+            limit={10}
+          />
+        </Stack>
+
+        <Stack direction="row" alignItems="center" spacing={1}>
+          <Typography variant="body2" sx={{ opacity: 0.7 }}>
+            {filteredExams.length} examen(s) trouvé(s)
+          </Typography>
+          {(ef.badge.length || ef.level.length || ef.matiere.length || ef.classe.length || ef.tags.length) > 0 && (
+            <Button size="small" onClick={clearEf}>
+              Effacer les filtres
+            </Button>
+          )}
+        </Stack>
+
+        {/* Recherche texte (réutilise VideoSearchBar) */}
+        <VideoSearchBar
+          query={examQuery}
+          onQueryChange={setExamQuery}
+          activeCount={filteredExams.length}
+        />
+      </Box>
+
       <Grid container spacing={3}>
-        {exams.map((exam) => (
+        {filteredExams.map((exam) => (
           <Grid item xs={12} md={6} lg={4} key={exam._id}>
             <ExamCard
               exam={exam}
-              onDownloadSubject={handleDownloadSubject}
-              onDownloadCorrection={handleDownloadCorrection}
               isPremiumUser={isPremiumUser}
             />
           </Grid>
         ))}
-        {(!exams || exams.length === 0) && (
+
+        {filteredExams.length === 0 && (
           <Grid item xs={12}>
-            <Alert severity="info">Aucun examen corrigé pour l’instant.</Alert>
+            <Alert severity="info">
+              {examQuery
+                ? "Aucun résultat pour votre recherche."
+                : "Aucun examen corrigé pour l’instant."}
+            </Alert>
           </Grid>
         )}
       </Grid>
-    )}
-  </Box>
+    </>
+  )}
+</Box>
 
-  {/* Vidéos */}
-  <Box role="tabpanel" hidden={tabIndex !== 2}>
-    {tabIndex === 2 && (
+
+
+
+
+{/* Vidéos */}
+<Box role="tabpanel" hidden={tabIndex !== 2}>
+  {tabIndex === 2 && (
+    <>
+
+{/* Barre de filtres + recherche */}
+<Box sx={{ mb: 2, display: "grid", gap: 1.25 }}>
+  {/* Groupes de badges cliquables */}
+  <Stack direction="row" spacing={1.5} useFlexGap flexWrap="wrap">
+    <FilterGroup
+      label="Badge"
+      options={videoFacets.badge}
+      selected={vf.badge}
+      onToggle={(val) => toggleVf("badge", val)}
+    />
+    <FilterGroup
+      label="Niveau"
+      options={videoFacets.level}
+      selected={vf.level}
+      onToggle={(val) => toggleVf("level", val)}
+    />
+    <FilterGroup
+      label="Matière"
+      options={videoFacets.matiere}
+      selected={vf.matiere}
+      onToggle={(val) => toggleVf("matiere", val)}
+    />
+    <FilterGroup
+      label="Classe"
+      options={videoFacets.classe}
+      selected={vf.classe}
+      onToggle={(val) => toggleVf("classe", val)}
+    />
+    <FilterGroup
+      label="Tags"
+      options={videoFacets.tags}
+      selected={vf.tags}
+      onToggle={(val) => toggleVf("tags", val)}
+      limit={10} // affiche les 10 premiers tags (ajuste si besoin)
+    />
+  </Stack>
+
+  {/* Ligne actions + stats + bouton Reset */}
+  <Stack direction="row" alignItems="center" spacing={1}>
+    <Typography variant="body2" sx={{ opacity: 0.7 }}>
+      {filteredVideos.length} vidéo(s) trouvée(s)
+    </Typography>
+    {(vf.badge.length || vf.level.length || vf.matiere.length || vf.classe.length || vf.tags.length) > 0 && (
+      <Button size="small" onClick={clearVf}>
+        Effacer les filtres
+      </Button>
+    )}
+  </Stack>
+
+  {/* Recherche texte (on garde ton composant) */}
+  <VideoSearchBar
+    query={videoQuery}
+    onQueryChange={setVideoQuery}
+    activeCount={filteredVideos.length}
+  />
+</Box>
+
+
+
+
+
+
+
       <Grid container spacing={3}>
-        {videos.map((video, i) => (
+        {filteredVideos.map((video, i) => (
           <Grid item xs={12} sm={6} md={4} key={i}>
             <VideoCardPremium video={video} isPremiumUser={isPremiumUser} />
           </Grid>
         ))}
-        {(!videos || videos.length === 0) && (
+
+        {filteredVideos.length === 0 && (
           <Grid item xs={12}>
-            <Alert severity="info">Aucune vidéo disponible pour l’instant.</Alert>
+            <Alert severity="info">
+              {videoQuery
+                ? "Aucun résultat pour votre recherche."
+                : "Aucune vidéo disponible pour l’instant."}
+            </Alert>
           </Grid>
         )}
       </Grid>
-    )}
-  </Box>
+    </>
+  )}
+</Box>
+
 </Container>
 
     </PageLayout>
