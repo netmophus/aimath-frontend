@@ -21,15 +21,12 @@
 //   Divider,
 //   Chip,
 //   LinearProgress,
-//   Dialog,
-//   DialogTitle,
-//   DialogContent,
-//   DialogActions,
+ 
 // } from "@mui/material";
 // import { useTheme } from "@mui/material/styles";
 // import PageLayout from "../components/PageLayout";
 // import API from "../api";
-
+// import { useNavigate } from "react-router-dom";
 
 // import SearchIcon from "@mui/icons-material/Search";
 // import SendRoundedIcon from "@mui/icons-material/SendRounded";
@@ -46,13 +43,7 @@
 // const timeTypingMs = 15;
 // const fmtReset = (iso) => (iso ? new Date(iso).toLocaleDateString("fr-FR") : null);
 
-// // 🔗 Remplace par l’URL directe de ton app si tu l’as
-// // 🔗 Lien unique pour l’APK (facile à mettre à jour)
-// const APK_URL = "https://github.com/netmophus/fahimta-android/releases/download/v1.0.2/fahimta-v1.0.2.apk";
 
-//  const openApkInNewTab = () => {
-//    window.open(APK_URL, "_blank", "noopener,noreferrer");
-//  };
 
 // // Debounce maison (pas de dépendance externe)
 // function useDebouncedValue(value, delay = 250) {
@@ -105,10 +96,9 @@
 //   const [resetAt, setResetAt] = useState(null);
 //   const [checkingQuota, setCheckingQuota] = useState(false);
 
-//   // ➕ Modal “Pricing → Mobile”
-//   const [pricingOpen, setPricingOpen] = useState(false);
-//   const openPricing = () => setPricingOpen(true);
-//   const closePricing = () => setPricingOpen(false);
+//   const navigate = useNavigate();
+
+
 
 //   useEffect(() => {
 //     // Optional peek quota; ignore si route absente
@@ -328,33 +318,6 @@
 
 //   return (
 //     <PageLayout>
-//       {/* Modal remplaçant Pricing */}
-//   <Dialog open={pricingOpen} onClose={closePricing} maxWidth="xs" fullWidth>
-//   <DialogTitle sx={{ fontWeight: 800 }}>Souscription</DialogTitle>
-//   <DialogContent dividers>
-//     <Typography gutterBottom>
-//       Pour vous abonner, utilisez <strong>l’application mobile FAHIMTA</strong>.
-//     </Typography>
-//     <Typography variant="body2" color="text.secondary">
-//       Téléchargez l’<strong>APK officiel</strong>, installez, créez votre compte puis
-//       faites l’abonnement dans l’app. Si Android affiche « source inconnue », autorisez
-//       l’installation depuis cette source.
-//     </Typography>
-//   </DialogContent>
-//   <DialogActions sx={{ p: 2, justifyContent: "space-between" }}>
-//     <Button onClick={closePricing}>Fermer</Button>
-//     <Button
-//       variant="contained"
-//       startIcon={<AndroidIcon />}
-//       onClick={() => {
-//         openApkInNewTab();
-//         closePricing();
-//       }}
-//     >
-//       Télécharger l’APK
-//     </Button>
-//   </DialogActions>
-// </Dialog>
 
 
 //       {/* HERO */}
@@ -410,7 +373,7 @@
 //                       variant="contained"
 //                       color="warning"
 //                       disableElevation
-//                       onClick={openPricing} // ⬅️ au lieu de navigate("/pricing")
+//                      onClick={() => navigate("/pricing")}
 //                       sx={{ fontWeight: 800, px: 2.5, borderRadius: 2 }}
 //                     >
 //                       S’abonner
@@ -441,7 +404,7 @@
 //                       variant="contained"
 //                       color="primary"
 //                       disableElevation
-//                       onClick={openPricing} // ⬅️
+//                     onClick={() => navigate("/pricing")}
 //                       sx={{ fontWeight: 800, px: 2.5, borderRadius: 2 }}
 //                     >
 //                       Découvrir les offres
@@ -514,7 +477,7 @@
 //                     <Button
 //                       size="small"
 //                       variant="contained"
-//                       onClick={openPricing} // ⬅️
+//                      onClick={() => navigate("/pricing")}
 //                       sx={{ ml: "auto" }}
 //                     >
 //                       Voir les offres
@@ -832,7 +795,7 @@
 //             variant="contained"
 //             size="large"
 //             sx={{ mt: 2, fontWeight: 800 }}
-//             onClick={openPricing} // ⬅️
+//            onClick={() => navigate("/pricing")}
 //           >
 //             Voir les offres
 //           </Button>
@@ -843,6 +806,52 @@
 // };
 
 // export default GratuitFahimtaPage;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -889,8 +898,18 @@ import BookCardGratuit from "../components/gratuit/BookCardGratuit";
 import ExamCardGratuit from "../components/gratuit/ExamCardGratuit";
 import VideoCardGratuit from "../components/gratuit/VideoCardGratuit";
 import AndroidIcon from "@mui/icons-material/Android";
+
+
+import MicNoneRoundedIcon from "@mui/icons-material/MicNoneRounded";
+import MicOffRoundedIcon from "@mui/icons-material/MicOffRounded";
+import VolumeUpRoundedIcon from "@mui/icons-material/VolumeUpRounded";
+import StopRoundedIcon from "@mui/icons-material/StopRounded";
+
+
 /* ---------- utils ---------- */
-const timeTypingMs = 15;
+// const timeTypingMs = 15;
+ // délai entre deux phrases (en ms)
+ const sentenceDelayMs = 550;
 const fmtReset = (iso) => (iso ? new Date(iso).toLocaleDateString("fr-FR") : null);
 
 
@@ -948,6 +967,138 @@ const GratuitFahimtaPage = () => {
 
   const navigate = useNavigate();
 
+
+
+  // --- Speech to Text (dictée)
+const [sttSupported, setSttSupported] = useState(false);
+const [listening, setListening] = useState(false);
+const recognitionRef = React.useRef(null);
+
+// --- Text to Speech (lecture de la réponse)
+const [ttsSupported, setTtsSupported] = useState(false);
+const [speaking, setSpeaking] = useState(false);
+const utteranceRef = React.useRef(null);
+
+
+
+useEffect(() => {
+  // --- STT (Speech To Text : dictée)
+  const WSR = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  if (WSR) {
+    setSttSupported(true);
+
+    const rec = new WSR();
+    rec.lang = "fr-FR";
+    rec.continuous = true;      // flux continu = meilleure UX
+    rec.interimResults = true;  // transcription au fil de l'eau
+
+    let base = ""; // texte déjà présent avant de démarrer la dictée
+
+    rec.onstart = () => {
+      base = (input && input.trim()) ? input.trim() + " " : "";
+      setListening(true);
+    };
+
+    rec.onresult = (e) => {
+      const transcript = Array.from(e.results)
+        .map(r => r[0]?.transcript || "")
+        .join(" ")
+        .replace(/\s+/g, " ")
+        .trim();
+
+      // On remplit le champ en direct ; l’utilisateur peut corriger à tout moment
+      setInput(base + transcript);
+    };
+
+    rec.onerror = () => setListening(false);
+    rec.onend = () => setListening(false);
+
+    recognitionRef.current = rec;
+  } else {
+    setSttSupported(false);
+  }
+
+  // --- TTS (Text To Speech : lecture de la réponse)
+  if ("speechSynthesis" in window) {
+    setTtsSupported(true);
+  } else {
+    setTtsSupported(false);
+  }
+
+  // 🔚 Cleanup à la sortie du composant
+  return () => {
+    try {
+      if (recognitionRef.current) {
+        recognitionRef.current.onresult = null;
+        recognitionRef.current.onstart = null;
+        recognitionRef.current.onerror = null;
+        recognitionRef.current.onend = null;
+        recognitionRef.current.stop();
+      }
+    } catch {}
+    try {
+      window.speechSynthesis?.cancel();
+    } catch {}
+  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, []);
+
+
+
+// --- Dictée
+const handleToggleDictation = () => {
+  if (!sttSupported) return setAiError("La dictée vocale n’est pas supportée par ce navigateur.");
+  if (!recognitionRef.current) return;
+
+  if (listening) {
+    recognitionRef.current.stop();
+    setListening(false);
+    return;
+  }
+  try {
+    setAiError("");
+    recognitionRef.current.start();
+    setListening(true);
+  } catch {
+    setListening(false);
+  }
+};
+
+// --- Lecture de la dernière réponse IA
+const getLastIaText = () => {
+  const last = [...messages].reverse().find(m => m.role === "ia");
+  if (!last) return null;
+  // si c’est la toute dernière en cours d’animation, prends typedResponse
+  const isLast = messages.length > 0 && messages[messages.length - 1] === last;
+  return isLast ? (typedResponse || last.text) : last.text;
+};
+
+const handleSpeak = () => {
+  if (!ttsSupported) return setAiError("La lecture audio n’est pas supportée par ce navigateur.");
+  const text = getLastIaText();
+  if (!text) return;
+
+  // stop avant de (re)lire
+  window.speechSynthesis.cancel();
+
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = "fr-FR";
+  u.rate = 1;     // 0.8 ~ 1.2 si tu veux
+  u.pitch = 1;
+  u.onstart = () => setSpeaking(true);
+  u.onend = () => setSpeaking(false);
+  u.onerror = () => setSpeaking(false);
+
+  utteranceRef.current = u;
+  window.speechSynthesis.speak(u);
+};
+
+const handleStopSpeak = () => {
+  if (!ttsSupported) return;
+  window.speechSynthesis.cancel();
+  setSpeaking(false);
+};
 
 
   useEffect(() => {
@@ -1033,21 +1184,62 @@ const GratuitFahimtaPage = () => {
     };
   }, []);
 
-  // Effet machine à écrire sur le dernier message IA
-  useEffect(() => {
-    const last = messages[messages.length - 1];
-    if (!last || last.role !== "ia") return;
 
-    setTypedResponse("");
-    let i = 0;
-    const id = setInterval(() => {
-      setTypedResponse((prev) => prev + last.text.slice(i, i + 1));
-      i += 1;
-      if (i >= last.text.length) clearInterval(id);
-    }, timeTypingMs);
+// Effet "révélation" phrase par phrase sur le dernier message IA
+useEffect(() => {
+  const last = messages[messages.length - 1];
+  if (!last || last.role !== "ia") return;
 
-    return () => clearInterval(id);
-  }, [messages]);
+  // Réinitialise le rendu progressif
+  setTypedResponse("");
+
+  // On découpe le texte en phrases (en gardant les sauts de ligne intacts)
+  // Exemple de séparateurs: '.', '?', '!', '…'
+  const raw = last.text || "";
+  const normalized = raw.replace(/\s+\n/g, "\n").replace(/\n\s+/g, "\n");
+  const byLines = normalized.split("\n");
+
+  // reconstitue une liste de "chunks" qui sont soit des phrases, soit des sauts de ligne
+  const chunks = [];
+  byLines.forEach((line, idx) => {
+    if (line.trim() === "") {
+      // ligne vide -> on garde un saut de ligne
+      chunks.push("\n");
+      return;
+    }
+    // split en phrases, on garde la ponctuation à la fin
+    const sentences = line.split(/(?<=[\.!?…])\s+/u).filter(Boolean);
+    chunks.push(...sentences);
+    // si ce n'est pas la dernière ligne, on garde le saut de ligne
+    if (idx < byLines.length - 1) chunks.push("\n");
+  });
+
+  let i = 0;
+  let acc = "";
+  let timerId = null;
+
+  const step = () => {
+    if (i >= chunks.length) return;
+
+    // ajoute la prochaine "phrase" (ou saut de ligne)
+    const next = chunks[i];
+    acc += (next === "\n" ? "\n" : (acc.endsWith("\n") || acc === "" ? "" : " ") + next);
+    setTypedResponse(acc);
+    i += 1;
+
+    if (i < chunks.length) {
+      // délai constant entre phrases (tu peux aussi adapter sur la longueur)
+      timerId = setTimeout(step, sentenceDelayMs);
+    }
+  };
+
+  // Lance la première révélation
+  timerId = setTimeout(step, 0);
+
+  return () => {
+    if (timerId) clearTimeout(timerId);
+  };
+}, [messages, sentenceDelayMs]);
 
 
 
@@ -1336,41 +1528,78 @@ const GratuitFahimtaPage = () => {
                 </Box>
               )}
 
-              <TextField
-                label="💬 Pose ta question ici..."
-                fullWidth
-                multiline
-                rows={downMd ? 4 : 3}
-                variant="outlined"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSubmitAI();
-                  }
-                }}
-                sx={{
-                  mt: 1.5,
-                  "& .MuiOutlinedInput-root": {
-                    bgcolor: "#fff",
-                    borderRadius: 2,
-                  },
-                }}
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton
-                        onClick={handleSubmitAI}
-                        disabled={loadingAI || !input.trim() || remaining === 0}
-                      >
-                        <SendRoundedIcon color="primary" />
-                      </IconButton>
-                    </InputAdornment>
-                  ),
-                }}
-                disabled={remaining === 0}
-              />
+             
+<TextField
+  label="💬 Pose ta question ici..."
+  fullWidth
+  multiline
+  rows={downMd ? 4 : 3}
+  variant="outlined"
+  value={input}
+  onChange={(e) => setInput(e.target.value)}
+  onKeyDown={(e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmitAI();
+    }
+  }}
+  disabled={remaining === 0}
+  sx={{
+    mt: 1.5,
+    "& .MuiOutlinedInput-root": {
+      bgcolor: "#fff",
+      borderRadius: 2,
+    },
+  }}
+  helperText={
+    listening
+      ? "🎙️ Dictée en cours… vous pouvez corriger le texte pendant l’enregistrement."
+      : "Astuce : appuyez sur le micro pour dicter, puis corrigez si besoin avant d’envoyer."
+  }
+  InputProps={{
+    startAdornment: (
+      <InputAdornment position="start">
+        <IconButton
+          onClick={handleToggleDictation}
+          onMouseDown={(e) => e.preventDefault()} // garde le focus dans le champ
+          disabled={!sttSupported || remaining === 0}
+          aria-label="Dicter au micro"
+          aria-pressed={listening}
+          title={
+            !sttSupported
+              ? "Micro non supporté par ce navigateur"
+              : listening
+              ? "Arrêter la dictée"
+              : "Dicter au micro"
+          }
+          color={listening ? "error" : "primary"}
+          size="large"
+          edge="start"
+          sx={{ mr: 0.5 }}
+        >
+          {listening ? <MicOffRoundedIcon /> : <MicNoneRoundedIcon />}
+        </IconButton>
+      </InputAdornment>
+    ),
+    endAdornment: (
+      <InputAdornment position="end">
+        <IconButton
+          onClick={handleSubmitAI}
+          disabled={loadingAI || !input.trim() || remaining === 0}
+          aria-label="Envoyer"
+          title="Envoyer"
+          edge="end"
+        >
+          <SendRoundedIcon color="primary" />
+        </IconButton>
+      </InputAdornment>
+    ),
+  }}
+/>
+
+
+
+
 
               <Typography
                 variant="caption"
@@ -1440,21 +1669,47 @@ const GratuitFahimtaPage = () => {
               </Box>
 
               {/* Actions IA */}
-              {messages.length > 0 && (
-                <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
-                  <Button
-                    size="small"
-                    startIcon={<RestartAltIcon />}
-                    onClick={() => {
-                      setMessages([]);
-                      setTypedResponse("");
-                      setAiError("");
-                    }}
-                  >
-                    Réinitialiser
-                  </Button>
-                </Stack>
-              )}
+
+
+           {/* Actions IA */}
+{messages.length > 0 && (
+  <Stack direction="row" spacing={1} sx={{ mt: 1, flexWrap: "wrap" }}>
+    {/* Lecture audio de la DERNIÈRE réponse IA */}
+    <Button
+      size="small"
+      startIcon={<VolumeUpRoundedIcon />}
+      onClick={handleSpeak}
+      disabled={!ttsSupported || !getLastIaText()}
+    >
+      Écouter
+    </Button>
+    <Button
+      size="small"
+      startIcon={<StopRoundedIcon />}
+      onClick={handleStopSpeak}
+      disabled={!speaking}
+    >
+      Arrêter l’audio
+    </Button>
+
+    <Button
+      size="small"
+      startIcon={<RestartAltIcon />}
+      onClick={() => {
+        setMessages([]);
+        setTypedResponse("");
+        setAiError("");
+        handleStopSpeak();
+      }}
+    >
+      Réinitialiser
+    </Button>
+  </Stack>
+)}
+
+
+
+
             </Box>
           </Stack>
         </Container>
@@ -1656,3 +1911,4 @@ const GratuitFahimtaPage = () => {
 };
 
 export default GratuitFahimtaPage;
+

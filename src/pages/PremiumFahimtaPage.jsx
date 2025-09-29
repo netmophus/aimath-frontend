@@ -1,4 +1,3 @@
-
 // pages/PremiumFahimtaPage.jsx
 import React, { useState, useEffect, useContext } from "react";
 import {
@@ -18,6 +17,7 @@ import {
   Chip,
   IconButton,
   Divider,
+   LinearProgress,
   useMediaQuery,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
@@ -45,17 +45,71 @@ import TaskAltRoundedIcon from "@mui/icons-material/TaskAltRounded";
 import PlayCircleOutlineRoundedIcon from "@mui/icons-material/PlayCircleOutlineRounded";
 
 
+
+import { InputAdornment } from "@mui/material";
+
+import MicNoneRoundedIcon from "@mui/icons-material/MicNoneRounded";
+import MicOffRoundedIcon from "@mui/icons-material/MicOffRounded";
+import VolumeUpRoundedIcon from "@mui/icons-material/VolumeUpRounded";
+import StopRoundedIcon from "@mui/icons-material/StopRounded";
+
 /* ---------------- utils ---------------- */
-const typewriter = (text = "", setState, speed = 15) => {
+/* ---------------- utils ---------------- */
+// délai par défaut entre phrases
+const sentenceDelayMs = 550;
+
+// Révèle un texte phrase par phrase (gère aussi les sauts de ligne)
+function revealBySentence(text = "", setState, options = {}) {
+  const { base = 350, perChar = 8, maxDelay = 1500, fixedDelay = null } = options;
+
   setState("");
+
+  // Normalise et découpe en lignes puis en phrases
+  const normalized = (text || "")
+    .replace(/\s+\n/g, "\n")
+    .replace(/\n\s+/g, "\n");
+  const lines = normalized.split("\n");
+
+  const chunks = [];
+  lines.forEach((line, idx) => {
+    if (line.trim() === "") {
+      chunks.push("\n");
+      return;
+    }
+    const sentences = line.split(/(?<=[\.!?…])\s+/u).filter(Boolean);
+    chunks.push(...sentences);
+    if (idx < lines.length - 1) chunks.push("\n");
+  });
+
   let i = 0;
-  const it = setInterval(() => {
-    setState((p) => p + text.charAt(i));
+  let acc = "";
+  let timerId = null;
+
+  const step = () => {
+    if (i >= chunks.length) return;
+
+    const next = chunks[i];
+    acc += (next === "\n" ? "\n" : (acc.endsWith("\n") || acc === "" ? "" : " ") + next);
+    setState(acc);
     i += 1;
-    if (i >= text.length) clearInterval(it);
-  }, speed);
-  return it;
-};
+
+    if (i < chunks.length) {
+      const delay = fixedDelay != null
+        ? fixedDelay
+        : Math.min(maxDelay, base + perChar * (chunks[i]?.length || 0));
+      timerId = setTimeout(step, delay);
+    }
+  };
+
+  // première étape
+  timerId = setTimeout(step, 0);
+
+  // retourne un cleanup
+  return () => {
+    if (timerId) clearTimeout(timerId);
+  };
+}
+
 
 // ✅ Uniformise les noms qui peuvent varier selon la version backend
 const normalizeQuotas = (q = {}) => {
@@ -125,18 +179,148 @@ const PremiumFahimtaPage = () => {
   // quotas
   const [quotas, setQuotas] = useState(null);
 
-  /* ---------- effets ---------- */
-  useEffect(() => {
-    if (!response) return;
-    const id = typewriter(response, setTypedText, 15);
-    return () => clearInterval(id);
-  }, [response]);
 
-  useEffect(() => {
-    if (!ocrResponse) return;
-    const id = typewriter(ocrResponse, setTypedOCR, 15);
-    return () => clearInterval(id);
-  }, [ocrResponse]);
+
+  // --- Speech to Text (dictée)
+const [sttSupported, setSttSupported] = useState(false);
+const [listening, setListening] = useState(false);
+const recognitionRef = React.useRef(null);
+
+// --- Text to Speech (lecture de la réponse)
+const [ttsSupported, setTtsSupported] = useState(false);
+const [speaking, setSpeaking] = useState(false);
+const utteranceRef = React.useRef(null);
+
+
+
+
+useEffect(() => {
+  // --- STT
+  const WSR = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  if (WSR) {
+    setSttSupported(true);
+    const rec = new WSR();
+    rec.lang = "fr-FR";
+    rec.continuous = true;
+    rec.interimResults = true;
+
+    let base = "";
+
+    rec.onstart = () => {
+      base = (input && input.trim()) ? input.trim() + " " : "";
+      setListening(true);
+    };
+
+    rec.onresult = (e) => {
+      const transcript = Array.from(e.results)
+        .map(r => r[0]?.transcript || "")
+        .join(" ")
+        .replace(/\s+/g, " ")
+        .trim();
+
+      setInput(base + transcript);
+    };
+
+    rec.onerror = () => setListening(false);
+    rec.onend = () => setListening(false);
+
+    recognitionRef.current = rec;
+  } else {
+    setSttSupported(false);
+  }
+
+  // --- TTS
+  if ("speechSynthesis" in window) {
+    setTtsSupported(true);
+  } else {
+    setTtsSupported(false);
+  }
+
+  // cleanup
+  return () => {
+    try {
+      if (recognitionRef.current) {
+        recognitionRef.current.onresult = null;
+        recognitionRef.current.onstart = null;
+        recognitionRef.current.onerror = null;
+        recognitionRef.current.onend = null;
+        recognitionRef.current.stop();
+      }
+    } catch {}
+    try {
+      window.speechSynthesis?.cancel();
+    } catch {}
+  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, []);
+
+
+// --- Dictée (toggle)
+const handleToggleDictation = () => {
+  if (!sttSupported) return setMessage("La dictée vocale n’est pas supportée par ce navigateur.");
+  if (!recognitionRef.current) return;
+
+  if (listening) {
+    recognitionRef.current.stop();
+    setListening(false);
+    return;
+  }
+  try {
+    setMessage("");
+    recognitionRef.current.start();
+    setListening(true);
+  } catch {
+    setListening(false);
+  }
+};
+
+// --- Quelle réponse lire ? (la dernière)
+const getLastIaText = () => {
+  // Ici on n'affiche qu'une seule réponse "response"
+  // Si l'animation est en cours, on lit le texte animé
+  return typedText || response || "";
+};
+
+// --- Lecture audio
+const handleSpeak = () => {
+  if (!ttsSupported) return setMessage("La lecture audio n’est pas supportée par ce navigateur.");
+  const text = getLastIaText();
+  if (!text) return;
+
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = "fr-FR";
+  u.rate = 1;
+  u.pitch = 1;
+  u.onstart = () => setSpeaking(true);
+  u.onend = () => setSpeaking(false);
+  u.onerror = () => setSpeaking(false);
+
+  utteranceRef.current = u;
+  window.speechSynthesis.speak(u);
+};
+
+const handleStopSpeak = () => {
+  if (!ttsSupported) return;
+  window.speechSynthesis.cancel();
+  setSpeaking(false);
+};
+
+
+  /* ---------- effets ---------- */
+useEffect(() => {
+  if (!response) return;
+  const cancel = revealBySentence(response, setTypedText, { base: 350, perChar: 8, maxDelay: 1500 });
+  return cancel;
+}, [response]);
+
+useEffect(() => {
+  if (!ocrResponse) return;
+  const cancel = revealBySentence(ocrResponse, setTypedOCR, { base: 350, perChar: 8, maxDelay: 1500 });
+  return cancel;
+}, [ocrResponse]);
+
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -575,36 +759,120 @@ const filteredExams = React.useMemo(() => {
                 </Grid>
 
                 {/* Quotas */}
-                {quotas && (
-                  <Paper
-                    elevation={0}
-                    sx={{
-                      mt: 3,
-                      p: 2,
-                      borderRadius: 2,
-                      bgcolor: "#fff8e1",
-                      border: "1px solid rgba(0,0,0,0.06)",
-                    }}
-                  >
-                    <Typography variant="subtitle1" fontWeight={900} sx={{ mb: 1 }}>
-                      Quotas restants ce mois-ci
-                    </Typography>
-                    <Grid container spacing={2}>
-                      {[
-                        { label: "Livres", value: quotas.booksRemaining, bg: "#F48FB1" },
-                        { label: "Sujets", value: quotas.examsRemaining, bg: "#FFF176" },
-                        { label: "Corrections", value: quotas.correctionsRemaining, bg: "#CE93D8" },
-                        { label: "Questions IA", value: quotas.iaTextRemaining, bg: "#A5D6A7" },
-                        // 👇 clé vision uniformisée
-                        { label: "IA (vision)", value: quotas.iaVisionRemaining, bg: "#B39DDB" },
-                      ].map((q) => (
-                        <Grid item xs={6} sm={4} md={2.4} key={q.label}>
-                          <QuotaPill {...q} />
-                        </Grid>
-                      ))}
-                    </Grid>
-                  </Paper>
-                )}
+               {/* Quotas (version chips compacte) */}
+{quotas && (
+  <Paper
+    elevation={0}
+    sx={{
+      mt: 2,
+      p: 1.25,
+      borderRadius: 2,
+      bgcolor: "rgba(255,255,255,0.06)",
+      border: "1px solid rgba(255,255,255,0.14)",
+      overflowX: "auto",
+    }}
+  >
+    {/* mini composant local */}
+    {(() => {
+      const QuotaChip = ({ label, remaining, max, color = "primary" }) => {
+        const hasMax = typeof max === "number" && max > 0;
+        const pct = hasMax
+          ? Math.max(0, Math.min(100, Math.round(((max - remaining) / max) * 100)))
+          : null;
+
+        return (
+          <Paper
+            elevation={0}
+            sx={{
+              px: 1.25,
+              py: 0.75,
+              borderRadius: 999,
+              display: "flex",
+              alignItems: "center",
+              gap: 1,
+              bgcolor: "rgba(0,0,0,0.18)",
+              border: "1px solid rgba(255,255,255,0.12)",
+              whiteSpace: "nowrap",
+            }}
+          >
+            <Typography variant="body2" sx={{ fontWeight: 800, color: "#fff" }}>
+              {label}
+            </Typography>
+            <Typography variant="body2" sx={{ fontWeight: 800, color: "#fff" }}>
+              {remaining}
+              {hasMax ? `/${max}` : ""}
+            </Typography>
+            {pct !== null && (
+              <Box sx={{ width: 120, ml: 0.5 }}>
+                <LinearProgress
+                  variant="determinate"
+                  value={pct}
+                  color={color}
+                  sx={{
+                    height: 6,
+                    borderRadius: 999,
+                    backgroundColor: "rgba(255,255,255,0.2)",
+                  }}
+                />
+              </Box>
+            )}
+          </Paper>
+        );
+      };
+
+      // si ton backend expose aussi les "max", mappe-les ici :
+      const maxes = {
+        books: quotas?.booksMax,
+        exams: quotas?.examsMax,
+        corrections: quotas?.correctionsMax,
+        iaText: quotas?.iaTextMax,
+        iaVision: quotas?.iaVisionMax,
+      };
+
+      return (
+        <Stack
+          direction="row"
+          spacing={1}
+          useFlexGap
+          flexWrap="wrap"
+          alignItems="center"
+        >
+          <QuotaChip
+            label="Livres"
+            remaining={quotas?.booksRemaining ?? 0}
+            max={maxes.books}
+            color="secondary"
+          />
+          <QuotaChip
+            label="Sujets"
+            remaining={quotas?.examsRemaining ?? 0}
+            max={maxes.exams}
+            color="info"
+          />
+          <QuotaChip
+            label="Corrections"
+            remaining={quotas?.correctionsRemaining ?? 0}
+            max={maxes.corrections}
+            color="secondary"
+          />
+          <QuotaChip
+            label="Questions IA"
+            remaining={quotas?.iaTextRemaining ?? 0}
+            max={maxes.iaText}
+            color="success"
+          />
+          <QuotaChip
+            label="IA (vision)"
+            remaining={quotas?.iaVisionRemaining ?? 0}
+            max={maxes.iaVision}
+            color="warning"
+          />
+        </Stack>
+      );
+    })()}
+  </Paper>
+)}
+
               </Paper>
             </Stack>
 
@@ -646,31 +914,76 @@ const filteredExams = React.useMemo(() => {
 
               {/* Texte */}
               <Box sx={{ mt: 2 }}>
-                <TextField
-                  label="Décris clairement ton exercice…"
-                  fullWidth
-                  multiline
-                  rows={downMd ? 4 : 3}
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  InputProps={{
-                    endAdornment: (
-                      <IconButton onClick={handleSubmit} disabled={loading || !input.trim()} edge="end">
-                        <SendRoundedIcon color="primary" />
-                      </IconButton>
-                    ),
-                  }}
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      bgcolor: "#fafafa",
-                      borderRadius: 2,
-                    },
-                  }}
-                />
+
+
+              <TextField
+  label="Décris clairement ton exercice…"
+  fullWidth
+  multiline
+  rows={downMd ? 4 : 3}
+  value={input}
+  onChange={(e) => setInput(e.target.value)}
+  onKeyDown={(e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit();
+    }
+  }}
+  helperText={
+    listening
+      ? "🎙️ Dictée en cours… vous pouvez corriger le texte pendant l’enregistrement."
+      : "Astuce : appuyez sur le micro pour dicter, puis corrigez si besoin avant d’envoyer."
+  }
+  InputProps={{
+    startAdornment: (
+      <InputAdornment position="start">
+        <IconButton
+          onClick={handleToggleDictation}
+          onMouseDown={(e) => e.preventDefault()} // garde le focus dans le champ
+          disabled={!sttSupported}
+          aria-label="Dicter au micro"
+          aria-pressed={listening}
+          title={
+            !sttSupported
+              ? "Micro non supporté par ce navigateur"
+              : listening
+              ? "Arrêter la dictée"
+              : "Dicter au micro"
+          }
+          color={listening ? "error" : "primary"}
+          edge="start"
+          size="large"
+        >
+          {listening ? <MicOffRoundedIcon /> : <MicNoneRoundedIcon />}
+        </IconButton>
+      </InputAdornment>
+    ),
+    endAdornment: (
+      <InputAdornment position="end">
+        <IconButton
+          onClick={handleSubmit}
+          disabled={loading || !input.trim()}
+          aria-label="Envoyer"
+          title="Envoyer"
+          edge="end"
+        >
+          <SendRoundedIcon color="primary" />
+        </IconButton>
+      </InputAdornment>
+    ),
+  }}
+  sx={{
+    "& .MuiOutlinedInput-root": {
+      bgcolor: "#fafafa",
+      borderRadius: 2,
+    },
+  }}
+/>
+
 
                 <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mt: 1 }}>
                   <Typography variant="caption" color="text.secondary">
-                    Ex.: “Résous pas à pas (2x - 5)/3 = 7” • “Comment factoriser x² - 5x + 6 ?”
+                    Ex.: “Expliquez moi les limites .”
                   </Typography>
                   <Button size="small" startIcon={<RestartAltIcon />} onClick={resetIA} sx={{ ml: "auto" }}>
                     Réinitialiser
@@ -710,6 +1023,46 @@ const filteredExams = React.useMemo(() => {
                     </Box>
                   </Box>
                 )}
+
+
+{(response || typedText) && (
+  <Stack direction="row" spacing={1} sx={{ mt: 1, flexWrap: "wrap" }}>
+    <Button
+      size="small"
+      startIcon={<VolumeUpRoundedIcon />}
+      onClick={handleSpeak}
+      disabled={!ttsSupported || !getLastIaText()}
+    >
+      Écouter
+    </Button>
+    <Button
+      size="small"
+      startIcon={<StopRoundedIcon />}
+      onClick={handleStopSpeak}
+      disabled={!speaking}
+    >
+      Arrêter l’audio
+    </Button>
+
+    <Button
+      size="small"
+      startIcon={<RestartAltIcon />}
+      onClick={() => {
+        setInput("");
+        setMessage("");
+        setResponse("");
+        setTypedText("");
+        handleStopSpeak();
+      }}
+      sx={{ ml: "auto" }}
+    >
+      Réinitialiser
+    </Button>
+  </Stack>
+)}
+
+
+
               </Box>
 
               <Divider sx={{ my: 3 }} />
