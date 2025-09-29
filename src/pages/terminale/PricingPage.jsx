@@ -23,7 +23,8 @@ const NITA_USERNAME = "SOFTLINKTEC";
 const NITA_PASSWORD = "SOFTLINKTEC@2025";
 /* ================================================================== */
 
-const BACKEND_PUBLIC_URL = "https://0efdda9448e2.ngrok-free.app/api";
+// const BACKEND_PUBLIC_URL = "https://0efdda9448e2.ngrok-free.app/api";
+const BACKEND_PUBLIC_URL = "https://fahimtabackend-647bfe306335.herokuapp.com/api";
 
 /* Helpers phone */
 const phoneToNita = (raw) => {
