@@ -258,6 +258,16 @@ const handleToggleDictation = () => {
 
 
 
+// Remet à zéro la dictée et le champ
+const handleResetDictationInput = () => {
+  try { recognitionRef.current?.stop(); } catch {}
+  setListening(false);
+  baseRef.current = "";
+  finalRef.current = "";
+  partialRef.current = "";
+  setInput("");
+  setAiError("");
+};
 
 
 
@@ -762,7 +772,14 @@ useEffect(() => {
       bgcolor: "#fff",
       borderRadius: 2,
     },
+    // couleur du helperText (Astuce) en blanc
+    "& .MuiFormHelperText-root": {
+      color: "#fff",
+      opacity: 0.9,
+    },
   }}
+  // (optionnel) même chose ici si tu préfères
+  // FormHelperTextProps={{ sx: { color: "#fff", opacity: 0.9 } }}
   helperText={
     listening
       ? "🎙️ Dictée en cours… vous pouvez corriger le texte pendant l’enregistrement."
@@ -771,9 +788,10 @@ useEffect(() => {
   InputProps={{
     startAdornment: (
       <InputAdornment position="start">
+        {/* Micro ON/OFF */}
         <IconButton
           onClick={handleToggleDictation}
-          onMouseDown={(e) => e.preventDefault()} // garde le focus dans le champ
+          onMouseDown={(e) => e.preventDefault()}
           disabled={!sttSupported || remaining === 0}
           aria-label="Dicter au micro"
           aria-pressed={listening}
@@ -787,9 +805,22 @@ useEffect(() => {
           color={listening ? "error" : "primary"}
           size="large"
           edge="start"
-          sx={{ mr: 0.5 }}
+          sx={{ mr: 0.25 }}
         >
           {listening ? <MicOffRoundedIcon /> : <MicNoneRoundedIcon />}
+        </IconButton>
+
+        {/* 🔄 Réinitialiser (à côté du micro) */}
+        <IconButton
+          onClick={handleResetDictationInput}
+          onMouseDown={(e) => e.preventDefault()}
+          aria-label="Réinitialiser la dictée"
+          title="Réinitialiser la dictée"
+          size="large"
+          edge="start"
+          sx={{ ml: 0.25 }}
+        >
+          <RestartAltIcon />
         </IconButton>
       </InputAdornment>
     ),
@@ -808,6 +839,7 @@ useEffect(() => {
     ),
   }}
 />
+
 
 
 
