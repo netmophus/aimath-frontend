@@ -609,7 +609,7 @@ useEffect(() => {
 
   return (
     <PageLayout>
-      <Box sx={{ maxWidth: 600, mx: "auto", p: isSmallScreen ? 2 : 4, mt: isSmallScreen ? 4 : 8 }}>
+      <Box sx={{ maxWidth: 600, mx: "auto", p: isSmallScreen ? 2 : 4, mt: isSmallScreen ? 8 : 8 }}>
         {/* Bandeau compteur + état */}
         <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1, flexWrap: "wrap" }}>
           <Chip

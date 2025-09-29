@@ -1,7 +1,7 @@
 
 import React, { useContext, useMemo, useState } from "react";
 // import { Box, Typography, Button, Card, CardContent, Divider } from "@mui/material";
-import { Box, Typography, Button, Card, CardContent, Divider, Alert } from "@mui/material";
+import { Box, Typography, Button, Card, CardContent, Divider, Alert, Stack } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import PageLayout from "../components/PageLayout";
 import headerImage from "../assets/head.png";
@@ -17,6 +17,16 @@ import SchoolRoundedIcon from "@mui/icons-material/SchoolRounded";
 
 import { AuthContext } from "../context/AuthContext";
 import DistributeursModal from "../components/DistributeursModal";
+
+
+
+
+import LanguageIcon from "@mui/icons-material/Language";
+import LoginIcon from "@mui/icons-material/Login";
+import PersonAddAlt1Icon from "@mui/icons-material/PersonAddAlt1";
+import PlayCircleOutlineIcon from "@mui/icons-material/PlayCircleOutline";
+
+
 
 // 👉 remplace par ton lien d’APK
 const APK_URL = "https://github.com/netmophus/fahimta-android/releases/download/v1.0.2/fahimta-v1.0.2.apk";
@@ -104,55 +114,151 @@ const FeatureCard = ({ icon, title, description, accent = ["#22d3ee", "#3b82f6"]
    
 
 {/* Bandeau */}
-<Box sx={{ position: "relative", height: "auto", mt:3, overflow: "hidden" }}>
-  {/* fond image très léger */}
-
+{/* HERO – priorité à la web-app */}
+<Box sx={{ position: "relative", mt: 7, overflow: "hidden" }}>
+  {/* image d’arrière-plan très légère */}
   <Box
-  component="img"
-  src={headerImage}
-  alt="IA background"
-  sx={{
-    position: "absolute",
-    inset: 0,
-    width: "100%",
-    height: "100%",
-    objectFit: "cover",
-    opacity: 0.06,
-    zIndex: 0,              // <-- bien en dessous
-    filter: "saturate(0.9)",
-    pointerEvents: "none",  // <-- ne capte aucun clic
-  }}
-/>
+    component="img"
+    src={headerImage}
+    alt="IA background"
+    sx={{
+      position: "absolute",
+      inset: 0,
+      width: "100%",
+      height: "100%",
+      objectFit: "cover",
+      opacity: 0.06,
+      zIndex: 0,
+      filter: "saturate(0.9)",
+      pointerEvents: "none",
+    }}
+  />
 
-  {/* Overlay thématisé (remplace le fond noir) */}
+  {/* Overlay / contenu */}
   <Box
     sx={{
-    position: "relative",
-    zIndex: 2,
-    // <<< anti-overflow + centrage >>>
-    maxWidth: 1200,
-    mx: "auto",
-    px: { xs: 2, sm: 3, md: 4 },
-    py: { xs: 4, md: 6 },
-    width: "100%",
-    boxSizing: "border-box",
-
-     background: BRAND_GRADIENT,
-    color: "white",
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    textAlign: "center",
-  }}
+      position: "relative",
+      zIndex: 2,
+      
+      mx: "auto",
+      px: { xs: 2, sm: 3, md: 4 },
+      py: { xs: 5, md: 7 },
+      width: "100%",
+      boxSizing: "border-box",
+      background: BRAND_GRADIENT,
+      color: "white",
+      display: "grid",
+      gridTemplateColumns: { xs: "1fr", md: "1.25fr 1fr" },
+      gap: { xs: 3, md: 5 },
+      alignItems: "center",
+      borderRadius: 2,
+    }}
   >
+    {/* Colonne texte + CTA */}
+    <Box>
+      <Typography variant="h3" fontWeight={900} sx={{ lineHeight: 1.1 }}>
+       FAHIMTA 
+      </Typography>
+      <Typography sx={{ mt: 1.5, color: "rgba(255,255,255,0.9)" }}>
+        Plateforme <strong>100% responsive</strong> sur téléphone, tablette et
+        ordinateur. Pose tes questions, révise, entraîne-toi, et retrouve ton
+        historique n’importe où.
+      </Typography>
+
+      {/* boutons principaux */}
+      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.2, mt: 2.5 }}>
+        <Button
+          startIcon={<LanguageIcon />}
+          variant="contained"
+          color="primary"
+          size="large"
+          onClick={onRegisterClick} // login si pas connecté, sinon /gratuit ou /premium
+          sx={{
+            px: 3,
+            py: 1.4,
+            fontWeight: 900,
+            bgcolor: "rgba(255,255,255,0.15)",
+            border: "1px solid rgba(255,255,255,0.35)",
+            "&:hover": { bgcolor: "rgba(255,255,255,0.25)" },
+          }}
+        >
+          Utiliser la web-app
+        </Button>
+
+        <Button
+          startIcon={<PlayCircleOutlineIcon />}
+          variant="contained"
+          color="secondary"
+          size="large"
+          onClick={() => navigate("/gratuit")}
+          sx={{ px: 3, py: 1.4, fontWeight: 900 }}
+        >
+          Essayer gratuitement
+        </Button>
+
+        {!premiumActive && (
+          <>
+            <Button
+              startIcon={<LoginIcon />}
+              onClick={() => navigate("/login")}
+              sx={{
+                px: 2.5,
+                py: 1.2,
+                fontWeight: 800,
+                color: "#fff",
+                border: "1px solid rgba(255,255,255,0.5)",
+                "&:hover": { backgroundColor: "rgba(255,255,255,0.12)" },
+              }}
+            >
+              Se connecter
+            </Button>
+            <Button
+              startIcon={<PersonAddAlt1Icon />}
+              onClick={() => navigate("/register")}
+              sx={{
+                px: 2.5,
+                py: 1.2,
+                fontWeight: 800,
+                color: "#fff",
+                border: "1px solid rgba(255,255,255,0.5)",
+                "&:hover": { backgroundColor: "rgba(255,255,255,0.12)" },
+              }}
+            >
+              Créer un compte
+            </Button>
+          </>
+        )}
+      </Box>
+
+      {/* mini “preuves”/avantages */}
+      <Box
+        sx={{
+          mt: 2.5,
+          display: "flex",
+          flexWrap: "wrap",
+          gap: 1,
+          color: "rgba(255,255,255,0.9)",
+          fontSize: 14,
+        }}
+      >
+        <Box sx={{ px: 1, py: 0.5, border: "1px solid rgba(255,255,255,0.25)", borderRadius: 1 }}>
+          📱 Optimisée mobile
+        </Box>
+        <Box sx={{ px: 1, py: 0.5, border: "1px solid rgba(255,255,255,0.25)", borderRadius: 1 }}>
+          ⚡ Démarrage instantané
+        </Box>
+        <Box sx={{ px: 1, py: 0.5, border: "1px solid rgba(255,255,255,0.25)", borderRadius: 1 }}>
+          🔄 Historique synchronisé
+        </Box>
+      </Box>
+    </Box>
+
+    {/* Colonne visuelle (garde la carte “verre” pour le look) */}
     <Card
       elevation={8}
       sx={{
-        width: "100%",
-        maxWidth: 980,
         borderRadius: 2.5,
         overflow: "hidden",
-        // “glass”
         backgroundColor: "rgba(255,255,255,0.10)",
         border: "1px solid rgba(255,255,255,0.22)",
         backdropFilter: "blur(8px)",
@@ -161,131 +267,14 @@ const FeatureCard = ({ icon, title, description, accent = ["#22d3ee", "#3b82f6"]
       }}
     >
       <CardContent sx={{ p: { xs: 2.5, md: 3.5 } }}>
-        <Typography variant="h5" fontWeight={800} sx={{ mb: 1, textAlign: "left", letterSpacing: 0.3 }}>
-          Télécharger l’application Android (APK)
+        <Typography variant="h6" fontWeight={800}>
+          Résous, révise, progresse.
         </Typography>
-
-        <Typography variant="body2" sx={{ opacity: 0.95, mb: 2, textAlign: "left" }}>
-          Installez FAHIMTA rapidement : téléchargez l’APK ou scannez le QR avec votre téléphone Android.
+        <Typography variant="body2" sx={{ opacity: 0.95, mt: 0.5 }}>
+          IA de maths, livres et vidéos, sujets corrigés, et soutien+ avec un enseignant.
         </Typography>
-
-        {/* Avertissement */}
-        <Alert
-          severity="info"
-          icon={false}
-          sx={{
-            textAlign: "left",
-            mb: 2,
-            bgcolor: "rgba(255,255,255,0.12)",
-            border: "1px solid rgba(255,255,255,0.22)",
-            color: "#fff",
-          }}
-        >
-          <strong>À savoir :</strong> comme l’APK ne vient pas d’une boutique officielle, Android peut afficher un
-          message « <em>application potentiellement dangereuse</em> » / « <em>autoriser cette source</em> ».  
-          C’est <strong>normal</strong>. Autorisez <em>l’installation depuis cette source</em> puis appuyez sur
-          <strong> Installer</strong>.
-        </Alert>
-
-        <Divider sx={{ borderColor: "rgba(255,255,255,0.18)", my: 2 }} />
-
-        {/* grille boutons + QR */}
-        <Box
-          sx={{
-            display: "grid",
-            gridTemplateColumns: { xs: "1fr", md: "1.2fr 1fr" },
-            gap: 2.5,
-            alignItems: "center",
-          }}
-        >
-          <Box sx={{ display: "flex", flexDirection: "column", alignItems: { xs: "stretch", sm: "flex-start" }, gap: 1.5 }}>
-            <Button
-              component="a"
-              href={APK_URL}
-              download
-              startIcon={<AndroidIcon />}
-              variant="contained"
-              color="success"
-              size="large"
-              sx={{
-                px: 3,
-                py: 1.4,
-                fontWeight: 800,
-                alignSelf: { xs: "stretch", sm: "flex-start" },
-                boxShadow: "0 6px 16px rgba(0,0,0,0.25)",
-              }}
-            >
-              Télécharger l’APK
-            </Button>
-
-            {!premiumActive && (
-              <Button
-                variant="contained"
-                onClick={onRegisterClick}
-                sx={{
-                  px: 3,
-                  py: 1.2,
-                  fontWeight: 700,
-                  alignSelf: { xs: "stretch", sm: "flex-start" },
-                  bgcolor: "#ff9800",
-                  "&:hover": { bgcolor: "#fb8c00" },
-                }}
-              >
-                Se connecter maintenant
-              </Button>
-            )}
-
-            <Typography variant="caption" sx={{ mt: 0.5, opacity: 0.95, textAlign: "left" }}>
-              1ʳᵉ installation : si Android le demande, autoriser l’« installation depuis cette source ».
-            </Typography>
-          </Box>
-
-          <Box sx={{ display: "flex", justifyContent: "center" }}>
-            <Box
-              sx={{
-                backgroundColor: "rgba(255,255,255,0.12)",
-                border: "1px solid rgba(255,255,255,0.20)",
-                borderRadius: 2,
-                p: 2,
-                textAlign: "center",
-                width: 260,
-              }}
-            >
-              <img
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(APK_URL)}`}
-                alt="QR de téléchargement"
-                style={{ width: "100%", height: "auto", borderRadius: 8 }}
-              />
-              <Typography variant="caption" sx={{ display: "block", mt: 1, opacity: 0.95 }}>
-                Scannez avec l’appareil photo pour installer
-              </Typography>
-            </Box>
-          </Box>
-        </Box>
       </CardContent>
     </Card>
-
-    {/* Bouton distributeurs */}
-    <Box sx={{ mt: 2.5 }}>
-      <Button
-        variant="outlined"
-        size="large"
-        startIcon={<StorefrontRoundedIcon />}
-        onClick={() => setOpenDist(true)}
-        sx={{
-          borderColor: "rgba(255,255,255,0.7)",
-          color: "#fff",
-          px: 3,
-          py: 1.2,
-          "&:hover": {
-            borderColor: "#fff",
-            backgroundColor: "rgba(255,255,255,0.12)",
-          },
-        }}
-      >
-        Voir la liste des distributeurs
-      </Button>
-    </Box>
   </Box>
 </Box>
 
@@ -293,6 +282,162 @@ const FeatureCard = ({ icon, title, description, accent = ["#22d3ee", "#3b82f6"]
 
 
 
+{/* Section téléchargement APK (en bas) */}
+{/* Section téléchargement APK — look moderne & compact */}
+<Box
+  sx={{
+    py: { xs: 4, md: 6 },
+    background:
+      "radial-gradient(900px 400px at 8% -10%, #173066 0%, #0c1431 45%) , linear-gradient(180deg, #0c1431 0%, #0b3f8a 100%)",
+    color: "#fff",
+  }}
+>
+  <Box sx={{ maxWidth: 1100, mx: "auto", px: { xs: 2, sm: 3, md: 4 } }}>
+    <Card
+      elevation={0}
+      sx={{
+        borderRadius: 3,
+        overflow: "hidden",
+        background: "rgba(255,255,255,0.06)",
+        border: "1px solid rgba(255,255,255,0.12)",
+        backdropFilter: "blur(8px)",
+      }}
+    >
+      <CardContent sx={{ p: { xs: 2.25, sm: 3 } }}>
+        {/* En-tête */}
+        <Stack
+          direction={{ xs: "column", sm: "row" }}
+          spacing={1}
+          alignItems={{ xs: "flex-start", sm: "center" }}
+          justifyContent="space-between"
+          color={"white"}
+        >
+          <Box>
+            <Typography
+              variant="h6"
+              fontWeight={900}
+              sx={{ fontSize: { xs: 18, sm: 20, md: 22 } }}
+            >
+              Installer l’app Android (APK)
+            </Typography>
+            <Typography sx={{ mt: 0.5, opacity: 0.9, fontSize: { xs: 13, sm: 14 } }}>
+              Téléchargez l’APK ou scannez le QR. Vous pouvez aussi utiliser la version web.
+            </Typography>
+          </Box>
+
+          {/* CTA principal */}
+          <Button
+            component="a"
+            href={APK_URL}
+            download
+            startIcon={<AndroidIcon />}
+            variant="contained"
+            color="success"
+            size="medium"
+            sx={{
+              px: 2.25,
+              py: 1,
+              fontWeight: 900,
+              boxShadow: "0 6px 18px rgba(0,0,0,0.25)",
+              borderRadius: 2,
+            }}
+          >
+            Télécharger l’APK
+          </Button>
+        </Stack>
+
+        {/* Zone contenu : Infos + QR */}
+        <Box
+          sx={{
+            mt: 2,
+            display: "grid",
+            gridTemplateColumns: { xs: "1fr", sm: "1fr auto" },
+            gap: 1.75,
+            alignItems: "center",
+          }}
+        >
+          {/* Colonne gauche : notice courte & étapes */}
+          <Box>
+            {/* Notice stylée (remplace l’Alert) */}
+            <Box
+              sx={{
+                p: 1.25,
+                borderRadius: 2,
+                background: "linear-gradient(135deg, rgba(255,255,255,0.10), rgba(255,255,255,0.06))",
+                border: "1px solid rgba(255,255,255,0.18)",
+              }}
+            >
+              <Typography sx={{ fontSize: { xs: 12.5, sm: 13.5 }, lineHeight: 1.55 , color:'#fff'}}>
+                <strong>À l’installation de l’APK sur votre téléphone Android</strong>, il est possible
+                de voir <em>« application potentiellement dangereuse »</em> ou
+                <em> « autoriser cette source »</em>. C’est <strong>normal</strong> pour toute application
+                installée via un fichier APK (hors boutique officielle). Notre arrivée sur les stores
+                publics est <strong>en cours</strong>.
+              </Typography>
+
+              <Stack
+                component="ol"
+                sx={{
+                  mt: 1,
+                  mb: 0,
+                  pl: 2.25,
+                  "& li": { mb: 0.25, fontSize: { xs: 12.5, sm: 13.5 } },
+                  color:'#fff'
+                }}
+                spacing={0.25}
+              >
+                <li>Téléchargez l’APK et ouvrez-le depuis vos <em>Téléchargements</em>.</li>
+                <li>Si un avertissement s’affiche : <em>Paramètres</em> → <em>Autoriser cette source</em> (une fois).</li>
+                <li>Revenez à l’écran précédent puis touchez <strong>Installer</strong>.</li>
+              </Stack>
+
+              <Typography sx={{ mt: 1, fontSize: { xs: 12.5, sm: 13.5 }, color:'#fff' }}>
+                Astuce : la <strong>version web</strong> de FAHIMTA est
+                entièrement responsive (mobile, tablette, ordinateur).
+              </Typography>
+            </Box>
+
+            {/* Légende d’installation */}
+            <Typography
+              variant="caption"
+              sx={{ display: "block", mt: 0.75, opacity: 0.9 , color:'#fff'}}
+            >
+              1ʳᵉ installation : Android peut demander d’« autoriser cette source ».
+            </Typography>
+          </Box>
+
+          {/* Colonne droite : QR très compact */}
+          <Box sx={{ display: "flex", justifyContent: { xs: "flex-start", sm: "center" } }}>
+            <Box
+              sx={{
+                backgroundColor: "rgba(255,255,255,0.08)",
+                border: "1px solid rgba(255,255,255,0.18)",
+                borderRadius: 2,
+                p: 1.1,
+                textAlign: "center",
+                width: { xs: 138, sm: 150 }, // QR plus petit et responsive
+              }}
+            >
+              <img
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(
+                  APK_URL
+                )}`}
+                alt="QR de téléchargement de l’APK"
+                style={{ width: "100%", height: "auto", borderRadius: 6 }}
+              />
+              <Typography
+                variant="caption"
+                sx={{ display: "block", mt: 0.5, opacity: 0.95, fontSize: 11.5 , color:'#fff'}}
+              >
+                Scannez pour installer
+              </Typography>
+            </Box>
+          </Box>
+        </Box>
+      </CardContent>
+    </Card>
+  </Box>
+</Box>
 
 
 
