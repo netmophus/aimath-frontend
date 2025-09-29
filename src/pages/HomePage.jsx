@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import PageLayout from "../components/PageLayout";
 import headerImage from "../assets/head.png";
 
-import StorefrontRoundedIcon from "@mui/icons-material/StorefrontRounded";
+
 import AndroidIcon from "@mui/icons-material/Android";
 
 
@@ -25,6 +25,7 @@ import LanguageIcon from "@mui/icons-material/Language";
 import LoginIcon from "@mui/icons-material/Login";
 import PersonAddAlt1Icon from "@mui/icons-material/PersonAddAlt1";
 import PlayCircleOutlineIcon from "@mui/icons-material/PlayCircleOutline";
+import fahimtaMark from "../assets/fahimta.png";
 
 
 
@@ -156,14 +157,71 @@ const FeatureCard = ({ icon, title, description, accent = ["#22d3ee", "#3b82f6"]
   >
     {/* Colonne texte + CTA */}
     <Box>
-      <Typography variant="h3" fontWeight={900} sx={{ lineHeight: 1.1 }}>
-       FAHIMTA 
-      </Typography>
+   <Stack spacing={0.5} sx={{ mb: 1 }}>
+  {/* "My" en style script */}
+  <Typography
+    variant="h5"
+    sx={{
+      fontFamily: `'Pacifico', cursive`, // si la police n'est pas dispo, le navigateur utilisera "cursive"
+      fontWeight: 700,
+      fontSize: { xs: 28, sm: 32, md: 36 },
+      lineHeight: 1,
+      mb: 0.5,
+      textShadow: "0 2px 0 rgba(0,0,0,0.25)",
+    }}
+  >
+    My
+  </Typography>
+
+  {/* FAHIMTA look 3D (ombre empilée) */}
+  <Typography
+    component="h1"
+    sx={{
+      fontWeight: 900,
+      letterSpacing: { xs: 1, md: 2 },
+      fontSize: { xs: 40, sm: 56, md: 72 },
+      lineHeight: 1,
+      color: "#3b82f6",
+      textTransform: "uppercase",
+      textShadow:
+        // couche "3D" (empilement d’ombres pour le relief)
+        "0 1px 0 #1e3a8a, 0 2px 0 #1e3a8a, 0 3px 0 #1e3a8a, 0 4px 0 #1e3a8a, " +
+        "0 6px 12px rgba(0,0,0,0.35)",
+    }}
+  >
+    FAHIMTA
+  </Typography>
+
+  {/* Slogan haoussa */}
+  <Typography
+    sx={{
+      mt: 0.75,
+      fontSize: { xs: 16, sm: 18, md: 20 },
+      fontWeight: 900,
+      color: "rgba(255,255,255,0.95)",
+    }}
+  >
+    Abokin karatun zamani.
+  </Typography>
+  <Typography
+    sx={{
+      fontSize: { xs: 16, sm: 18, md: 20 },
+      fontWeight: 900,
+      color: "rgba(255,255,255,0.95)",
+    }}
+  >
+    Ay zamani cewandika.
+  </Typography>
+</Stack>
+
       <Typography sx={{ mt: 1.5, color: "rgba(255,255,255,0.9)" }}>
         Plateforme <strong>100% responsive</strong> sur téléphone, tablette et
-        ordinateur. Pose tes questions, révise, entraîne-toi, et retrouve ton
-        historique n’importe où.
+        ordinateur. Un accélérateur de réussite en maths.
       </Typography>
+
+      <Typography sx={{  fontSize: { xs: 16, sm: 18, md: 20 },  color: "rgba(255,255,255,0.9)" }}>
+        <strong> votre accélérateur de réussite en maths.</strong>
+     </Typography>
 
       {/* boutons principaux */}
       <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.2, mt: 2.5 }}>
@@ -253,28 +311,95 @@ const FeatureCard = ({ icon, title, description, accent = ["#22d3ee", "#3b82f6"]
       </Box>
     </Box>
 
-    {/* Colonne visuelle (garde la carte “verre” pour le look) */}
-    <Card
-      elevation={8}
-      sx={{
-        borderRadius: 2.5,
-        overflow: "hidden",
-        backgroundColor: "rgba(255,255,255,0.10)",
-        border: "1px solid rgba(255,255,255,0.22)",
-        backdropFilter: "blur(8px)",
-        color: "#fff",
-        boxShadow: "0 10px 30px rgba(0,0,0,0.25)",
-      }}
-    >
-      <CardContent sx={{ p: { xs: 2.5, md: 3.5 } }}>
-        <Typography variant="h6" fontWeight={800}>
-          Résous, révise, progresse.
+  {/* Colonne visuelle – version enrichie + image */}
+<Card
+  elevation={8}
+  sx={{
+    alignSelf: { md: "start" },            // la carte remonte légèrement
+    mt: { xs: 0, md: -1 },
+    borderRadius: 3,
+    overflow: "hidden",
+    background:
+      "linear-gradient(135deg, rgba(255,255,255,0.10), rgba(255,255,255,0.06))",
+    border: "1px solid rgba(255,255,255,0.22)",
+    backdropFilter: "blur(8px)",
+    color: "#fff",
+    boxShadow: "0 14px 34px rgba(0,0,0,0.28)",
+  }}
+>
+  <CardContent sx={{ p: { xs: 2.25, md: 3 } }}>
+    <Stack spacing={1.25}>
+      {/* Logo / visuel */}
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "flex-start",
+          mb: 0.5,
+        }}
+      >
+        <Box
+          component="img"
+          alt="Fahimta"
+          src={fahimtaMark}
+          sx={{
+            width: { xs: 120, sm: 140, md: 160 },
+            height: "auto",
+            filter: "drop-shadow(0 8px 18px rgba(0,0,0,0.35))",
+            borderRadius: 1.5,
+          }}
+        />
+      </Box>
+
+      {/* Accroche principale */}
+      <Typography
+        variant="h6"
+        fontWeight={900}
+        sx={{
+          lineHeight: 1.15,
+          fontSize: { xs: 18, sm: 20, md: 22 },
+          textShadow: "0 2px 10px rgba(0,0,0,0.25)",
+        }}
+      >
+       Révèle ton potentiel en maths, maintenant.
+      </Typography>
+
+      <Typography variant="body2" sx={{ opacity: 0.95 }}>
+       Fahimta réunit IA de maths, vidéos claires, livres et rappels de cours,  sujets type BEPC ou BAC corrigés. Encore bloqué ? Passe en Soutien+ : un enseignant en ligne répond à toutes tes questions et te guide pas à pas. Résultat : moins de stress, plus de déclics, de meilleures notes.
+      </Typography>
+
+      {/* Message marketing ajouté */}
+      <Box
+        sx={{
+          mt: 0.5,
+          p: 1,
+          borderRadius: 2,
+          background: "rgba(59,130,246,0.12)",
+          border: "1px solid rgba(59,130,246,0.28)",
+        }}
+      >
+        <Typography
+          sx={{
+            fontSize: { xs: 13.5, sm: 16 },
+            fontWeight: 700,
+            color: "#E6F0FF",
+          }}
+        >
+          Avec Fahimta, vous n’avez plus d’excuse&nbsp;: les mathématiques n’ont plus
+          de secret pour vous.
         </Typography>
-        <Typography variant="body2" sx={{ opacity: 0.95, mt: 0.5 }}>
-          IA de maths, livres et vidéos, sujets corrigés, et soutien+ avec un enseignant.
-        </Typography>
-      </CardContent>
-    </Card>
+      </Box>
+
+      {/* Roadmap courte */}
+      <Typography
+        variant="caption"
+        sx={{ mt: 0.25, opacity: 0.9, display: "block" }}
+      >
+        Bientôt&nbsp;: Physique, Chimie et SVT.
+      </Typography>
+    </Stack>
+  </CardContent>
+</Card>
+
   </Box>
 </Box>
 
