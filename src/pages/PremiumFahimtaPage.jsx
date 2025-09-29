@@ -181,106 +181,142 @@ const PremiumFahimtaPage = () => {
 
 
 
-  // --- Speech to Text (dictée)
+
+
+
+
+
+// --- Speech to Text (dictée) + TTS — version anti-doublons mobile ----------
 const [sttSupported, setSttSupported] = useState(false);
 const [listening, setListening] = useState(false);
 const recognitionRef = React.useRef(null);
+
+// Accumulateurs pour éviter les répétitions
+const baseRef = React.useRef("");     // texte présent AVANT de démarrer la dictée
+const finalRef = React.useRef("");    // segments finaux validés (isFinal)
+const partialRef = React.useRef("");  // segment en cours (interim)
+const stopTimerRef = React.useRef(null);
 
 // --- Text to Speech (lecture de la réponse)
 const [ttsSupported, setTtsSupported] = useState(false);
 const [speaking, setSpeaking] = useState(false);
 const utteranceRef = React.useRef(null);
 
-
-
+// Détection mobile (les moteurs mobiles répètent souvent les interim)
+const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+  typeof navigator !== "undefined" ? navigator.userAgent : ""
+);
 
 useEffect(() => {
-  // --- STT
   const WSR = window.SpeechRecognition || window.webkitSpeechRecognition;
-
-  if (WSR) {
+  if (!WSR) {
+    setSttSupported(false);
+  } else {
     setSttSupported(true);
     const rec = new WSR();
     rec.lang = "fr-FR";
-    rec.continuous = true;
-    rec.interimResults = true;
-
-    let base = "";
+    rec.maxAlternatives = 1;
+    rec.continuous = !isMobile;       // mobile: sessions plus courtes
+    rec.interimResults = !isMobile;   // mobile: pas d’interim => moins de doublons
 
     rec.onstart = () => {
-      base = (input && input.trim()) ? input.trim() + " " : "";
+      baseRef.current = (input && input.trim()) ? input.trim() : "";
+      finalRef.current = "";
+      partialRef.current = "";
       setListening(true);
     };
 
     rec.onresult = (e) => {
-      const transcript = Array.from(e.results)
-        .map(r => r[0]?.transcript || "")
-        .join(" ")
-        .replace(/\s+/g, " ")
-        .trim();
+      for (let i = e.resultIndex; i < e.results.length; i += 1) {
+        const res = e.results[i];
+        const txt = (res[0]?.transcript || "").replace(/\s+/g, " ").trim();
+        if (!txt) continue;
 
-      setInput(base + transcript);
+        if (res.isFinal) {
+          // ajoute le segment final UNE SEULE FOIS
+          if (!finalRef.current.endsWith(txt)) {
+            finalRef.current = [finalRef.current, txt].filter(Boolean).join(" ");
+          }
+          partialRef.current = "";
+
+          const composed = [baseRef.current, finalRef.current]
+            .filter(Boolean)
+            .join(" ")
+            .replace(/\s+/g, " ")
+            .trim();
+          setInput(composed);
+
+          // Auto-stop doux après une petite pause sur mobile
+          if (isMobile) {
+            clearTimeout(stopTimerRef.current);
+            stopTimerRef.current = setTimeout(() => {
+              try { recognitionRef.current?.stop(); } catch {}
+            }, 1500);
+          }
+        } else if (!isMobile) {
+          // interim: n’actualise que si ça change réellement
+          if (txt !== partialRef.current) {
+            partialRef.current = txt;
+            const composed = [baseRef.current, finalRef.current, partialRef.current]
+              .filter(Boolean)
+              .join(" ")
+              .replace(/\s+/g, " ")
+              .trim();
+            setInput(composed);
+          }
+        }
+      }
     };
 
-    rec.onerror = () => setListening(false);
-    rec.onend = () => setListening(false);
+    rec.onerror = () => {
+      setListening(false);
+      clearTimeout(stopTimerRef.current);
+    };
+
+    rec.onend = () => {
+      setListening(false);
+      clearTimeout(stopTimerRef.current);
+      // Nettoie un éventuel interim affiché
+      partialRef.current = "";
+      const composed = [baseRef.current, finalRef.current].filter(Boolean).join(" ").trim();
+      if (composed) setInput(composed);
+    };
 
     recognitionRef.current = rec;
-  } else {
-    setSttSupported(false);
   }
 
-  // --- TTS
-  if ("speechSynthesis" in window) {
-    setTtsSupported(true);
-  } else {
-    setTtsSupported(false);
-  }
+  // TTS dispo ?
+  setTtsSupported("speechSynthesis" in window);
 
-  // cleanup
+  // Cleanup
   return () => {
-    try {
-      if (recognitionRef.current) {
-        recognitionRef.current.onresult = null;
-        recognitionRef.current.onstart = null;
-        recognitionRef.current.onerror = null;
-        recognitionRef.current.onend = null;
-        recognitionRef.current.stop();
-      }
-    } catch {}
-    try {
-      window.speechSynthesis?.cancel();
-    } catch {}
+    try { recognitionRef.current?.stop(); } catch {}
+    clearTimeout(stopTimerRef.current);
+    try { window.speechSynthesis?.cancel(); } catch {}
   };
   // eslint-disable-next-line react-hooks/exhaustive-deps
 }, []);
 
-
 // --- Dictée (toggle)
 const handleToggleDictation = () => {
-  if (!sttSupported) return setMessage("La dictée vocale n’est pas supportée par ce navigateur.");
-  if (!recognitionRef.current) return;
-
-  if (listening) {
-    recognitionRef.current.stop();
-    setListening(false);
+  if (!sttSupported || !recognitionRef.current) {
+    setMessage("La dictée vocale n’est pas supportée par ce navigateur.");
     return;
   }
+  if (listening) {
+    try { recognitionRef.current.stop(); } catch {}
+    return;
+  }
+  setMessage("");
   try {
-    setMessage("");
     recognitionRef.current.start();
-    setListening(true);
   } catch {
     setListening(false);
   }
 };
 
 // --- Quelle réponse lire ? (la dernière)
-const getLastIaText = () => {
-  // Ici on n'affiche qu'une seule réponse "response"
-  // Si l'animation est en cours, on lit le texte animé
-  return typedText || response || "";
-};
+const getLastIaText = () => typedText || response || "";
 
 // --- Lecture audio
 const handleSpeak = () => {
@@ -296,7 +332,6 @@ const handleSpeak = () => {
   u.onstart = () => setSpeaking(true);
   u.onend = () => setSpeaking(false);
   u.onerror = () => setSpeaking(false);
-
   utteranceRef.current = u;
   window.speechSynthesis.speak(u);
 };
@@ -306,6 +341,22 @@ const handleStopSpeak = () => {
   window.speechSynthesis.cancel();
   setSpeaking(false);
 };
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
 
 
   /* ---------- effets ---------- */
