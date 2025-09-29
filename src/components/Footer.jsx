@@ -174,11 +174,11 @@ const Footer = () => {
       Contact
     </Typography>
    <Typography variant="body2" sx={{ color: "#bbdefb", mb: 1 }}>
-  📞 +22780648383 
+   +22780648383 
   <br />
-  📧 contact@softlink-groupe.com  
+  contact@softlink-groupe.com  
   <br />
-  📍 Niamey, Niger
+  Niamey, Niger
 </Typography>
 
 
