@@ -53,6 +53,28 @@ import MicOffRoundedIcon from "@mui/icons-material/MicOffRounded";
 import VolumeUpRoundedIcon from "@mui/icons-material/VolumeUpRounded";
 import StopRoundedIcon from "@mui/icons-material/StopRounded";
 
+// --- export TXT helpers ---
+const saveTextFile = (text = "", filename = "fahimta.txt") => {
+  const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+};
+
+// plein texte (pas l'animation) pour IA et OCR
+const getFullIaText = (typedText, response) => (response || typedText || "").trim();
+const getFullOcrText = (typedOCR, ocrResponse) => (ocrResponse || typedOCR || "").trim();
+
+// nom de fichier horodaté
+const tsName = (base) =>
+  `${base}-${new Date().toISOString().slice(0,19).replace(/:/g,"-")}.txt`;
+
+
+
+
 /* ---------------- utils ---------------- */
 /* ---------------- utils ---------------- */
 // délai par défaut entre phrases
@@ -421,6 +443,15 @@ useEffect(() => {
     setResponse("");
     setTypedText("");
   };
+
+
+  const resetOCR = () => {
+  setOcrImage(null);
+  setOcrResponse("");
+  setTypedOCR("");
+  setOcrError("");
+};
+
 
   /* ---------- handlers OCR (VISION) ---------- */
   const handleImageSubmit = async () => {
@@ -1109,6 +1140,16 @@ const filteredExams = React.useMemo(() => {
     >
       Réinitialiser
     </Button>
+    <Button
+      size="small"
+      onClick={() => {
+        const full = getFullIaText(typedText, response);
+        if (!full) return;
+        saveTextFile(full, tsName("fahimta-reponse-ia"));
+      }}
+    >
+      Enregistrer en .txt
+    </Button>
   </Stack>
 )}
 
@@ -1200,7 +1241,7 @@ const filteredExams = React.useMemo(() => {
                   </Stack>
                 )}
 
-                {ocrResponse && (
+                {/* {ocrResponse && (
                   <Box sx={{ mt: 2, bgcolor: "#263238", p: 2, borderRadius: 2 }}>
                     <Typography variant="subtitle1" color="white" fontWeight={800}>
                       Réponse IA :
@@ -1217,7 +1258,55 @@ const filteredExams = React.useMemo(() => {
                       {typedOCR}
                     </Typography>
                   </Box>
-                )}
+                )} */}
+
+
+{ocrResponse && (
+  <Box sx={{ mt: 2, bgcolor: "#263238", p: 2, borderRadius: 2 }}>
+    <Typography variant="subtitle1" color="white" fontWeight={800}>
+      Réponse IA :
+    </Typography>
+    <Typography
+      sx={{
+        whiteSpace: "pre-line",
+        mt: 1,
+        fontFamily: "Courier New, monospace",
+        color: "white",
+        minHeight: 100,
+      }}
+    >
+      {typedOCR}
+    </Typography>
+
+    <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
+      <Button
+        size="small"
+        variant="outlined"
+        onClick={() => {
+          const full = getFullOcrText(typedOCR, ocrResponse);
+          if (!full) return;
+          saveTextFile(full, tsName("fahimta-reponse-ocr"));
+        }}
+      >
+        Enregistrer en .txt
+      </Button>
+      <Button
+        size="small"
+        startIcon={<RestartAltIcon />}
+        onClick={resetOCR}
+        disabled={ocrLoading}
+      >
+        Réinitialiser
+      </Button>
+    </Stack>
+  </Box>
+)}
+
+
+
+
+
+
               </Box>
             </Paper>
           </Stack>

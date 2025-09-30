@@ -20,6 +20,7 @@ import {
   useMediaQuery,
   Divider,
   Chip,
+  Tooltip,
   LinearProgress,
  
 } from "@mui/material";
@@ -38,13 +39,17 @@ import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import BookCardGratuit from "../components/gratuit/BookCardGratuit";
 import ExamCardGratuit from "../components/gratuit/ExamCardGratuit";
 import VideoCardGratuit from "../components/gratuit/VideoCardGratuit";
-import AndroidIcon from "@mui/icons-material/Android";
+
 
 
 import MicNoneRoundedIcon from "@mui/icons-material/MicNoneRounded";
 import MicOffRoundedIcon from "@mui/icons-material/MicOffRounded";
 import VolumeUpRoundedIcon from "@mui/icons-material/VolumeUpRounded";
 import StopRoundedIcon from "@mui/icons-material/StopRounded";
+// import { jsPDF } from "jspdf";
+
+
+
 
 
 /* ---------- utils ---------- */
@@ -71,6 +76,7 @@ const TabLabel = ({ label, count }) => (
     <Chip size="small" label={count} sx={{ fontWeight: 700 }} />
   </Stack>
 );
+
 
 const GratuitFahimtaPage = () => {
   const theme = useTheme();
@@ -109,21 +115,6 @@ const GratuitFahimtaPage = () => {
   const navigate = useNavigate();
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // --- Speech to Text (dictée) + TTS — version anti-doublons mobile ----------
 const [sttSupported, setSttSupported] = useState(false);
 const [listening, setListening] = useState(false);
@@ -139,6 +130,74 @@ const stopTimerRef = React.useRef(null);
 const [ttsSupported, setTtsSupported] = useState(false);
 const [speaking, setSpeaking] = useState(false);
 const utteranceRef = React.useRef(null);
+
+
+
+
+
+// ↓ récupère déjà la dernière réponse IA (tu l'as déjà)
+const lastIaText = () => getLastIaText() || "";
+
+// Export .txt
+const exportIaTxt = () => {
+  const text = lastIaText();
+  if (!text) return;
+  const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  const ts = new Date().toISOString().slice(0,19).replace(/:/g,"-");
+  a.href = url;
+  a.download = `fahimta-reponse-${ts}.txt`;
+  a.click();
+  URL.revokeObjectURL(url);
+};
+
+// Export PDF (mise en page simple, multi-pages)
+// const exportIaPdf = () => {
+//   const text = lastIaText();
+//   if (!text) return;
+
+//   const doc = new jsPDF({ unit: "pt", format: "a4" }); // 72pt = 1in
+//   const margin = 40;
+//   const pageWidth = doc.internal.pageSize.getWidth();
+//   const usable = pageWidth - margin * 2;
+
+//   // Titre
+//   doc.setFont("helvetica", "bold");
+//   doc.setFontSize(14);
+//   doc.text("Réponse Fahimta AI", margin, 56);
+
+//   // Corps
+//   doc.setFont("helvetica", "normal");
+//   doc.setFontSize(12);
+
+//   const lines = doc.splitTextToSize(text, usable);
+//   let y = 80;
+//   const lineHeight = 16;
+//   const pageHeight = doc.internal.pageSize.getHeight();
+
+//   lines.forEach((line) => {
+//     if (y + lineHeight > pageHeight - margin) {
+//       doc.addPage();
+//       y = margin;
+//     }
+//     doc.text(line, margin, y);
+//     y += lineHeight;
+//   });
+
+//   const ts = new Date().toISOString().slice(0,19).replace(/:/g,"-");
+//   doc.save(`fahimta-reponse-${ts}.pdf`);
+// };
+
+
+
+
+
+
+
+
+
+
 
 // Détection mobile
 const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
@@ -840,11 +899,6 @@ useEffect(() => {
   }}
 />
 
-
-
-
-
-
               <Typography
                 variant="caption"
                 sx={{ display: "block", mt: 1, opacity: 0.85 }}
@@ -916,9 +970,9 @@ useEffect(() => {
 
 
            {/* Actions IA */}
-{messages.length > 0 && (
+{/* {messages.length > 0 && (
   <Stack direction="row" spacing={1} sx={{ mt: 1, flexWrap: "wrap" }}>
-    {/* Lecture audio de la DERNIÈRE réponse IA */}
+    
     <Button
       size="small"
       startIcon={<VolumeUpRoundedIcon />}
@@ -949,7 +1003,40 @@ useEffect(() => {
       Réinitialiser
     </Button>
   </Stack>
+)} */}
+
+
+
+{messages.length > 0 && (
+  <Stack direction="row" spacing={1} sx={{ mt: 1, flexWrap: "wrap" }}>
+    <Button size="small" startIcon={<VolumeUpRoundedIcon />} onClick={handleSpeak} disabled={!ttsSupported || !getLastIaText()}>
+      Écouter
+    </Button>
+    <Button size="small" startIcon={<StopRoundedIcon />} onClick={handleStopSpeak} disabled={!speaking}>
+      Arrêter l’audio
+    </Button>
+    <Button size="small" startIcon={<RestartAltIcon />} onClick={() => { setMessages([]); setTypedResponse(""); setAiError(""); handleStopSpeak(); }}>
+      Réinitialiser
+    </Button>
+
+    {/* ↓↓↓ AJOUT ICI ↓↓↓ */}
+    <Button
+      size="small"
+      onClick={exportIaTxt}
+      disabled={!getLastIaText()}
+    >
+      Enregistrer .TXT
+    </Button>
+    {/* <Button
+      size="small"
+      onClick={exportIaPdf}
+      disabled={!getLastIaText()}
+    >
+      Enregistrer PDF
+    </Button> */}
+  </Stack>
 )}
+
 
 
 
