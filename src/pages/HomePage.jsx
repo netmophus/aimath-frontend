@@ -29,8 +29,8 @@ import fahimtaMark from "../assets/fahimta.png";
 
 
 
-// 👉 remplace par ton lien d’APK
-const APK_URL = "https://github.com/netmophus/fahimta-android/releases/download/v1.0.2/fahimta-v1.0.2.apk";
+// Toujours la dernière release (asset doit s’appeler exactement "fahimta.apk")
+const APK_URL = "https://github.com/netmophus/fahimta-android/releases/latest/download/fahimta.apk";
 
 // Abonnement actif: booléen true OU date de fin future
 const hasActiveSub = (u) =>
