@@ -1913,6 +1913,30 @@ useEffect(() => {
         )
       : null;
 
+
+
+
+  // Compter les vidéos en incluant les parties complémentaires
+const totalVideosCount = useMemo(() => {
+  // si tu veux compter selon le level sélectionné, on filtre ici
+  const matchesLevel = (item) => {
+    if (selectedLevel === "ALL") return true;
+    const lv = String(item?.level || item?.classe || "").toLowerCase().trim();
+    return lv === selectedLevel.toLowerCase();
+  };
+
+  let total = 0;
+  for (const v of videos || []) {
+    if (!matchesLevel(v)) continue;              // respecte le filtre de niveau
+    total += 1;                                   // la vidéo principale
+    total += Array.isArray(v?.videosSupplementaires) 
+      ? v.videosSupplementaires.length 
+      : 0;                                       // les parties
+  }
+  return total;
+}, [videos, selectedLevel]);
+
+
   return (
     <PageLayout>
 
@@ -2379,7 +2403,8 @@ useEffect(() => {
 >
   <Tab label={<TabLabel label="Livres" count={livres.length} />} id="tab-0" aria-controls="panel-0" />
   <Tab label={<TabLabel label="Sujets corrigés" count={exams.length} />} id="tab-1" aria-controls="panel-1" />
-  <Tab label={<TabLabel label="Vidéos" count={videos.length} />} id="tab-2" aria-controls="panel-2" />
+ <Tab label={<TabLabel label="Vidéos" count={totalVideosCount} />} id="tab-2" aria-controls="panel-2" />
+
 </Tabs>
 
              
