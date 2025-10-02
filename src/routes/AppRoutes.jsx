@@ -69,7 +69,16 @@ const AppRoutes = () => {
       <Route path="/login" element={<LoginPage />} />
        <Route path="/forgot-password" element={<ForgotPassword />} />
     <Route path="/reset-password" element={<ResetPassword />} />
-       <Route path="/gratuit" element={<GratuitFahimtaPage />} />
+       {/* <Route path="/gratuit" element={<GratuitFahimtaPage />} /> */}
+
+       <Route
+  path="/gratuit"
+  element={
+     <ProtectedRoute>
+      <GratuitFahimtaPage />
+     </ProtectedRoute>
+  }
+/>
 
     <Route path="/verify" element={<VerifyPage />} />
 <Route path="/teacher/profile" element={<TeacherProfilePage />} />
@@ -217,9 +226,16 @@ const AppRoutes = () => {
         }
       />
 
-<Route path="/premium" element={<PremiumFahimtaPage />} />
+{/* <Route path="/premium" element={<PremiumFahimtaPage />} /> */}
 
-
+   <Route
+     path="/premium"
+    element={
+      <ProtectedRoute>
+        <PremiumFahimtaPage />
+      </ProtectedRoute>
+     }
+  />
 
     </Routes>
   );

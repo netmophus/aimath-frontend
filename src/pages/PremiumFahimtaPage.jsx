@@ -176,6 +176,13 @@ const PremiumFahimtaPage = () => {
   const { user } = useContext(AuthContext);
   const isPremiumUser = user?.isSubscribed === true;
 
+
+  // Si connecté (route protégée) mais pas abonné → redirige vers /pricing
+ useEffect(() => {
+  if (user && isPremiumUser === false) {
+     navigate("/pricing", { replace: true });
+  } }, [user, isPremiumUser, navigate]);
+
   // onglets ressources
   const [tabIndex, setTabIndex] = useState(0);
 
