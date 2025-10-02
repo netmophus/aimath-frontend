@@ -783,6 +783,23 @@ const filteredExams = React.useMemo(() => {
 
 
 
+// Compter les vidéos en incluant les parties complémentaires
+const totalVideosCount = React.useMemo(() => {
+  let total = 0;
+  for (const v of videos || []) {
+    total += 1; // la vidéo principale
+    total += Array.isArray(v?.videosSupplementaires)
+      ? v.videosSupplementaires.length
+      : 0;      // les vidéos complémentaires
+  }
+  return total;
+}, [videos]);
+
+
+
+
+
+
 
   /* ---------- render ---------- */
   return (
@@ -1421,17 +1438,23 @@ const filteredExams = React.useMemo(() => {
           <Box display="flex" alignItems="center" gap={1}>
             <PlayCircleOutlineRoundedIcon fontSize="small" />
             Cours vidéo
-            <Chip
-              size="small"
-              label={videos?.length ?? 0}
-              sx={{
-                ml: .5,
-                height: 18,
-                fontSize: 11,
-                color: "#0b3f8a",
-                bgcolor: "rgba(13,110,253,0.12)",
-              }}
-            />
+           
+ <Chip
+   size="small"
+   label={totalVideosCount}
+   sx={{
+     ml: .5,
+     height: 18,
+     fontSize: 11,
+     color: "#0b3f8a",
+     bgcolor: "rgba(13,110,253,0.12)",
+   }}
+ />
+
+
+
+
+
           </Box>
         }
       />

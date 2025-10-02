@@ -2267,43 +2267,6 @@ const totalVideosCount = useMemo(() => {
               {/* Actions IA */}
 
 
-           {/* Actions IA */}
-{/* {messages.length > 0 && (
-  <Stack direction="row" spacing={1} sx={{ mt: 1, flexWrap: "wrap" }}>
-    
-    <Button
-      size="small"
-      startIcon={<VolumeUpRoundedIcon />}
-      onClick={handleSpeak}
-      disabled={!ttsSupported || !getLastIaText()}
-    >
-      Écouter
-    </Button>
-    <Button
-      size="small"
-      startIcon={<StopRoundedIcon />}
-      onClick={handleStopSpeak}
-      disabled={!speaking}
-    >
-      Arrêter l’audio
-    </Button>
-
-    <Button
-      size="small"
-      startIcon={<RestartAltIcon />}
-      onClick={() => {
-        setMessages([]);
-        setTypedResponse("");
-        setAiError("");
-        handleStopSpeak();
-      }}
-    >
-      Réinitialiser
-    </Button>
-  </Stack>
-)} */}
-
-
 
 {messages.length > 0 && (
   <Stack direction="row" spacing={1} sx={{ mt: 1, flexWrap: "wrap" }}>
@@ -2325,13 +2288,7 @@ const totalVideosCount = useMemo(() => {
     >
       Enregistrer .TXT
     </Button>
-    {/* <Button
-      size="small"
-      onClick={exportIaPdf}
-      disabled={!getLastIaText()}
-    >
-      Enregistrer PDF
-    </Button> */}
+ 
   </Stack>
 )}
 
