@@ -1674,7 +1674,7 @@ const totalVideosCount = React.useMemo(() => {
   {/* Ligne actions + stats + bouton Reset */}
   <Stack direction="row" alignItems="center" spacing={1}>
     <Typography variant="body2" sx={{ opacity: 0.7 }}>
-      {filteredVideos.length} vidéo(s) trouvée(s)
+      {filteredVideos.length} chapitre(s) trouvé(s)
     </Typography>
     {(vf.badge.length || vf.level.length || vf.matiere.length || vf.classe.length || vf.tags.length) > 0 && (
       <Button size="small" onClick={clearVf}>
