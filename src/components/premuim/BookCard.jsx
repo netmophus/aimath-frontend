@@ -23,6 +23,7 @@ const BookCard = ({ book }) => {
 
   const { user } = useContext(AuthContext);
   const isPremiumUser = !!user?.isSubscribed;
+const [showMore, setShowMore] = useState(false);
 
   // ----- Quotas & droits -----
   const limit = useMemo(
@@ -93,7 +94,7 @@ const BookCard = ({ book }) => {
               📘 {book?.title}
             </Typography>
 
-            <Typography
+            {/* <Typography
               variant="body2"
               color="text.secondary"
               sx={{
@@ -105,7 +106,37 @@ const BookCard = ({ book }) => {
               }}
             >
               {book?.description}
-            </Typography>
+            </Typography> */}
+
+
+            <Typography
+  variant="body2"
+  color="text.secondary"
+  sx={{
+    mb: 1,
+    ...(showMore
+      ? { display: "block", overflow: "visible" }
+      : {
+          display: "-webkit-box",
+          WebkitLineClamp: 2,
+          WebkitBoxOrient: "vertical",
+          overflow: "hidden",
+        }),
+  }}
+>
+  {book?.description}
+</Typography>
+
+{book?.description && book.description.length > 120 && (
+  <Button
+    size="small"
+    onClick={() => setShowMore((v) => !v)}
+    sx={{ px: 0, textTransform: "none" }}
+  >
+    {showMore ? "Voir moins" : "Voir plus"}
+  </Button>
+)}
+
 
             <Typography variant="caption" fontWeight="bold" sx={{ color: "#666" }}>
               🎓 Niveau : {book?.level?.toUpperCase()} | 🎖️ {isGratuit ? "Gratuit" : "Premium"}

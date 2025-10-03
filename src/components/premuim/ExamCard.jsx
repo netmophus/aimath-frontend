@@ -89,7 +89,8 @@
 
 
 // components/premuim/ExamCard.jsx
-import React, { useMemo } from "react";
+// import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import {
   Card, CardContent, Typography, Button, Box, Chip, Stack, Divider,
 } from "@mui/material";
@@ -101,6 +102,8 @@ import API from "../../api";
 
 const ExamCard = ({ exam, isPremiumUser = false }) => {
   const navigate = useNavigate();
+  const [showMore, setShowMore] = useState(false);
+
 
   const levelLabel = useMemo(
     () => (exam?.level ? String(exam.level).toUpperCase() : "NIVEAU N/D"),
@@ -213,13 +216,56 @@ const ExamCard = ({ exam, isPremiumUser = false }) => {
           <Chip size="small" label={levelLabel} variant="outlined" />
         </Stack>
 
-        {!!exam?.description && (
+        {/* {!!exam?.description && (
           <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
             {exam.description.length > 300
               ? `${exam.description.slice(0, 300)}…`
               : exam.description}
           </Typography>
-        )}
+        )} */}
+
+
+
+
+
+
+        {!!exam?.description && (
+  <>
+    <Typography
+      variant="body2"
+      color="text.secondary"
+      sx={{
+        mt: 0.5,
+        ...(showMore
+          ? { display: "block", overflow: "visible" }
+          : {
+              display: "-webkit-box",
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: "vertical",
+              overflow: "hidden",
+            }),
+      }}
+    >
+      {exam.description}
+    </Typography>
+
+    {exam.description.length > 120 && (
+      <Button
+        size="small"
+        variant="text"
+        onClick={() => setShowMore((v) => !v)}
+        sx={{ px: 0, textTransform: "none" }}
+      >
+        {showMore ? "Voir moins" : "Voir plus"}
+      </Button>
+    )}
+  </>
+)}
+
+
+
+
+
 
         <Box sx={{ mt: 1 }}>
           <Typography variant="caption" color="text.secondary" display="block">
