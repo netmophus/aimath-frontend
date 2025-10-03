@@ -350,20 +350,45 @@
 
 // components/gratuit/ExamCardGratuit.jsx
 
-import React, { useMemo, useCallback, useState } from "react";
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import React, { useMemo, useCallback, useState } from "react";
 import {
-  Card,
-  CardContent,
-  CardActions,
-  Typography,
-  Box,
-  Button,
-  Chip,
-  Stack,
-  Divider,
-  Tooltip,
-  IconButton,
+  Card, CardContent, CardActions, Typography, Box, Button, Chip, Stack, Divider, Tooltip, IconButton
 } from "@mui/material";
 import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
@@ -378,18 +403,47 @@ import API from "../../api";
 
 /* ---------------- utils ---------------- */
 const SafeText = ({ text = "", max = 300 }) => {
+  const [expanded, setExpanded] = useState(false);
   const t = String(text || "");
+  const isLong = t.length > max;
+  const shown = expanded ? t : (isLong ? `${t.slice(0, max)}…` : t);
+
   return (
-    <Typography variant="body2" sx={{ mt: 1, color: "text.secondary" }}>
-      {t.length > max ? `${t.slice(0, max)}…` : t}
-    </Typography>
+    <Box sx={{ mt: 1 }}>
+      <Typography
+        variant="body2"
+        sx={{
+          color: "text.secondary",
+          whiteSpace: "pre-wrap",
+          wordBreak: "break-word",
+          overflowWrap: "anywhere",
+          lineHeight: 1.6,
+        }}
+      >
+        {shown}
+      </Typography>
+
+      {isLong && (
+        <Button
+          variant="text"
+          size="small"
+          onClick={() => setExpanded((v) => !v)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") setExpanded((v) => !v);
+          }}
+          sx={{ mt: 0.5, px: 0, textTransform: "none" }}
+        >
+          {expanded ? "Voir moins" : "Voir plus"}
+        </Button>
+      )}
+    </Box>
   );
 };
 
 const StatRow = ({ icon, children }) => (
   <Stack direction="row" alignItems="center" spacing={1} sx={{ color: "text.secondary" }}>
     {icon}
-    <Typography variant="caption">{children}</Typography>
+    <Typography variant="caption" sx={{ whiteSpace: "nowrap" }}>{children}</Typography>
   </Stack>
 );
 
@@ -399,7 +453,6 @@ const fmtLevel = (x) => (String(x || "").trim().toUpperCase() || "NIVEAU N/D");
 const ExamCardGratuit = ({ exam = {} }) => {
   const navigate = useNavigate();
   const goPricing = () => navigate("/pricing");
-const [showMore, setShowMore] = useState(false);
 
   const isGratuit = useMemo(
     () => String(exam?.badge || "").toLowerCase() === "gratuit",
@@ -446,7 +499,7 @@ const [showMore, setShowMore] = useState(false);
       elevation={6}
       sx={{
         display: "grid",
-        gridTemplateColumns: { xs: "1fr", sm: "260px 1fr" },
+        gridTemplateColumns: { xs: "1fr", sm: "minmax(220px, 320px) 1fr" },
         gap: 0,
         borderRadius: 3,
         overflow: "hidden",
@@ -460,11 +513,35 @@ const [showMore, setShowMore] = useState(false);
       }}
     >
       {/* Colonne image (gauche) */}
-      <Box sx={{ position: "relative", bgcolor: "#0b1220", minHeight: { xs: 180, sm: "100%" }, display: "grid", placeItems: "center" }}>
+      <Box
+        sx={{
+          position: "relative",
+          bgcolor: "#0b1220",
+          minHeight: { xs: 180, sm: "100%" },
+          display: "grid",
+          placeItems: "center",
+          width: "100%",
+        }}
+      >
         {exam?.coverImage ? (
-          <img src={exam.coverImage} alt={imgAlt} loading="lazy" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          <img
+            src={exam.coverImage}
+            alt={imgAlt}
+            loading="lazy"
+            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+          />
         ) : (
-          <Box sx={{ color: "#cbd5e1", textAlign: "center", p: 2, width: "100%", height: "100%", display: "grid", placeItems: "center" }}>
+          <Box
+            sx={{
+              color: "#cbd5e1",
+              textAlign: "center",
+              p: 2,
+              width: "100%",
+              height: "100%",
+              display: "grid",
+              placeItems: "center",
+            }}
+          >
             <ImageNotSupportedRoundedIcon sx={{ fontSize: 40, mb: 1 }} />
             <Typography variant="caption">Aucune miniature</Typography>
           </Box>
@@ -508,11 +585,10 @@ const [showMore, setShowMore] = useState(false);
             display: "flex",
             alignItems: "flex-end",
             justifyContent: "space-between",
-            p: 1.5,
+            p: { xs: 1, sm: 1.5 },
             background: "linear-gradient(180deg, rgba(0,0,0,0.00) 40%, rgba(0,0,0,0.45) 100%)",
           }}
         >
-          {/* Verrou coin si Premium → clic = page des prix */}
           {!isGratuit && (
             <Tooltip title="Réservé aux membres Premium — voir les offres">
               <Box
@@ -537,22 +613,32 @@ const [showMore, setShowMore] = useState(false);
             </Tooltip>
           )}
 
-          <Stack direction="row" spacing={1}>
+          <Stack direction="row" spacing={1} sx={{ width: "100%" }}>
             <Button
+              fullWidth
               variant="contained"
               size="small"
               startIcon={<DescriptionOutlinedIcon />}
               onClick={isGratuit ? openSubject : goPricing}
-              sx={{ textTransform: "none", bgcolor: isGratuit ? "primary.main" : "grey.700" }}
+              sx={{
+                textTransform: "none",
+                bgcolor: isGratuit ? "primary.main" : "grey.700",
+                flex: 1,
+              }}
             >
               Sujet
             </Button>
             <Button
+              fullWidth
               variant="contained"
               size="small"
               startIcon={<CheckCircleOutlineIcon />}
               onClick={isGratuit ? openCorrection : goPricing}
-              sx={{ textTransform: "none", bgcolor: isGratuit ? "success.main" : "grey.700" }}
+              sx={{
+                textTransform: "none",
+                bgcolor: isGratuit ? "success.main" : "grey.700",
+                flex: 1,
+              }}
             >
               Correction
             </Button>
@@ -561,152 +647,117 @@ const [showMore, setShowMore] = useState(false);
       </Box>
 
       {/* Colonne contenu (droite) */}
-      <Box sx={{ display: "flex", flexDirection: "column" }}>
-       
+      <Box sx={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
+        <CardContent sx={{ flex: 1, minWidth: 0 }}>
+          {/* Titre + chips */}
+          <Stack
+            direction={{ xs: "column", sm: "row" }}
+            alignItems={{ xs: "flex-start", sm: "center" }}
+            justifyContent="space-between"
+            spacing={1}
+            sx={{ mb: 1, minWidth: 0 }}
+          >
+            <Typography
+              variant="h6"
+              fontWeight="bold"
+              sx={{
+                pr: 1,
+                lineHeight: 1.2,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                display: "-webkit-box",
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: "vertical",
+                wordBreak: "break-word",
+              }}
+            >
+              {exam?.title || "Sujet d'examen"}
+            </Typography>
 
-      <CardContent
-  sx={{
-    flex: 1,
-    px: { xs: 2, sm: 3, md: 3 },
-    py: { xs: 1.5, sm: 2 },
-  }}
->
-  {/* Titre + chips principales */}
-  <Stack
-    direction={{ xs: "column", sm: "row" }}
-    alignItems={{ xs: "flex-start", sm: "center" }}
-    justifyContent="space-between"
-    spacing={{ xs: 1, sm: 1.5 }}
-    sx={{ mb: { xs: 1, sm: 1.25 } }}
-  >
-    <Typography
-      component="h3"
-      sx={{
-        fontWeight: 700,
-        lineHeight: 1.25,
-        // échelle fluide du titre
-        fontSize: { xs: "1rem", sm: "1.125rem", md: "1.25rem" },
-        pr: { sm: 1 },
-        wordBreak: "break-word",
-      }}
-    >
-      {exam?.title || "Sujet d'examen"}
-    </Typography>
+            <Stack
+              direction="row"
+              spacing={1}
+              sx={{ minWidth: 0, flexWrap: "wrap" }}
+              useFlexGap
+            >
+              <Chip
+                size="small"
+                label={isGratuit ? "Gratuit" : "Premium"}
+                color={isGratuit ? "success" : "warning"}
+                variant={isGratuit ? "filled" : "outlined"}
+              />
+              <Chip size="small" variant="outlined" label={levelLabel} />
+            </Stack>
+          </Stack>
 
-    <Stack
-      direction="row"
-      spacing={1}
-      sx={{
-        flexWrap: "wrap",
-        rowGap: 0.75,
-        columnGap: 1,
-        maxWidth: "100%",
-      }}
-    >
-      <Chip
-        size="small"
-        label={isGratuit ? "Gratuit" : "Premium"}
-        color={isGratuit ? "success" : "warning"}
-        variant={isGratuit ? "filled" : "outlined"}
-        sx={{ flexShrink: 0 }}
-      />
-      <Chip size="small" variant="outlined" label={levelLabel} sx={{ flexShrink: 0 }} />
-    </Stack>
-  </Stack>
+          {/* Tags/infos rapides */}
+          <Stack
+            direction="row"
+            spacing={1}
+            useFlexGap
+            sx={{ flexWrap: "wrap", mb: 0.5 }}
+          >
+            {exam?.matiere && <Chip size="small" variant="outlined" label={exam.matiere} />}
+            {exam?.classe && <Chip size="small" variant="outlined" label={exam.classe} />}
+            {exam?.session && (
+              <Chip
+                size="small"
+                variant="outlined"
+                icon={<LocalOfferRoundedIcon sx={{ fontSize: 16 }} />}
+                label={exam.session}
+              />
+            )}
+            {Array.isArray(exam?.tags) &&
+              exam.tags.slice(0, 2).map((t, i) => (
+                <Chip key={i} size="small" variant="outlined" label={`#${t}`} />
+              ))}
+          </Stack>
 
-  {/* Tags secondaires */}
-  <Stack
-    direction="row"
-    sx={{
-      flexWrap: "wrap",
-      rowGap: 0.75,
-      columnGap: 1,
-      mb: 0.5,
-    }}
-  >
-    {exam?.matiere && <Chip size="small" variant="outlined" label={exam.matiere} />}
-    {exam?.classe && <Chip size="small" variant="outlined" label={exam.classe} />}
-    {exam?.session && (
-      <Chip
-        size="small"
-        variant="outlined"
-        icon={<LocalOfferRoundedIcon sx={{ fontSize: 16 }} />}
-        label={exam.session}
-      />
-    )}
-    {Array.isArray(exam?.tags) &&
-      exam.tags.slice(0, 3).map((t, i) => (
-        <Chip key={i} size="small" variant="outlined" label={`#${t}`} />
-      ))}
-  </Stack>
+          {/* Description avec Voir plus / Voir moins */}
+          <SafeText text={exam?.description} max={320} />
 
-  {/* Description responsive + Voir plus/moins */}
-  <Box
-    sx={{
-      mt: 1,
-      pr: { xs: 1.25, sm: 2 },
-    }}
-  >
-    <Typography
-      variant="body2"
-      color="text.secondary"
-      sx={{
-        mb: 0.5,
-        display: "-webkit-box",
-        WebkitLineClamp: showMore ? "unset" : 3,
-        WebkitBoxOrient: "vertical",
-        overflow: "hidden",
-        overflowWrap: "anywhere",
-        wordBreak: "break-word",
-      }}
-    >
-      {exam?.description || "—"}
-    </Typography>
+          <Divider sx={{ my: 1.5 }} />
 
-    {exam?.description && exam.description.length > 120 && (
-      <Button
-        size="small"
-        variant="text"
-        onClick={() => setShowMore((v) => !v)}
-        sx={{ px: 0, minWidth: 0, textTransform: "none" }}
-      >
-        {showMore ? "Voir moins" : "Voir plus"}
-      </Button>
-    )}
-  </Box>
+          {/* Statistiques */}
+          <Stack
+            direction={{ xs: "column", md: "row" }}
+            spacing={{ xs: 1, md: 3 }}
+            useFlexGap
+            flexWrap="wrap"
+            sx={{ mb: 0.5 }}
+          >
+            <StatRow icon={<CalendarMonthIcon fontSize="small" />}>
+              Publié le : {createdAt}
+            </StatRow>
 
-  <Divider sx={{ my: { xs: 1.25, sm: 1.5 } }} />
+            <StatRow icon={<GetAppRoundedIcon fontSize="small" />}>
+              {pluralize(
+                subjectCount,
+                "téléchargement du sujet",
+                "téléchargements du sujet"
+              )}
+            </StatRow>
 
-  {/* Statistiques : colonne (xs) → ligne (md) */}
-  <Stack
-    direction={{ xs: "column", md: "row" }}
-    spacing={{ xs: 1, md: 3 }}
-    useFlexGap
-    flexWrap="wrap"
-    sx={{ mb: 0.5 }}
-  >
-    <StatRow icon={<CalendarMonthIcon fontSize="small" />}>
-      Publié le : {createdAt}
-    </StatRow>
-    <StatRow icon={<GetAppRoundedIcon fontSize="small" />}>
-      {pluralize(subjectCount, "téléchargement du sujet", "téléchargements du sujet")}
-    </StatRow>
-    <StatRow icon={<GetAppRoundedIcon fontSize="small" />}>
-      {pluralize(correctionCount, "téléchargement de la correction", "téléchargements de la correction")}
-    </StatRow>
-  </Stack>
-</CardContent>
-
+            <StatRow icon={<GetAppRoundedIcon fontSize="small" />}>
+              {pluralize(
+                correctionCount,
+                "téléchargement de la correction",
+                "téléchargements de la correction"
+              )}
+            </StatRow>
+          </Stack>
+        </CardContent>
 
         {/* Barre d’actions bas */}
         <CardActions
           sx={{
-            px: 2,
-            py: 1.5,
+            px: { xs: 1.25, sm: 2 },
+            py: 1.25,
             bgcolor: "rgba(0,0,0,0.02)",
             borderTop: "1px solid rgba(0,0,0,0.06)",
             display: "flex",
             gap: 1,
+            flexWrap: "wrap",
           }}
         >
           <Button
@@ -714,7 +765,7 @@ const [showMore, setShowMore] = useState(false);
             size="small"
             startIcon={<DescriptionOutlinedIcon />}
             onClick={openSubject}
-            sx={{ textTransform: "none" }}
+            sx={{ textTransform: "none", flex: { xs: "1 1 140px", sm: "0 0 auto" } }}
           >
             Sujet
           </Button>
@@ -724,7 +775,7 @@ const [showMore, setShowMore] = useState(false);
             size="small"
             startIcon={<CheckCircleOutlineIcon />}
             onClick={openCorrection}
-            sx={{ textTransform: "none" }}
+            sx={{ textTransform: "none", flex: { xs: "1 1 160px", sm: "0 0 auto" } }}
           >
             Correction
           </Button>
@@ -734,14 +785,17 @@ const [showMore, setShowMore] = useState(false);
               variant="outlined"
               size="small"
               onClick={goPricing}
-              sx={{ ml: "auto", textTransform: "none" }}
+              sx={{
+                textTransform: "none",
+                ml: { xs: 0, sm: "auto" },
+                flex: { xs: "1 1 180px", sm: "0 0 auto" },
+              }}
             >
               Débloquer l’accès
             </Button>
           )}
 
-          {/* Espaceur à droite */}
-          <Box sx={{ ml: "auto" }} />
+          <Box sx={{ ml: { sm: "auto" }, display: { xs: "none", sm: "block" } }} />
 
           <Tooltip title="Ouvrir la page de l'examen (si disponible)">
             <span>
@@ -765,4 +819,3 @@ const [showMore, setShowMore] = useState(false);
 };
 
 export default ExamCardGratuit;
-
