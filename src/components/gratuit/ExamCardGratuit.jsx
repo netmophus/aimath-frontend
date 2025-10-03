@@ -564,116 +564,139 @@ const [showMore, setShowMore] = useState(false);
       <Box sx={{ display: "flex", flexDirection: "column" }}>
        
 
-          <CardContent sx={{ flex: 1, px: { xs: 2.5, sm: 3, md: 3 } }}>
-
-          {/* Titre + chips */}
-          <Stack
-            direction="row"
-            alignItems={{ xs: "flex-start", sm: "center" }}
-            justifyContent="space-between"
-            spacing={1}
-            sx={{ mb: 1 }}
-          >
-            <Typography variant="h6" fontWeight="bold" sx={{ pr: 1, lineHeight: 1.2 }}>
-              {exam?.title || "Sujet d'examen"}
-            </Typography>
-
-            <Stack direction="row" spacing={1} sx={{ minWidth: 0, flexWrap: "wrap" }}>
-              <Chip
-                size="small"
-                label={isGratuit ? "Gratuit" : "Premium"}
-                color={isGratuit ? "success" : "warning"}
-                variant={isGratuit ? "filled" : "outlined"}
-              />
-              <Chip size="small" variant="outlined" label={levelLabel} />
-            </Stack>
-          </Stack>
-
-          {/* Tags/infos rapides */}
-          <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", mb: 0.5 }}>
-            {exam?.matiere && <Chip size="small" variant="outlined" label={exam.matiere} />}
-            {exam?.classe && <Chip size="small" variant="outlined" label={exam.classe} />}
-            {exam?.session && (
-              <Chip
-                size="small"
-                variant="outlined"
-                icon={<LocalOfferRoundedIcon sx={{ fontSize: 16 }} />}
-                label={exam.session}
-              />
-            )}
-            {Array.isArray(exam?.tags) &&
-              exam.tags.slice(0, 2).map((t, i) => (
-                <Chip key={i} size="small" variant="outlined" label={`#${t}`} />
-              ))}
-          </Stack>
-
-          {/* <SafeText text={exam?.description} max={320} /> */}
-
-
-
-<Box
+      <CardContent
   sx={{
-    mt: 1,
-    pr: 2,                                  // padding à droite par défaut
-    "@media (max-width:410px)": { pr: 2 },  // garde l'espace à 410px et moins
-    "@media (max-width:360px)": { pr: 1.5 },
-    "@media (max-width:320px)": { pr: 1.25 },
-    "@media (max-width:300px)": { pr: 1 },
+    flex: 1,
+    px: { xs: 2, sm: 3, md: 3 },
+    py: { xs: 1.5, sm: 2 },
   }}
 >
-  <Typography
-    variant="body2"
-    color="text.secondary"
+  {/* Titre + chips principales */}
+  <Stack
+    direction={{ xs: "column", sm: "row" }}
+    alignItems={{ xs: "flex-start", sm: "center" }}
+    justifyContent="space-between"
+    spacing={{ xs: 1, sm: 1.5 }}
+    sx={{ mb: { xs: 1, sm: 1.25 } }}
+  >
+    <Typography
+      component="h3"
+      sx={{
+        fontWeight: 700,
+        lineHeight: 1.25,
+        // échelle fluide du titre
+        fontSize: { xs: "1rem", sm: "1.125rem", md: "1.25rem" },
+        pr: { sm: 1 },
+        wordBreak: "break-word",
+      }}
+    >
+      {exam?.title || "Sujet d'examen"}
+    </Typography>
+
+    <Stack
+      direction="row"
+      spacing={1}
+      sx={{
+        flexWrap: "wrap",
+        rowGap: 0.75,
+        columnGap: 1,
+        maxWidth: "100%",
+      }}
+    >
+      <Chip
+        size="small"
+        label={isGratuit ? "Gratuit" : "Premium"}
+        color={isGratuit ? "success" : "warning"}
+        variant={isGratuit ? "filled" : "outlined"}
+        sx={{ flexShrink: 0 }}
+      />
+      <Chip size="small" variant="outlined" label={levelLabel} sx={{ flexShrink: 0 }} />
+    </Stack>
+  </Stack>
+
+  {/* Tags secondaires */}
+  <Stack
+    direction="row"
     sx={{
+      flexWrap: "wrap",
+      rowGap: 0.75,
+      columnGap: 1,
       mb: 0.5,
-      display: "-webkit-box",
-      WebkitLineClamp: showMore ? "unset" : 3,
-      WebkitBoxOrient: "vertical",
-      overflow: "hidden",
-      overflowWrap: "anywhere",   // évite la coupe du texte
-      wordBreak: "break-word",
     }}
   >
-    {exam?.description || "—"}
-  </Typography>
+    {exam?.matiere && <Chip size="small" variant="outlined" label={exam.matiere} />}
+    {exam?.classe && <Chip size="small" variant="outlined" label={exam.classe} />}
+    {exam?.session && (
+      <Chip
+        size="small"
+        variant="outlined"
+        icon={<LocalOfferRoundedIcon sx={{ fontSize: 16 }} />}
+        label={exam.session}
+      />
+    )}
+    {Array.isArray(exam?.tags) &&
+      exam.tags.slice(0, 3).map((t, i) => (
+        <Chip key={i} size="small" variant="outlined" label={`#${t}`} />
+      ))}
+  </Stack>
 
-  {exam?.description && exam.description.length > 120 && (
-    <Button
-      size="small"
-      variant="text"
-      onClick={() => setShowMore(v => !v)}
-      sx={{ px: 0, minWidth: 0, textTransform: "none" }}
+  {/* Description responsive + Voir plus/moins */}
+  <Box
+    sx={{
+      mt: 1,
+      pr: { xs: 1.25, sm: 2 },
+    }}
+  >
+    <Typography
+      variant="body2"
+      color="text.secondary"
+      sx={{
+        mb: 0.5,
+        display: "-webkit-box",
+        WebkitLineClamp: showMore ? "unset" : 3,
+        WebkitBoxOrient: "vertical",
+        overflow: "hidden",
+        overflowWrap: "anywhere",
+        wordBreak: "break-word",
+      }}
     >
-      {showMore ? "Voir moins" : "Voir plus"}
-    </Button>
-  )}
-</Box>
+      {exam?.description || "—"}
+    </Typography>
 
+    {exam?.description && exam.description.length > 120 && (
+      <Button
+        size="small"
+        variant="text"
+        onClick={() => setShowMore((v) => !v)}
+        sx={{ px: 0, minWidth: 0, textTransform: "none" }}
+      >
+        {showMore ? "Voir moins" : "Voir plus"}
+      </Button>
+    )}
+  </Box>
 
+  <Divider sx={{ my: { xs: 1.25, sm: 1.5 } }} />
 
-          <Divider sx={{ my: 1.5 }} />
+  {/* Statistiques : colonne (xs) → ligne (md) */}
+  <Stack
+    direction={{ xs: "column", md: "row" }}
+    spacing={{ xs: 1, md: 3 }}
+    useFlexGap
+    flexWrap="wrap"
+    sx={{ mb: 0.5 }}
+  >
+    <StatRow icon={<CalendarMonthIcon fontSize="small" />}>
+      Publié le : {createdAt}
+    </StatRow>
+    <StatRow icon={<GetAppRoundedIcon fontSize="small" />}>
+      {pluralize(subjectCount, "téléchargement du sujet", "téléchargements du sujet")}
+    </StatRow>
+    <StatRow icon={<GetAppRoundedIcon fontSize="small" />}>
+      {pluralize(correctionCount, "téléchargement de la correction", "téléchargements de la correction")}
+    </StatRow>
+  </Stack>
+</CardContent>
 
-          {/* Statistiques */}
-          <Stack
-            direction={{ xs: "column", md: "row" }}
-            spacing={{ xs: 1, md: 3 }}
-            useFlexGap
-            flexWrap="wrap"
-            sx={{ mb: 0.5 }}
-          >
-            <StatRow icon={<CalendarMonthIcon fontSize="small" />}>
-              Publié le : {createdAt}
-            </StatRow>
-
-            <StatRow icon={<GetAppRoundedIcon fontSize="small" />}>
-              {pluralize(subjectCount, "téléchargement du sujet", "téléchargements du sujet")}
-            </StatRow>
-
-            <StatRow icon={<GetAppRoundedIcon fontSize="small" />}>
-              {pluralize(correctionCount, "téléchargement de la correction", "téléchargements de la correction")}
-            </StatRow>
-          </Stack>
-        </CardContent>
 
         {/* Barre d’actions bas */}
         <CardActions
