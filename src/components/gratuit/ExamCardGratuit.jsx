@@ -609,19 +609,22 @@ const [showMore, setShowMore] = useState(false);
 
 
           <Box sx={{ mt: 1 }}>
+
   <Typography
-    variant="body2"
-    color="text.secondary"
-    sx={{
-      mb: 0.5,
-      display: "-webkit-box",
-      WebkitLineClamp: showMore ? "unset" : 3,
-      WebkitBoxOrient: "vertical",
-      overflow: "hidden",
-    }}
-  >
-    {exam?.description || "—"}
-  </Typography>
+  variant="body2"
+  color="text.secondary"
+  sx={{
+    mb: 0.5,
+    pr: { xs: 1, sm: 2 }, 
+    display: "-webkit-box",
+    WebkitLineClamp: showMore ? "unset" : 2,
+    WebkitBoxOrient: "vertical",
+    overflow: "hidden",
+  }}
+>
+  {exam?.description || "—"}
+</Typography>
+
 
   {exam?.description && exam.description.length > 120 && (
     <Button
