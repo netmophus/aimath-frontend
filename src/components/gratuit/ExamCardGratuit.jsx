@@ -562,7 +562,10 @@ const [showMore, setShowMore] = useState(false);
 
       {/* Colonne contenu (droite) */}
       <Box sx={{ display: "flex", flexDirection: "column" }}>
-        <CardContent sx={{ flex: 1 }}>
+       
+
+          <CardContent sx={{ flex: 1, px: { xs: 2.5, sm: 3, md: 3 } }}>
+
           {/* Titre + chips */}
           <Stack
             direction="row"
@@ -608,35 +611,44 @@ const [showMore, setShowMore] = useState(false);
 
 
 
-          <Box sx={{ mt: 1 }}>
-
-  <Typography
-  variant="body2"
-  color="text.secondary"
+<Box
   sx={{
-    mb: 0.5,
-    pr: { xs: 1, sm: 2 }, 
-    display: "-webkit-box",
-    WebkitLineClamp: showMore ? "unset" : 2,
-    WebkitBoxOrient: "vertical",
-    overflow: "hidden",
+    mt: 1,
+    pr: 2,                                  // padding à droite par défaut
+    "@media (max-width:410px)": { pr: 2 },  // garde l'espace à 410px et moins
+    "@media (max-width:360px)": { pr: 1.5 },
+    "@media (max-width:320px)": { pr: 1.25 },
+    "@media (max-width:300px)": { pr: 1 },
   }}
 >
-  {exam?.description || "—"}
-</Typography>
-
+  <Typography
+    variant="body2"
+    color="text.secondary"
+    sx={{
+      mb: 0.5,
+      display: "-webkit-box",
+      WebkitLineClamp: showMore ? "unset" : 3,
+      WebkitBoxOrient: "vertical",
+      overflow: "hidden",
+      overflowWrap: "anywhere",   // évite la coupe du texte
+      wordBreak: "break-word",
+    }}
+  >
+    {exam?.description || "—"}
+  </Typography>
 
   {exam?.description && exam.description.length > 120 && (
     <Button
       size="small"
       variant="text"
-      onClick={() => setShowMore((v) => !v)}
+      onClick={() => setShowMore(v => !v)}
       sx={{ px: 0, minWidth: 0, textTransform: "none" }}
     >
       {showMore ? "Voir moins" : "Voir plus"}
     </Button>
   )}
 </Box>
+
 
 
           <Divider sx={{ my: 1.5 }} />
