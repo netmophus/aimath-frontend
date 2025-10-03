@@ -452,6 +452,7 @@ const ExamCardGratuit = ({ exam = {} }) => {
         borderRadius: 3,
         overflow: "hidden",
         height: "100%",
+        alignItems: "flex-start",
         background: "linear-gradient(135deg, rgba(255,255,255,0.92), rgba(255,255,255,0.98))",
         backdropFilter: "blur(6px)",
         border: "1px solid rgba(0,0,0,0.05)",
@@ -461,9 +462,10 @@ const ExamCardGratuit = ({ exam = {} }) => {
       }}
     >
       {/* Colonne image (gauche) */}
-      <Box sx={{ position: "relative", bgcolor: "#0b1220", minHeight: { xs: 180, sm: "100%" }, display: "grid", placeItems: "center" }}>
+      <Box sx={{ position: "relative", bgcolor: "#0b1220", height: { xs: 180, sm: 180 },
+alignSelf: "flex-start", display: "grid", placeItems: "center" }}>
         {exam?.coverImage ? (
-          <img src={exam.coverImage} alt={imgAlt} loading="lazy" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          <img src={exam.coverImage} alt={imgAlt} loading="lazy" style={{ width: "100%", height: 180, objectFit: "cover" }} />
         ) : (
           <Box sx={{ color: "#cbd5e1", textAlign: "center", p: 2, width: "100%", height: "100%", display: "grid", placeItems: "center" }}>
             <ImageNotSupportedRoundedIcon sx={{ fontSize: 40, mb: 1 }} />

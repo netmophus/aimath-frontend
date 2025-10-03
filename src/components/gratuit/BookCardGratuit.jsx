@@ -197,6 +197,7 @@ const BookCardGratuit = ({ book }) => {
           flexDirection: { xs: "column", sm: "row" },
           borderRadius: 3,
           boxShadow: 4,
+           alignItems: "flex-start",
           overflow: "hidden",
           mb: 3,
         }}
@@ -205,7 +206,7 @@ const BookCardGratuit = ({ book }) => {
           component="img"
           image={book.coverImage}
           alt={book.title}
-          sx={{ width: { xs: "100%", sm: 180 }, objectFit: "cover" }}
+          sx={{ width: { xs: "100%", sm: 180 }, objectFit: "cover",  alignSelf: "flex-start",  }}
         />
 
         <Box sx={{ flex: 1, display: "flex", flexDirection: "column" }}>
