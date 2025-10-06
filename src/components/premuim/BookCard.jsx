@@ -84,7 +84,12 @@ const [showMore, setShowMore] = useState(false);
           component="img"
           image={book?.coverImage}
           alt={book?.title}
-          sx={{ width: { xs: "100%", sm: 180 }, objectFit: "cover" }}
+          sx={{ 
+            width: { xs: "100%", sm: 180 }, 
+            height: { xs: 200, sm: 240 }, 
+            objectFit: "cover",
+            flexShrink: 0
+          }}
         />
 
         {/* Contenu */}
@@ -94,51 +99,35 @@ const [showMore, setShowMore] = useState(false);
               📘 {book?.title}
             </Typography>
 
-            {/* <Typography
+            <Typography
               variant="body2"
               color="text.secondary"
               sx={{
                 mb: 1,
-                display: "-webkit-box",
-                WebkitLineClamp: 3,
-                WebkitBoxOrient: "vertical",
-                overflow: "hidden",
+                ...(showMore
+                  ? { display: "block", overflow: "visible" }
+                  : {
+                      display: "-webkit-box",
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: "vertical",
+                      overflow: "hidden",
+                    }),
               }}
             >
               {book?.description}
-            </Typography> */}
+            </Typography>
 
+            {book?.description && book.description.length > 120 && (
+              <Button
+                size="small"
+                onClick={() => setShowMore((v) => !v)}
+                sx={{ px: 0, textTransform: "none" }}
+              >
+                {showMore ? "Voir moins" : "Voir plus"}
+              </Button>
+            )}
 
-            <Typography
-  variant="body2"
-  color="text.secondary"
-  sx={{
-    mb: 1,
-    ...(showMore
-      ? { display: "block", overflow: "visible" }
-      : {
-          display: "-webkit-box",
-          WebkitLineClamp: 2,
-          WebkitBoxOrient: "vertical",
-          overflow: "hidden",
-        }),
-  }}
->
-  {book?.description}
-</Typography>
-
-{book?.description && book.description.length > 120 && (
-  <Button
-    size="small"
-    onClick={() => setShowMore((v) => !v)}
-    sx={{ px: 0, textTransform: "none" }}
-  >
-    {showMore ? "Voir moins" : "Voir plus"}
-  </Button>
-)}
-
-
-            <Typography variant="caption" fontWeight="bold" sx={{ color: "#666" }}>
+            <Typography variant="caption" fontWeight="bold" sx={{ color: "#666", mt: 2, display: "block" }}>
               🎓 Niveau : {book?.level?.toUpperCase()} | 🎖️ {isGratuit ? "Gratuit" : "Premium"}
             </Typography>
 
