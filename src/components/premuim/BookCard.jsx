@@ -75,6 +75,7 @@ const [showMore, setShowMore] = useState(false);
           flexDirection: { xs: "column", sm: "row" },
           borderRadius: 3,
           boxShadow: 4,
+          alignItems: "flex-start",
           overflow: "hidden",
           mb: 3,
         }}
@@ -86,7 +87,8 @@ const [showMore, setShowMore] = useState(false);
           alt={book?.title}
           sx={{ 
             width: { xs: "100%", sm: 180 }, 
-            objectFit: "cover"
+            objectFit: "cover",
+            alignSelf: "flex-start"
           }}
         />
 
