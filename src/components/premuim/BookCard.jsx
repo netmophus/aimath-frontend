@@ -86,9 +86,7 @@ const [showMore, setShowMore] = useState(false);
           alt={book?.title}
           sx={{ 
             width: { xs: "100%", sm: 180 }, 
-            height: { xs: 200, sm: 240 }, 
-            objectFit: "cover",
-            flexShrink: 0
+            objectFit: "cover"
           }}
         />
 
@@ -129,6 +127,10 @@ const [showMore, setShowMore] = useState(false);
 
             <Typography variant="caption" fontWeight="bold" sx={{ color: "#666", mt: 2, display: "block" }}>
               🎓 Niveau : {book?.level?.toUpperCase()} | 🎖️ {isGratuit ? "Gratuit" : "Premium"}
+            </Typography>
+
+            <Typography variant="caption" color="text.secondary" display="block" mt={1}>
+              📏 Hauteur : {book?.height ? `${book.height} cm` : "—"}
             </Typography>
 
             <Typography variant="caption" color="text.secondary" display="block" mt={1}>
