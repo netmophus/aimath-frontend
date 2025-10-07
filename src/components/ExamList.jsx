@@ -154,6 +154,19 @@ const ExamList = () => {
   const [snack, setSnack] = useState({ open: false, type: "success", msg: "" });
   const showSnack = (type, msg) => setSnack({ open: true, type, msg });
 
+  // Helper pour extraire le nom de fichier depuis une URL Cloudinary
+  const getFileNameFromUrl = (url) => {
+    if (!url) return null;
+    try {
+      const parts = url.split('/');
+      const lastPart = parts[parts.length - 1];
+      // Decode URL-encoded characters
+      return decodeURIComponent(lastPart);
+    } catch {
+      return null;
+    }
+  };
+
   const fetchExams = useCallback(async () => {
     try {
       setLoading(true);
@@ -412,7 +425,7 @@ const ExamList = () => {
                 <input type="file" accept="application/pdf" hidden onChange={(e) => setSubjectFile(e.target.files?.[0] || null)} />
               </Button>
               <Typography variant="body2" color="text.secondary">
-                {subjectFile?.name || "Aucun fichier sélectionné"}
+                {subjectFile?.name || getFileNameFromUrl(currentExam?.subjectUrl) || "Aucun fichier"}
               </Typography>
             </Stack>
 
@@ -422,7 +435,7 @@ const ExamList = () => {
                 <input type="file" accept="application/pdf" hidden onChange={(e) => setCorrectionFile(e.target.files?.[0] || null)} />
               </Button>
               <Typography variant="body2" color="text.secondary">
-                {correctionFile?.name || (currentExam?.correctionUrl ? "Correction actuelle conservée" : "Pas de correction")}
+                {correctionFile?.name || getFileNameFromUrl(currentExam?.correctionUrl) || "Pas de correction"}
               </Typography>
             </Stack>
 
@@ -435,11 +448,11 @@ const ExamList = () => {
 
             <Stack direction="row" spacing={1} alignItems="center">
               <Button component="label" variant="outlined" startIcon={<ImageIcon />}>
-                Remplacer l’image de couverture
+                Remplacer l'image de couverture
                 <input type="file" accept="image/*" hidden onChange={(e) => setCoverFile(e.target.files?.[0] || null)} />
               </Button>
               <Typography variant="body2" color="text.secondary">
-                {coverFile?.name || (currentExam?.coverImage ? "Couverture actuelle conservée" : "Pas d’image")}
+                {coverFile?.name || getFileNameFromUrl(currentExam?.coverImage) || "Pas d'image"}
               </Typography>
             </Stack>
 
