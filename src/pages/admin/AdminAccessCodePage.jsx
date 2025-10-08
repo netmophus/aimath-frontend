@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import {
   Box,
   Typography,
@@ -15,7 +15,17 @@ import {
   DialogContent,
   DialogTitle,
   CircularProgress,
+  TablePagination,
+  Card,
+  CardContent,
+  Grid,
+  FormControl,
+  InputLabel,
+  Select,
+  Stack,
+  InputAdornment,
 } from "@mui/material";
+import SearchIcon from "@mui/icons-material/Search";
 import PageLayout from "../../components/PageLayout";
 import API from "../../api";
 import jsPDF from "jspdf";
@@ -26,18 +36,27 @@ import QRCode from "qrcode";
 
 
 const AdminAccessCodePage = () => {
-  const [batches, setBatches] = useState([]);
+  const [allBatches, setAllBatches] = useState([]);
+  const [filteredBatches, setFilteredBatches] = useState([]);
   const [loading, setLoading] = useState(false);
   const [type, setType] = useState("mensuel");
   const [quantity, setQuantity] = useState(1);
 
+  // ✅ Pagination (0-based pour TablePagination)
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+
+  // ✅ Recherche et filtres
+  const [searchTerm, setSearchTerm] = useState("");
+  const [typeFilter, setTypeFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
 
   const [selectedBatchId, setSelectedBatchId] = useState(null);
-const [batchCodes, setBatchCodes] = useState([]);
-const [modalOpen, setModalOpen] = useState(false);
-const [price, setPrice] = useState("");
+  const [batchCodes, setBatchCodes] = useState([]);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [price, setPrice] = useState("");
 
-const [selectedBatch, setSelectedBatch] = useState(null);
+  const [selectedBatch, setSelectedBatch] = useState(null);
 
 const SITE_URL = "https://myfahimta.com";
 const PHONE = "+227 80 64 83 83";
@@ -286,15 +305,83 @@ const loadBatchCodes = async (batchId) => {
 };
 
 
-  const fetchCodes = async () => {
+  const fetchCodes = useCallback(async () => {
     setLoading(true);
     try {
       const res = await API.get("/payments/codes");
-      setBatches(res.data);
+      const data = res.data || [];
+      setAllBatches(data);
+      setFilteredBatches(data);
     } catch (err) {
       console.error("Erreur lors du chargement des lots", err);
     }
     setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    fetchCodes();
+  }, [fetchCodes]);
+
+  // Fonction de filtrage
+  const applyFilters = useCallback(() => {
+    let filtered = [...allBatches];
+
+    // Filtre par recherche (batchId)
+    if (searchTerm) {
+      filtered = filtered.filter(batch =>
+        batch.batchId.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Filtre par type
+    if (typeFilter) {
+      filtered = filtered.filter(batch => batch.type === typeFilter);
+    }
+
+    // Filtre par statut (basé sur les codes utilisés)
+    if (statusFilter) {
+      if (statusFilter === "used") {
+        filtered = filtered.filter(batch => 
+          batch.codes && batch.codes.some(c => c.used)
+        );
+      } else if (statusFilter === "unused") {
+        filtered = filtered.filter(batch => 
+          batch.codes && batch.codes.every(c => !c.used)
+        );
+      }
+    }
+
+    setFilteredBatches(filtered);
+    setPage(0); // Reset à la première page quand on filtre
+  }, [allBatches, searchTerm, typeFilter, statusFilter]);
+
+  useEffect(() => {
+    applyFilters();
+  }, [applyFilters]);
+
+  // Pagination côté client
+  const paginatedBatches = useMemo(() => {
+    const start = page * rowsPerPage;
+    return filteredBatches.slice(start, start + rowsPerPage);
+  }, [filteredBatches, page, rowsPerPage]);
+
+  // Fonction pour réinitialiser les filtres
+  const handleResetFilters = () => {
+    setSearchTerm("");
+    setTypeFilter("");
+    setStatusFilter("");
+    setPage(0);
+  };
+
+  // Statistiques
+  const stats = {
+    totalLots: allBatches.length,
+    mensuel: allBatches.filter(b => b.type === "mensuel").length,
+    annuel: allBatches.filter(b => b.type === "annuel").length,
+    totalCodes: allBatches.reduce((sum, b) => sum + (b.totalCodes || 0), 0),
+    usedCodes: allBatches.reduce((sum, b) => 
+      sum + (b.codes?.filter(c => c.used).length || 0), 0
+    )
   };
 
   const generateCodes = async () => {
@@ -306,10 +393,6 @@ const loadBatchCodes = async (batchId) => {
       alert("Erreur lors de la génération : " + (err.response?.data?.message || ""));
     }
   };
-
-  useEffect(() => {
-    fetchCodes();
-  }, []);
 
 
   const handleActivateAll = async () => {
@@ -377,6 +460,141 @@ const loadBatchCodes = async (batchId) => {
           </Box>
         </Paper>
 
+        {/* Cartes de statistiques */}
+        <Grid container spacing={2} mb={3}>
+          <Grid item xs={12} sm={6} md={2.4}>
+            <Card sx={{ textAlign: 'center', p: 2 }}>
+              <CardContent>
+                <Typography variant="h4" color="primary" fontWeight="bold">
+                  {stats.totalLots}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Total Lots
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+          <Grid item xs={12} sm={6} md={2.4}>
+            <Card sx={{ textAlign: 'center', p: 2 }}>
+              <CardContent>
+                <Typography variant="h4" color="success.main" fontWeight="bold">
+                  {stats.mensuel}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Lots Mensuels
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+          <Grid item xs={12} sm={6} md={2.4}>
+            <Card sx={{ textAlign: 'center', p: 2 }}>
+              <CardContent>
+                <Typography variant="h4" color="warning.main" fontWeight="bold">
+                  {stats.annuel}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Lots Annuels
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+          <Grid item xs={12} sm={6} md={2.4}>
+            <Card sx={{ textAlign: 'center', p: 2 }}>
+              <CardContent>
+                <Typography variant="h4" color="info.main" fontWeight="bold">
+                  {stats.totalCodes}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Total Codes
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+          <Grid item xs={12} sm={6} md={2.4}>
+            <Card sx={{ textAlign: 'center', p: 2 }}>
+              <CardContent>
+                <Typography variant="h4" color="error.main" fontWeight="bold">
+                  {stats.usedCodes}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Codes Utilisés
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
+
+        {/* Barre de recherche et filtres */}
+        <Paper sx={{ p: 2, mb: 3, bgcolor: 'grey.50' }}>
+          <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+            🔍 Recherche et Filtres
+          </Typography>
+          
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center">
+            <TextField
+              placeholder="Recherche par lot (batchId)..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              size="small"
+              sx={{ flex: 1 }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon />
+                  </InputAdornment>
+                ),
+              }}
+            />
+            
+            <FormControl size="small" sx={{ minWidth: 120 }}>
+              <InputLabel>Type</InputLabel>
+              <Select
+                value={typeFilter}
+                onChange={(e) => setTypeFilter(e.target.value)}
+                label="Type"
+              >
+                <MenuItem value="">Tous</MenuItem>
+                <MenuItem value="mensuel">Mensuel</MenuItem>
+                <MenuItem value="annuel">Annuel</MenuItem>
+              </Select>
+            </FormControl>
+
+            <FormControl size="small" sx={{ minWidth: 140 }}>
+              <InputLabel>Statut</InputLabel>
+              <Select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                label="Statut"
+              >
+                <MenuItem value="">Tous</MenuItem>
+                <MenuItem value="used">Avec codes utilisés</MenuItem>
+                <MenuItem value="unused">Tous non utilisés</MenuItem>
+              </Select>
+            </FormControl>
+
+            <Button 
+              variant="outlined" 
+              size="small" 
+              onClick={handleResetFilters}
+              sx={{
+                borderColor: '#1976d2',
+                color: '#1976d2',
+                '&:hover': {
+                  borderColor: '#1565c0',
+                  backgroundColor: '#e3f2fd',
+                  color: '#1565c0'
+                },
+                fontWeight: 600,
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px',
+                minWidth: '120px'
+              }}
+            >
+              🔄 Réinitialiser
+            </Button>
+          </Stack>
+        </Paper>
+
         {/* Liste des lots */}
         <Paper>
           <Typography variant="h6" p={2}>Lots générés</Typography>
@@ -385,37 +603,76 @@ const loadBatchCodes = async (batchId) => {
               <CircularProgress />
             </Box>
           ) : (
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Lot</TableCell>
-                  <TableCell>Type</TableCell>
-                  <TableCell>Prix</TableCell>
+            <>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Lot</TableCell>
+                    <TableCell>Type</TableCell>
+                    <TableCell>Prix</TableCell>
 
-                  <TableCell>Total</TableCell>
-                  <TableCell>Utilisés</TableCell>
-                  <TableCell>Généré par</TableCell>
-                  <TableCell>Date</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {batches.map((batch) => (
-                  <TableRow key={batch._id} onClick={() => loadBatchCodes(batch.batchId)} style={{ cursor: 'pointer' }}>
-
-                    <TableCell>{batch.batchId}</TableCell>
-                    <TableCell>{batch.type}</TableCell>
-                    <TableCell>{batch.price ? `${batch.price} FCFA` : "—"}</TableCell>
-
-                    <TableCell>{batch.totalCodes}</TableCell>
-                    <TableCell>{batch.codes.filter(c => c.used).length}</TableCell>
-                    <TableCell>{batch.generatedBy?.fullName || "—"}</TableCell>
-                    
-                    <TableCell>{new Date(batch.createdAt).toLocaleDateString()}</TableCell>
-                    
+                    <TableCell>Total</TableCell>
+                    <TableCell>Utilisés</TableCell>
+                    <TableCell>Généré par</TableCell>
+                    <TableCell>Date</TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHead>
+                <TableBody>
+                  {filteredBatches.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} align="center">
+                        <Typography color="text.secondary">
+                          {searchTerm || typeFilter || statusFilter 
+                            ? "Aucun lot ne correspond aux filtres." 
+                            : "Aucun lot pour le moment."}
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    paginatedBatches.map((batch) => (
+                      <TableRow key={batch._id} onClick={() => loadBatchCodes(batch.batchId)} style={{ cursor: 'pointer' }} hover>
+
+                        <TableCell>{batch.batchId}</TableCell>
+                        <TableCell>{batch.type}</TableCell>
+                        <TableCell>{batch.price ? `${batch.price} FCFA` : "—"}</TableCell>
+
+                        <TableCell>{batch.totalCodes}</TableCell>
+                        <TableCell>{batch.codes.filter(c => c.used).length}</TableCell>
+                        <TableCell>{batch.generatedBy?.fullName || "—"}</TableCell>
+                        
+                        <TableCell>{new Date(batch.createdAt).toLocaleDateString()}</TableCell>
+                        
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+
+              {/* ✅ TablePagination */}
+              <TablePagination
+                component="div"
+                count={filteredBatches.length}
+                page={page}
+                onPageChange={(e, newPage) => setPage(newPage)}
+                rowsPerPage={rowsPerPage}
+                onRowsPerPageChange={(e) => {
+                  setRowsPerPage(parseInt(e.target.value, 10));
+                  setPage(0);
+                }}
+                rowsPerPageOptions={[5, 10, 25, 50]}
+                labelRowsPerPage="Lignes par page:"
+                labelDisplayedRows={({ from, to, count }) =>
+                  `${from}-${to} sur ${count !== -1 ? count : `plus de ${to}`}`
+                }
+                sx={{ 
+                  borderTop: '1px solid #e0e0e0',
+                  '& .MuiTablePagination-toolbar': {
+                    paddingLeft: 2,
+                    paddingRight: 2,
+                  }
+                }}
+              />
+            </>
           )}
         </Paper>
 

@@ -329,6 +329,12 @@ import {
   DialogActions,
   Chip,
 } from "@mui/material";
+import PersonIcon from "@mui/icons-material/Person";
+import PhoneIcon from "@mui/icons-material/Phone";
+import LockIcon from "@mui/icons-material/Lock";
+import BusinessIcon from "@mui/icons-material/Business";
+import LocationOnIcon from "@mui/icons-material/LocationOn";
+import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import PageLayout from "../../components/PageLayout";
 import API from "../../api";
 
@@ -558,104 +564,230 @@ const PartnerManagementPage = () => {
         <Grid container spacing={3}>
           {/* --- Create form --- */}
           <Grid item xs={12} md={5}>
-            <Paper sx={{ p: 3, borderRadius: 2 }}>
-              <Typography variant="h6" fontWeight="bold" mb={2}>
-                Créer un partenaire
-              </Typography>
+            <Paper 
+              sx={{ 
+                p: 4, 
+                borderRadius: 3,
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                color: 'white',
+                boxShadow: '0 10px 40px rgba(102, 126, 234, 0.3)'
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+                <PersonIcon sx={{ fontSize: 32, mr: 2 }} />
+                <Typography variant="h5" fontWeight="bold">
+                  Créer un partenaire
+                </Typography>
+              </Box>
 
-              <Grid container spacing={2}>
-                <Grid item xs={12}>
-                  <TextField
-                    label="Nom complet"
-                    fullWidth
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                  />
-                </Grid>
+              <Paper sx={{ p: 3, borderRadius: 2, bgcolor: 'white' }}>
+                <Grid container spacing={2.5}>
+                  <Grid item xs={12}>
+                    <TextField
+                      label="Nom complet"
+                      fullWidth
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <PersonIcon color="primary" />
+                          </InputAdornment>
+                        ),
+                      }}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          '&:hover fieldset': {
+                            borderColor: '#667eea',
+                          },
+                        },
+                      }}
+                    />
+                  </Grid>
 
-                <Grid item xs={12}>
-                  <TextField
-                    label="Téléphone"
-                    fullWidth
-                    placeholder="ex: 22790000000"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                  />
-                </Grid>
+                  <Grid item xs={12}>
+                    <TextField
+                      label="Téléphone"
+                      fullWidth
+                      placeholder="ex: 22790000000"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <PhoneIcon color="primary" />
+                          </InputAdornment>
+                        ),
+                      }}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          '&:hover fieldset': {
+                            borderColor: '#667eea',
+                          },
+                        },
+                      }}
+                    />
+                  </Grid>
 
-                <Grid item xs={12} md={6}>
-                  <TextField
-                    label="Mot de passe"
-                    type="password"
-                    fullWidth
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    helperText="Min. 6 caractères"
-                  />
-                </Grid>
-                <Grid item xs={12} md={6}>
-                  <TextField
-                    label="Confirmer mot de passe"
-                    type="password"
-                    fullWidth
-                    value={passwordConfirm}
-                    onChange={(e) => setPasswordConfirm(e.target.value)}
-                    error={!!password && !!passwordConfirm && password !== passwordConfirm}
-                    helperText={
-                      password && passwordConfirm && password !== passwordConfirm ? "Ne correspond pas" : " "
-                    }
-                  />
-                </Grid>
+                  <Grid item xs={12} md={6}>
+                    <TextField
+                      label="Mot de passe"
+                      type="password"
+                      fullWidth
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      helperText="Min. 6 caractères"
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <LockIcon color="primary" />
+                          </InputAdornment>
+                        ),
+                      }}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          '&:hover fieldset': {
+                            borderColor: '#667eea',
+                          },
+                        },
+                      }}
+                    />
+                  </Grid>
+                  <Grid item xs={12} md={6}>
+                    <TextField
+                      label="Confirmer"
+                      type="password"
+                      fullWidth
+                      value={passwordConfirm}
+                      onChange={(e) => setPasswordConfirm(e.target.value)}
+                      error={!!password && !!passwordConfirm && password !== passwordConfirm}
+                      helperText={
+                        password && passwordConfirm && password !== passwordConfirm ? "Ne correspond pas" : " "
+                      }
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <LockIcon color={password && passwordConfirm && password !== passwordConfirm ? "error" : "primary"} />
+                          </InputAdornment>
+                        ),
+                      }}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          '&:hover fieldset': {
+                            borderColor: '#667eea',
+                          },
+                        },
+                      }}
+                    />
+                  </Grid>
 
-                <Grid item xs={12}>
-                  <TextField
-                    label="Entreprise (optionnel)"
-                    fullWidth
-                    value={companyName}
-                    onChange={(e) => setCompanyName(e.target.value)}
-                  />
-                </Grid>
+                  <Grid item xs={12}>
+                    <TextField
+                      label="Entreprise (optionnel)"
+                      fullWidth
+                      value={companyName}
+                      onChange={(e) => setCompanyName(e.target.value)}
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <BusinessIcon color="primary" />
+                          </InputAdornment>
+                        ),
+                      }}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          '&:hover fieldset': {
+                            borderColor: '#667eea',
+                          },
+                        },
+                      }}
+                    />
+                  </Grid>
 
-                <Grid item xs={12} md={6}>
-                  <TextField
-                    label="Région"
-                    select
-                    fullWidth
-                    value={region}
-                    onChange={(e) => setRegion(e.target.value)}
-                  >
-                    {regions.map((r) => (
-                      <MenuItem key={r} value={r}>
-                        {r}
-                      </MenuItem>
-                    ))}
-                  </TextField>
-                </Grid>
+                  <Grid item xs={12} md={6}>
+                    <TextField
+                      label="Région"
+                      select
+                      fullWidth
+                      value={region}
+                      onChange={(e) => setRegion(e.target.value)}
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <LocationOnIcon color="primary" />
+                          </InputAdornment>
+                        ),
+                      }}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          '&:hover fieldset': {
+                            borderColor: '#667eea',
+                          },
+                        },
+                      }}
+                    >
+                      {regions.map((r) => (
+                        <MenuItem key={r} value={r}>
+                          {r}
+                        </MenuItem>
+                      ))}
+                    </TextField>
+                  </Grid>
 
-                <Grid item xs={12} md={6}>
-                  <TextField
-                    label="Commission par activation"
-                    type="number"
-                    fullWidth
-                    value={commissionDefaultCfa}
-                    onChange={(e) => setCommissionDefaultCfa(e.target.value)}
-                    InputProps={{
-                      startAdornment: <InputAdornment position="start">FCFA</InputAdornment>,
-                    }}
-                  />
-                </Grid>
+                  <Grid item xs={12} md={6}>
+                    <TextField
+                      label="Commission"
+                      type="number"
+                      fullWidth
+                      value={commissionDefaultCfa}
+                      onChange={(e) => setCommissionDefaultCfa(e.target.value)}
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <AttachMoneyIcon color="primary" />
+                          </InputAdornment>
+                        ),
+                        endAdornment: <InputAdornment position="end">FCFA</InputAdornment>,
+                      }}
+                      sx={{
+                        '& .MuiOutlinedInput-root': {
+                          '&:hover fieldset': {
+                            borderColor: '#667eea',
+                          },
+                        },
+                      }}
+                    />
+                  </Grid>
 
-                <Grid item xs={12}>
-                  <Button
-                    variant="contained"
-                    fullWidth
-                    disabled={!canSubmit || creating}
-                    onClick={handleCreate}
-                  >
-                    {creating ? "Création..." : "Créer le partenaire"}
-                  </Button>
+                  <Grid item xs={12}>
+                    <Button
+                      variant="contained"
+                      fullWidth
+                      disabled={!canSubmit || creating}
+                      onClick={handleCreate}
+                      sx={{
+                        py: 1.5,
+                        fontSize: '1.1rem',
+                        fontWeight: 'bold',
+                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)',
+                        '&:hover': {
+                          background: 'linear-gradient(135deg, #764ba2 0%, #667eea 100%)',
+                          boxShadow: '0 6px 20px rgba(102, 126, 234, 0.6)',
+                          transform: 'translateY(-2px)',
+                        },
+                        '&:disabled': {
+                          background: '#ccc',
+                          boxShadow: 'none',
+                        },
+                        transition: 'all 0.3s ease',
+                      }}
+                    >
+                      {creating ? "⏳ Création en cours..." : "✨ Créer le partenaire"}
+                    </Button>
+                  </Grid>
                 </Grid>
-              </Grid>
+              </Paper>
             </Paper>
           </Grid>
 

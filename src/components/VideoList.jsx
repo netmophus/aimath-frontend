@@ -177,7 +177,7 @@
 
 
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import {
   Table,
   TableBody,
@@ -190,69 +190,127 @@ import {
   Chip,
   Button,
   Box,
-  Pagination,
+  TablePagination,
   Stack,
   CircularProgress,
   Alert,
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Card,
+  CardContent,
+  Grid,
+  InputAdornment,
 } from "@mui/material";
+import SearchIcon from "@mui/icons-material/Search";
 import API from "../api";
 
 const VideoList = () => {
   // -- État pour pagination + UX
-  const [videos, setVideos] = useState([]);
-  const [page, setPage] = useState(1);
-  const [limit] = useState(8);         // ajuste si besoin
-  const [pages, setPages] = useState(1);
+  const [allVideos, setAllVideos] = useState([]); // Toutes les vidéos
+  const [filteredVideos, setFilteredVideos] = useState([]); // Vidéos filtrées
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // Pagination côté client si le backend renvoie un tableau brut
-  const paginateClient = (arr, p, l) => {
-    const total = arr.length;
-    const nbPages = Math.max(Math.ceil(total / l), 1);
-    const safe = Math.min(Math.max(p, 1), nbPages);
-    const start = (safe - 1) * l;
-    return { items: arr.slice(start, start + l), pages: nbPages, page: safe };
-  };
+  // ✅ Pagination (0-based pour TablePagination)
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
 
-  const fetchVideos = useCallback(async (p = 1) => {
+  // -- État pour les filtres et recherche
+  const [searchTerm, setSearchTerm] = useState("");
+  const [levelFilter, setLevelFilter] = useState("");
+  const [badgeFilter, setBadgeFilter] = useState("");
+
+  const fetchVideos = useCallback(async () => {
     try {
       setLoading(true);
       setError("");
-      const res = await API.get("/videos", { params: { page: p, limit } });
+      const res = await API.get("/videos");
       const payload = res.data;
 
       // ✅ Backend paginé: {items,total,page,pages,limit}
       if (payload && typeof payload === "object" && Array.isArray(payload.items)) {
-        setVideos(payload.items);
-        setPages(payload.pages ?? 1);
+        setAllVideos(payload.items);
+        setFilteredVideos(payload.items);
       }
       // ✅ Ancien backend (tableau brut)
       else if (Array.isArray(payload)) {
-        const { items, pages: nbPages } = paginateClient(payload, p, limit);
-        setVideos(items);
-        setPages(nbPages);
+        setAllVideos(payload);
+        setFilteredVideos(payload);
       } else {
-        setVideos([]);
-        setPages(1);
+        setAllVideos([]);
+        setFilteredVideos([]);
       }
     } catch (e) {
       setError(e.response?.data?.message || "Erreur lors du chargement des vidéos.");
     } finally {
       setLoading(false);
     }
-  }, [limit]);
+  }, []);
 
   useEffect(() => {
-    fetchVideos(page);
-  }, [page, fetchVideos]);
+    fetchVideos();
+  }, [fetchVideos]);
+
+  // Fonction de filtrage
+  const applyFilters = useCallback(() => {
+    let filtered = [...allVideos];
+
+    // Filtre par recherche
+    if (searchTerm) {
+      filtered = filtered.filter(video =>
+        video.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        video.description.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Filtre par niveau
+    if (levelFilter) {
+      filtered = filtered.filter(video => video.level === levelFilter);
+    }
+
+    // Filtre par badge
+    if (badgeFilter) {
+      filtered = filtered.filter(video => video.badge === badgeFilter);
+    }
+
+    setFilteredVideos(filtered);
+    setPage(0); // Reset à la première page quand on filtre
+  }, [allVideos, searchTerm, levelFilter, badgeFilter]);
+
+  useEffect(() => {
+    applyFilters();
+  }, [applyFilters]);
+
+  // Pagination côté client
+  const paginatedVideos = useMemo(() => {
+    const start = page * rowsPerPage;
+    return filteredVideos.slice(start, start + rowsPerPage);
+  }, [filteredVideos, page, rowsPerPage]);
+
+  // Fonction pour réinitialiser les filtres
+  const handleResetFilters = () => {
+    setSearchTerm("");
+    setLevelFilter("");
+    setBadgeFilter("");
+    setPage(0);
+  };
+
+  // Statistiques
+  const stats = {
+    total: allVideos.length,
+    gratuit: allVideos.filter(v => v.badge === "gratuit").length,
+    premium: allVideos.filter(v => v.badge === "prenuim").length
+  };
 
   const handleDelete = async (id) => {
     if (!window.confirm("Voulez-vous vraiment supprimer cette vidéo ?")) return;
     try {
       await API.delete(`/videos/${id}`);
-      // Rechargement de la page courante pour rester cohérent (serveur ou client)
-      fetchVideos(page);
+      // Rechargement des vidéos
+      fetchVideos();
     } catch (err) {
       alert("❌ Erreur lors de la suppression.");
       console.error(err);
@@ -264,6 +322,123 @@ const VideoList = () => {
       <Typography variant="h6" fontWeight="bold" gutterBottom>
         🎥 Liste des Vidéos de Formation
       </Typography>
+
+      {/* Cartes de statistiques */}
+      <Grid container spacing={2} mb={3}>
+        <Grid item xs={12} sm={4}>
+          <Card sx={{ textAlign: 'center', p: 2 }}>
+            <CardContent>
+              <Typography variant="h4" color="primary" fontWeight="bold">
+                {stats.total}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Total
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} sm={4}>
+          <Card sx={{ textAlign: 'center', p: 2 }}>
+            <CardContent>
+              <Typography variant="h4" color="success.main" fontWeight="bold">
+                {stats.gratuit}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Gratuits
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} sm={4}>
+          <Card sx={{ textAlign: 'center', p: 2 }}>
+            <CardContent>
+              <Typography variant="h4" color="warning.main" fontWeight="bold">
+                {stats.premium}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Premium
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+
+      {/* Barre de recherche et filtres */}
+      <Paper sx={{ p: 2, mb: 3 }}>
+        <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+          🔍 Recherche et Filtres
+        </Typography>
+        
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center">
+          <TextField
+            placeholder="Recherche (titre, description...)"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            size="small"
+            sx={{ flex: 1 }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon />
+                </InputAdornment>
+              ),
+            }}
+          />
+          
+          <FormControl size="small" sx={{ minWidth: 120 }}>
+            <InputLabel>Niveau</InputLabel>
+            <Select
+              value={levelFilter}
+              onChange={(e) => setLevelFilter(e.target.value)}
+              label="Niveau"
+            >
+              <MenuItem value="">Tous</MenuItem>
+              <MenuItem value="6eme">6ème</MenuItem>
+              <MenuItem value="5eme">5ème</MenuItem>
+              <MenuItem value="4eme">4ème</MenuItem>
+              <MenuItem value="3eme">3ème</MenuItem>
+              <MenuItem value="seconde">Seconde</MenuItem>
+              <MenuItem value="premiere">Première</MenuItem>
+              <MenuItem value="terminale">Terminale</MenuItem>
+              <MenuItem value="universite">Université</MenuItem>
+            </Select>
+          </FormControl>
+
+          <FormControl size="small" sx={{ minWidth: 120 }}>
+            <InputLabel>Badge</InputLabel>
+            <Select
+              value={badgeFilter}
+              onChange={(e) => setBadgeFilter(e.target.value)}
+              label="Badge"
+            >
+              <MenuItem value="">Tous</MenuItem>
+              <MenuItem value="gratuit">Gratuit</MenuItem>
+              <MenuItem value="prenuim">Premium</MenuItem>
+            </Select>
+          </FormControl>
+
+          <Button 
+            variant="outlined" 
+            size="small" 
+            onClick={handleResetFilters}
+            sx={{
+              borderColor: '#1976d2',
+              color: '#1976d2',
+              '&:hover': {
+                borderColor: '#1565c0',
+                backgroundColor: '#e3f2fd',
+                color: '#1565c0'
+              },
+              fontWeight: 600,
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px',
+              minWidth: '120px'
+            }}
+          >
+            🔄 Réinitialiser
+          </Button>
+        </Stack>
+      </Paper>
 
       {loading ? (
         <Stack alignItems="center" my={3}><CircularProgress /></Stack>
@@ -285,7 +460,18 @@ const VideoList = () => {
               </TableHead>
 
               <TableBody>
-                {videos.map((video) => (
+                {filteredVideos.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} align="center">
+                      <Typography color="text.secondary">
+                        {searchTerm || levelFilter || badgeFilter 
+                          ? "Aucune vidéo ne correspond aux filtres." 
+                          : "Aucune vidéo."}
+                      </Typography>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  paginatedVideos.map((video) => (
                   <TableRow key={video._id}>
                     <TableCell>{video.title}</TableCell>
                     <TableCell>{video.level?.toUpperCase()}</TableCell>
@@ -384,20 +570,36 @@ const VideoList = () => {
                       </Box>
                     </TableCell>
                   </TableRow>
-                ))}
+                  ))
+                )}
               </TableBody>
             </Table>
           </TableContainer>
 
-          {/* Pagination */}
-          <Stack alignItems="center" mt={3}>
-            <Pagination
-              count={pages}
-              page={page}
-              onChange={(_, p) => setPage(p)}
-              shape="rounded"
-            />
-          </Stack>
+          {/* ✅ TablePagination */}
+          <TablePagination
+            component="div"
+            count={filteredVideos.length}
+            page={page}
+            onPageChange={(e, newPage) => setPage(newPage)}
+            rowsPerPage={rowsPerPage}
+            onRowsPerPageChange={(e) => {
+              setRowsPerPage(parseInt(e.target.value, 10));
+              setPage(0);
+            }}
+            rowsPerPageOptions={[5, 10, 25, 50]}
+            labelRowsPerPage="Lignes par page:"
+            labelDisplayedRows={({ from, to, count }) =>
+              `${from}-${to} sur ${count !== -1 ? count : `plus de ${to}`}`
+            }
+            sx={{ 
+              borderTop: '1px solid #e0e0e0',
+              '& .MuiTablePagination-toolbar': {
+                paddingLeft: 2,
+                paddingRight: 2,
+              }
+            }}
+          />
         </>
       )}
     </Box>

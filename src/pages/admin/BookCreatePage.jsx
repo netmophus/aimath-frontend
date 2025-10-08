@@ -74,7 +74,7 @@ const BookCreatePage = () => {
   return (
     <PageLayout>
       <Box maxWidth="600px" mx="auto" mt={10} mb={5}>
-        <Paper elevation={3} sx={{ p: 4 }}>
+        <Paper elevation={3} sx={{ p: 4, mb: 4 }}>
           <Typography variant="h5" fontWeight="bold" gutterBottom>
             📘 Ajouter un nouveau livre
           </Typography>
@@ -178,7 +178,7 @@ const BookCreatePage = () => {
               variant="contained"
               color="primary"
               fullWidth
-              sx={{ mt: 4 }}
+              sx={{ mt: 4  }}
               type="submit"
             >
               Enregistrer le livre

@@ -103,13 +103,14 @@
 
 
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import {
   Table, TableBody, TableCell, TableHead, TableRow,
   Typography, Paper, Box, Button, Chip, Stack,
   Dialog, DialogTitle, DialogContent, DialogActions,
   TextField, FormControl, InputLabel, Select, MenuItem,
-  Snackbar, Alert, CircularProgress, Checkbox, FormControlLabel
+  Snackbar, Alert, CircularProgress, Checkbox, FormControlLabel,
+  TablePagination, Card, CardContent, Grid, InputAdornment
 } from "@mui/material";
 import {
   Edit as EditIcon,
@@ -118,6 +119,7 @@ import {
   UploadFile as UploadFileIcon,
   Image as ImageIcon
 } from "@mui/icons-material";
+import SearchIcon from "@mui/icons-material/Search";
 import API from "../api";
 
 const initialForm = {
@@ -128,8 +130,18 @@ const initialForm = {
 };
 
 const ExamList = () => {
-  const [exams, setExams] = useState([]);
+  const [allExams, setAllExams] = useState([]);
+  const [filteredExams, setFilteredExams] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // ✅ Pagination (0-based pour TablePagination)
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+
+  // ✅ Recherche et filtres
+  const [searchTerm, setSearchTerm] = useState("");
+  const [levelFilter, setLevelFilter] = useState("");
+  const [badgeFilter, setBadgeFilter] = useState("");
 
   // Edition
   const [editOpen, setEditOpen] = useState(false);
@@ -171,7 +183,9 @@ const ExamList = () => {
     try {
       setLoading(true);
       const res = await API.get("/exams");
-      setExams(res.data || []);
+      const data = res.data || [];
+      setAllExams(data);
+      setFilteredExams(data);
     } catch (error) {
       console.error("Erreur lors du chargement des examens :", error);
       showSnack("error", "Erreur lors du chargement des sujets.");
@@ -183,6 +197,57 @@ const ExamList = () => {
   useEffect(() => {
     fetchExams();
   }, [fetchExams]);
+
+  // Fonction de filtrage
+  const applyFilters = useCallback(() => {
+    let filtered = [...allExams];
+
+    // Filtre par recherche
+    if (searchTerm) {
+      filtered = filtered.filter(exam =>
+        exam.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        exam.description.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Filtre par niveau
+    if (levelFilter) {
+      filtered = filtered.filter(exam => exam.level === levelFilter);
+    }
+
+    // Filtre par badge
+    if (badgeFilter) {
+      filtered = filtered.filter(exam => exam.badge === badgeFilter);
+    }
+
+    setFilteredExams(filtered);
+    setPage(0); // Reset à la première page quand on filtre
+  }, [allExams, searchTerm, levelFilter, badgeFilter]);
+
+  useEffect(() => {
+    applyFilters();
+  }, [applyFilters]);
+
+  // Pagination côté client
+  const paginatedExams = useMemo(() => {
+    const start = page * rowsPerPage;
+    return filteredExams.slice(start, start + rowsPerPage);
+  }, [filteredExams, page, rowsPerPage]);
+
+  // Fonction pour réinitialiser les filtres
+  const handleResetFilters = () => {
+    setSearchTerm("");
+    setLevelFilter("");
+    setBadgeFilter("");
+    setPage(0);
+  };
+
+  // Statistiques
+  const stats = {
+    total: allExams.length,
+    gratuit: allExams.filter(e => e.badge === "gratuit").length,
+    premium: allExams.filter(e => e.badge === "prenuim").length
+  };
 
   /* ---------- Edition ---------- */
   const handleOpenEdit = (exam) => {
@@ -280,7 +345,8 @@ const ExamList = () => {
       setDeletingId(currentExam._id);
       await API.delete(`/exams/${currentExam._id}`);
       showSnack("success", "Sujet supprimé.");
-      setExams((prev) => prev.filter((e) => e._id !== currentExam._id));
+      // Recharger les examens après suppression
+      fetchExams();
       setConfirmOpen(false);
       setCurrentExam(null);
     } catch (error) {
@@ -296,6 +362,117 @@ const ExamList = () => {
       <Typography variant="h6" fontWeight="bold" gutterBottom>
         📋 Liste des Sujets d'Examen
       </Typography>
+
+      {/* Cartes de statistiques */}
+      <Grid container spacing={2} mb={3}>
+        <Grid item xs={12} sm={4}>
+          <Card sx={{ textAlign: 'center', p: 2 }}>
+            <CardContent>
+              <Typography variant="h4" color="primary" fontWeight="bold">
+                {stats.total}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Total
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} sm={4}>
+          <Card sx={{ textAlign: 'center', p: 2 }}>
+            <CardContent>
+              <Typography variant="h4" color="success.main" fontWeight="bold">
+                {stats.gratuit}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Gratuits
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} sm={4}>
+          <Card sx={{ textAlign: 'center', p: 2 }}>
+            <CardContent>
+              <Typography variant="h4" color="warning.main" fontWeight="bold">
+                {stats.premium}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Premium
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+
+      {/* Barre de recherche et filtres */}
+      <Paper sx={{ p: 2, mb: 3, bgcolor: 'grey.50' }}>
+        <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+          🔍 Recherche et Filtres
+        </Typography>
+        
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center">
+          <TextField
+            placeholder="Recherche (titre, description...)"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            size="small"
+            sx={{ flex: 1 }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon />
+                </InputAdornment>
+              ),
+            }}
+          />
+          
+          <FormControl size="small" sx={{ minWidth: 120 }}>
+            <InputLabel>Niveau</InputLabel>
+            <Select
+              value={levelFilter}
+              onChange={(e) => setLevelFilter(e.target.value)}
+              label="Niveau"
+            >
+              <MenuItem value="">Tous</MenuItem>
+              <MenuItem value="college">Collège</MenuItem>
+              <MenuItem value="lycee">Lycée</MenuItem>
+            </Select>
+          </FormControl>
+
+          <FormControl size="small" sx={{ minWidth: 120 }}>
+            <InputLabel>Badge</InputLabel>
+            <Select
+              value={badgeFilter}
+              onChange={(e) => setBadgeFilter(e.target.value)}
+              label="Badge"
+            >
+              <MenuItem value="">Tous</MenuItem>
+              <MenuItem value="gratuit">Gratuit</MenuItem>
+              <MenuItem value="prenuim">Premium</MenuItem>
+            </Select>
+          </FormControl>
+
+          <Button 
+            variant="outlined" 
+            size="small" 
+            onClick={handleResetFilters}
+            sx={{
+              borderColor: '#1976d2',
+              color: '#1976d2',
+              '&:hover': {
+                borderColor: '#1565c0',
+                backgroundColor: '#e3f2fd',
+                color: '#1565c0'
+              },
+              fontWeight: 600,
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px',
+              minWidth: '120px'
+            }}
+          >
+            🔄 Réinitialiser
+          </Button>
+        </Stack>
+      </Paper>
 
       <Paper>
         <Table>
@@ -320,14 +497,18 @@ const ExamList = () => {
                   </Box>
                 </TableCell>
               </TableRow>
-            ) : exams.length === 0 ? (
+            ) : filteredExams.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} align="center">
-                  <Typography color="text.secondary">Aucun sujet pour le moment.</Typography>
+                  <Typography color="text.secondary">
+                    {searchTerm || levelFilter || badgeFilter 
+                      ? "Aucun sujet ne correspond aux filtres." 
+                      : "Aucun sujet pour le moment."}
+                  </Typography>
                 </TableCell>
               </TableRow>
             ) : (
-              exams.map((exam) => (
+              paginatedExams.map((exam) => (
                 <TableRow key={exam._id} hover>
                   <TableCell>{exam.title}</TableCell>
                   <TableCell>{exam.level?.toUpperCase()}</TableCell>
@@ -400,6 +581,31 @@ const ExamList = () => {
             )}
           </TableBody>
         </Table>
+
+        {/* ✅ TablePagination */}
+        <TablePagination
+          component="div"
+          count={filteredExams.length}
+          page={page}
+          onPageChange={(e, newPage) => setPage(newPage)}
+          rowsPerPage={rowsPerPage}
+          onRowsPerPageChange={(e) => {
+            setRowsPerPage(parseInt(e.target.value, 10));
+            setPage(0);
+          }}
+          rowsPerPageOptions={[5, 10, 25, 50]}
+          labelRowsPerPage="Lignes par page:"
+          labelDisplayedRows={({ from, to, count }) =>
+            `${from}-${to} sur ${count !== -1 ? count : `plus de ${to}`}`
+          }
+          sx={{ 
+            borderTop: '1px solid #e0e0e0',
+            '& .MuiTablePagination-toolbar': {
+              paddingLeft: 2,
+              paddingRight: 2,
+            }
+          }}
+        />
       </Paper>
 
       {/* ----- Dialog Edition ----- */}
