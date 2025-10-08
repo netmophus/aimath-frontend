@@ -288,7 +288,7 @@ const FeatureCard = ({ icon, title, description, accent = ["#22d3ee", "#3b82f6"]
         )}
       </Box>
 
-      {/* mini “preuves”/avantages */}
+      {/* mini "preuves"/avantages */}
       <Box
         sx={{
           mt: 2.5,
@@ -307,6 +307,24 @@ const FeatureCard = ({ icon, title, description, accent = ["#22d3ee", "#3b82f6"]
         </Box>
         <Box sx={{ px: 1, py: 0.5, border: "1px solid rgba(255,255,255,0.25)", borderRadius: 1 }}>
           🔄 Historique synchronisé
+        </Box>
+        <Box 
+          onClick={() => setOpenDist(true)}
+          sx={{ 
+            px: 1, 
+            py: 0.5, 
+            border: "1px solid rgba(255,255,255,0.35)", 
+            borderRadius: 1,
+            cursor: "pointer",
+            transition: "all 0.2s",
+            "&:hover": {
+              backgroundColor: "rgba(255,255,255,0.15)",
+              borderColor: "rgba(255,255,255,0.5)",
+              transform: "translateY(-1px)"
+            }
+          }}
+        >
+          📍 Trouver un distributeur
         </Box>
       </Box>
     </Box>

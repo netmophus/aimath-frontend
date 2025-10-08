@@ -1384,6 +1384,10 @@ const GratuitFahimtaPage = () => {
   const downMd = useMediaQuery(theme.breakpoints.down("md"));
   
   const [tabIndex, setTabIndex] = useState(0);
+  
+  // ✅ Sélection de matière (par défaut Maths)
+  const [selectedSubject, setSelectedSubject] = useState("maths");
+  
   const [livres, setLivres] = useState([]);
   const [exams, setExams] = useState([]);
   const [videos, setVideos] = useState([]);
@@ -2318,6 +2322,53 @@ const totalVideosCount = useMemo(() => {
             mb: 3,
           }}
         >
+          {/* ✅ Onglets de sélection de matière */}
+          <Tabs
+            value={selectedSubject}
+            onChange={(_e, v) => setSelectedSubject(v)}
+            variant={downMd ? "scrollable" : "standard"}
+            centered={!downMd}
+            sx={{
+              mb: 2,
+              borderBottom: "1px solid rgba(0,0,0,0.08)",
+              "& .MuiTab-root": { 
+                fontWeight: 800, 
+                textTransform: "none", 
+                fontSize: { xs: 14, md: 15 },
+                minHeight: 48
+              },
+            }}
+          >
+            <Tab label="📐 Mathématiques" value="maths" />
+            <Tab 
+              label={
+                <Stack direction="row" spacing={0.5} alignItems="center">
+                  <Typography sx={{ fontWeight: 800 }}>⚛️ Physique</Typography>
+                  <Chip label="Bientôt" size="small" color="info" sx={{ height: 18, fontSize: 10, fontWeight: 700 }} />
+                </Stack>
+              } 
+              value="physique" 
+            />
+            <Tab 
+              label={
+                <Stack direction="row" spacing={0.5} alignItems="center">
+                  <Typography sx={{ fontWeight: 800 }}>🧪 Chimie</Typography>
+                  <Chip label="Bientôt" size="small" color="info" sx={{ height: 18, fontSize: 10, fontWeight: 700 }} />
+                </Stack>
+              } 
+              value="chimie" 
+            />
+            <Tab 
+              label={
+                <Stack direction="row" spacing={0.5} alignItems="center">
+                  <Typography sx={{ fontWeight: 800 }}>🌱 SVT</Typography>
+                  <Chip label="Bientôt" size="small" color="info" sx={{ height: 18, fontSize: 10, fontWeight: 700 }} />
+                </Stack>
+              } 
+              value="svt" 
+            />
+          </Tabs>
+
           <Stack
             direction={{ xs: "column", md: "row" }}
             spacing={1.5}
@@ -2325,6 +2376,8 @@ const totalVideosCount = useMemo(() => {
             justifyContent="space-between"
           >
            
+           {/* Onglets de contenu (Livres/Examens/Vidéos) - visible uniquement pour Maths */}
+           {selectedSubject === "maths" && (
            <Tabs
   value={tabIndex}
   onChange={(_e, v) => setTabIndex(v)}
@@ -2363,9 +2416,11 @@ const totalVideosCount = useMemo(() => {
  <Tab label={<TabLabel label="Vidéos" count={totalVideosCount} />} id="tab-2" aria-controls="panel-2" />
 
 </Tabs>
+           )}
 
              
-
+            {/* Barre de recherche - visible uniquement pour Maths */}
+            {selectedSubject === "maths" && (
             <TextField
               placeholder="Rechercher (titre, matière, classe)…"
               value={q}
@@ -2380,8 +2435,50 @@ const totalVideosCount = useMemo(() => {
                 ),
               }}
             />
+            )}
           </Stack>
         </Paper>
+
+        {/* ✅ Message "Bientôt disponible" pour Physique, Chimie, SVT */}
+        {selectedSubject !== "maths" && (
+          <Box sx={{ py: 8, textAlign: "center" }}>
+            <Box
+              sx={{
+                display: "inline-block",
+                p: 4,
+                borderRadius: 3,
+                background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                color: "white",
+                boxShadow: "0 8px 32px rgba(102, 126, 234, 0.3)",
+              }}
+            >
+              <Typography variant="h4" fontWeight={800} gutterBottom>
+                {selectedSubject === "physique" && "⚛️ Physique"}
+                {selectedSubject === "chimie" && "🧪 Chimie"}
+                {selectedSubject === "svt" && "🌱 SVT"}
+              </Typography>
+              <Typography variant="h6" sx={{ mt: 2, opacity: 0.95 }}>
+                Bientôt disponible ! 🚀
+              </Typography>
+              <Typography variant="body1" sx={{ mt: 1, opacity: 0.9 }}>
+                Vidéos, livres et examens corrigés disponibles dans les 4 prochains mois.
+              </Typography>
+              <Chip
+                label="En préparation"
+                sx={{
+                  mt: 3,
+                  bgcolor: "rgba(255,255,255,0.2)",
+                  color: "white",
+                  fontWeight: 700,
+                }}
+              />
+            </Box>
+          </Box>
+        )}
+
+        {/* Contenu (Livres/Examens/Vidéos) - visible uniquement pour Maths */}
+        {selectedSubject === "maths" && (
+        <>
 
      {/* Panel Livres */}
 <Box role="tabpanel" hidden={tabIndex !== 0} id="panel-0" aria-labelledby="tab-0">
@@ -2539,10 +2636,10 @@ const totalVideosCount = useMemo(() => {
           }}
         >
           <Typography variant={downMd ? "h5" : "h4"} fontWeight={900}>
-            Besoin d’aller plus loin ?
+            Besoin d'aller plus loin ?
           </Typography>
           <Typography sx={{ mt: 1, color: "text.secondary" }}>
-            Passe à la formule Premium pour bénéficier d’un accompagnement personnalisé en continu.
+            Passe à la formule Premium pour bénéficier d'un accompagnement personnalisé en continu.
           </Typography>
           <Button
             variant="contained"
@@ -2553,6 +2650,8 @@ const totalVideosCount = useMemo(() => {
             Voir les offres
           </Button>
         </Paper>
+        </>
+        )}
       </Container>
     </PageLayout>
   );

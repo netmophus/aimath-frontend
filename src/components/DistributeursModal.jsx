@@ -255,6 +255,7 @@ import {
   Stack,
   Typography,
   CircularProgress,
+  MenuItem,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import MapRoundedIcon from "@mui/icons-material/MapRounded";
@@ -282,6 +283,37 @@ const mapsUrl = (lat, lng) =>
     ? `https://www.google.com/maps?q=${lat},${lng}`
     : null;
 
+/* ✅ Helper pour vérifier si ouvert maintenant */
+const checkIfOpenNow = (openingHours) => {
+  if (!openingHours) return null;
+  if (typeof openingHours === "string") return null; // Pas de calcul pour texte libre
+  
+  const now = new Date();
+  const dayNames = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+  const today = dayNames[now.getDay()];
+  const daySchedule = openingHours[today];
+  
+  if (!daySchedule || daySchedule.closed) return false;
+  
+  const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+  const isOpen = currentTime >= daySchedule.open && currentTime < daySchedule.close;
+  return { isOpen, closeTime: daySchedule.close };
+};
+
+/* ✅ Helper pour formatter les heures d'aujourd'hui */
+const getTodaySchedule = (openingHours) => {
+  if (!openingHours) return null;
+  if (typeof openingHours === "string") return openingHours;
+  
+  const dayNames = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+  const today = dayNames[new Date().getDay()];
+  const daySchedule = openingHours[today];
+  
+  if (!daySchedule) return null;
+  if (daySchedule.closed) return "Fermé aujourd'hui";
+  return `${daySchedule.open} - ${daySchedule.close}`;
+};
+
 export default function DistributeursModal({ open, onClose }) {
   // UI
   const [q, setQ] = useState("");
@@ -296,8 +328,11 @@ export default function DistributeursModal({ open, onClose }) {
   const [userPos, setUserPos] = useState(null); // {lat, lng}
   const [geoDenied, setGeoDenied] = useState(false);
 
-  // Rayon pour /near (km)
-  const [radiusKm] = useState(100);
+  // ✅ Filtre par région si géolocalisation refusée
+  const [selectedRegion, setSelectedRegion] = useState("");
+
+  // ✅ Rayon ajustable pour /near (km) - Par défaut 5 km (distances urbaines)
+  const [radiusKm, setRadiusKm] = useState(5);
 
   // Demande de géolocalisation quand le modal s’ouvre
   useEffect(() => {
@@ -335,13 +370,18 @@ export default function DistributeursModal({ open, onClose }) {
       let res;
 
       if (userPos && !geoDenied) {
-        // ↪️ on tente l’endpoint géospatial (tri par distance côté DB)
+        // ↪️ on tente l'endpoint géospatial (tri par distance côté DB)
         res = await API.get("/distributors/near", {
           params: { ...paramsBase, lat: userPos.lat, lng: userPos.lng, radiusKm },
         });
       } else {
-        // ↪️ fallback: liste paginée standard
-        res = await API.get("/distributors", { params: paramsBase });
+        // ✅ fallback: liste paginée standard + filtre par région si sélectionnée
+        res = await API.get("/distributors", { 
+          params: { 
+            ...paramsBase, 
+            region: selectedRegion || undefined,
+          } 
+        });
       }
 
       // Structure attendue côté back:
@@ -359,15 +399,15 @@ export default function DistributeursModal({ open, onClose }) {
     }
   };
 
-  // Fetch quand pagination/recherche/position changent
+  // Fetch quand pagination/recherche/position/région/rayon changent
   useEffect(() => {
     const id = setTimeout(fetchData, 200);
     return () => clearTimeout(id);
     // eslint-disable-next-line
-  }, [open, page, rowsPerPage, q, userPos, geoDenied]);
+  }, [open, page, rowsPerPage, q, userPos, geoDenied, selectedRegion, radiusKm]);
 
-  // Reset page quand filtre recherche change
-  useEffect(() => setPage(0), [q]);
+  // Reset page quand filtre recherche, région ou rayon change
+  useEffect(() => setPage(0), [q, selectedRegion, radiusKm]);
 
   // Normalisation pour le rendu
   const displayRows = useMemo(() => {
@@ -380,6 +420,10 @@ export default function DistributeursModal({ open, onClose }) {
       // distance client (au cas où le back ne renvoie pas déjà trié)
       const dist = userPos ? haversineKm(userPos, { lat, lng }) : null;
 
+      // ✅ Calcul de l'état d'ouverture
+      const openStatus = checkIfOpenNow(d.openingHours);
+      const todaySchedule = getTodaySchedule(d.openingHours);
+
       return {
         id: d._id || d.id,
         name: d.name,
@@ -390,6 +434,8 @@ export default function DistributeursModal({ open, onClose }) {
         lng,
         dist,
         mapUrl: d.mapUrl || mapsUrl(lat, lng),
+        openStatus,
+        todaySchedule,
       };
     });
   }, [rows, userPos]);
@@ -422,14 +468,55 @@ export default function DistributeursModal({ open, onClose }) {
             }}
           />
 
+          {/* ✅ Filtre par région si géolocalisation refusée */}
+          {(geoDenied || !userPos) && (
+            <TextField
+              select
+              size="small"
+              label="Région"
+              value={selectedRegion}
+              onChange={(e) => setSelectedRegion(e.target.value)}
+              sx={{ minWidth: 160 }}
+            >
+              <MenuItem value="">Toutes les régions</MenuItem>
+              <MenuItem value="Niamey">Niamey</MenuItem>
+              <MenuItem value="Agadez">Agadez</MenuItem>
+              <MenuItem value="Diffa">Diffa</MenuItem>
+              <MenuItem value="Dosso">Dosso</MenuItem>
+              <MenuItem value="Maradi">Maradi</MenuItem>
+              <MenuItem value="Tahoua">Tahoua</MenuItem>
+              <MenuItem value="Tillabéri">Tillabéri</MenuItem>
+              <MenuItem value="Zinder">Zinder</MenuItem>
+            </TextField>
+          )}
+
           <Box display="flex" alignItems="center" gap={1}>
             {userPos ? (
-              <Chip
-                icon={<NearMeRoundedIcon />}
-                color="success"
-                label={`Autour de moi (≤ ${radiusKm} km)`}
-                variant="outlined"
-              />
+              <>
+                <Chip
+                  icon={<NearMeRoundedIcon />}
+                  color="success"
+                  label={`Autour de moi`}
+                  variant="outlined"
+                />
+                {/* ✅ Rayon ajustable - Options fines pour distances courtes */}
+                <TextField
+                  select
+                  size="small"
+                  value={radiusKm}
+                  onChange={(e) => setRadiusKm(Number(e.target.value))}
+                  sx={{ minWidth: 100 }}
+                >
+                  <MenuItem value={0.5}>≤ 500 m</MenuItem>
+                  <MenuItem value={1}>≤ 1 km</MenuItem>
+                  <MenuItem value={2}>≤ 2 km</MenuItem>
+                  <MenuItem value={5}>≤ 5 km</MenuItem>
+                  <MenuItem value={10}>≤ 10 km</MenuItem>
+                  <MenuItem value={20}>≤ 20 km</MenuItem>
+                  <MenuItem value={50}>≤ 50 km</MenuItem>
+                  <MenuItem value={100}>≤ 100 km</MenuItem>
+                </TextField>
+              </>
             ) : (
               <Chip
                 icon={<NearMeRoundedIcon />}
@@ -479,7 +566,43 @@ export default function DistributeursModal({ open, onClose }) {
               {displayRows.map((d) => (
                 <TableRow key={d.id} hover>
                   <TableCell>
-                    <Typography fontWeight={700}>{d.name || "—"}</Typography>
+                    <Stack spacing={0.5}>
+                      <Stack direction="row" spacing={0.5} alignItems="center">
+                        <Typography fontWeight={700}>{d.name || "—"}</Typography>
+                        {/* ✅ Indicateur GPS précis */}
+                        {d.lat != null && d.lng != null ? (
+                          <Tooltip title="Géolocalisation GPS précise">
+                            <Chip label="GPS" color="success" size="small" sx={{ fontSize: 9, height: 16 }} />
+                          </Tooltip>
+                        ) : (
+                          <Tooltip title="Pas de coordonnées GPS précises">
+                            <Chip label="⚠️" size="small" variant="outlined" sx={{ fontSize: 9, height: 16 }} />
+                          </Tooltip>
+                        )}
+                      </Stack>
+                      
+                      {/* ✅ Indicateur Ouvert/Fermé + Horaires */}
+                      {d.openStatus && (
+                        <Stack direction="row" spacing={0.5} alignItems="center">
+                          <Chip 
+                            label={d.openStatus.isOpen ? "Ouvert" : "Fermé"} 
+                            color={d.openStatus.isOpen ? "success" : "error"} 
+                            size="small"
+                            sx={{ fontSize: 10, height: 18, fontWeight: 700 }}
+                          />
+                          {d.openStatus.isOpen && d.openStatus.closeTime && (
+                            <Typography variant="caption" color="text.secondary" sx={{ fontSize: 11 }}>
+                              jusqu'à {d.openStatus.closeTime}
+                            </Typography>
+                          )}
+                        </Stack>
+                      )}
+                      {d.todaySchedule && !d.openStatus && (
+                        <Typography variant="caption" color="text.secondary" sx={{ fontSize: 11 }}>
+                          {d.todaySchedule}
+                        </Typography>
+                      )}
+                    </Stack>
                   </TableCell>
                   <TableCell>{d.city || "—"}</TableCell>
                   <TableCell>{d.addr || "—"}</TableCell>

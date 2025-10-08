@@ -4,12 +4,14 @@ import {
   Box, Paper, Typography, Button, Stack, TextField, Chip, IconButton,
   Dialog, DialogTitle, DialogContent, DialogActions, MenuItem, Switch, FormControlLabel,
   Snackbar, Alert, Tooltip, Table, TableHead, TableRow, TableCell, TableBody,
-  TableContainer, TablePagination, CircularProgress
+  TableContainer, TablePagination, CircularProgress, Checkbox
 } from "@mui/material";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
 import RefreshRoundedIcon from "@mui/icons-material/RefreshRounded";
+import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import API from "../../api";
 import PageLayout from "../../components/PageLayout";
 
@@ -24,6 +26,16 @@ const emptyForm = {
   latitude: "",
   longitude: "",
   openingHours: "",
+  openingHoursType: "text", // ✅ "text" ou "structured"
+  structuredHours: {
+    monday: { open: "08:00", close: "18:00", closed: false },
+    tuesday: { open: "08:00", close: "18:00", closed: false },
+    wednesday: { open: "08:00", close: "18:00", closed: false },
+    thursday: { open: "08:00", close: "18:00", closed: false },
+    friday: { open: "08:00", close: "18:00", closed: false },
+    saturday: { open: "08:00", close: "13:00", closed: false },
+    sunday: { closed: true },
+  },
   notes: "",
   isActive: true,
 };
@@ -51,6 +63,15 @@ const AdminDistributorsPage = () => {
 
   // Feedback
   const [snack, setSnack] = useState({ open: false, msg: "", sev: "success" });
+
+  // ✅ Compteur de distributeurs sans GPS
+  const noGpsCount = useMemo(() => {
+    return rows.filter(row => {
+      const lat = row.location?.coordinates?.[1] ?? row.latitude;
+      const lng = row.location?.coordinates?.[0] ?? row.longitude;
+      return lat == null || lng == null;
+    }).length;
+  }, [rows]);
 
   // -------- data fetch (server pagination) --------
   const fetchData = async () => {
@@ -95,6 +116,10 @@ const AdminDistributorsPage = () => {
   const handleOpenCreate = () => { resetForm(); setOpen(true); };
   const handleOpenEdit = (row) => {
     setEditingId(row._id);
+    
+    // ✅ Détection du type d'heures (texte ou structuré)
+    const isStructured = typeof row.openingHours === "object" && row.openingHours !== null;
+    
     setForm({
       name: row.name || "",
       phone: row.phone || "",
@@ -105,7 +130,9 @@ const AdminDistributorsPage = () => {
       address: row.address || "",
       latitude: row.location?.coordinates?.[1] ?? row.latitude ?? "",
       longitude: row.location?.coordinates?.[0] ?? row.longitude ?? "",
-      openingHours: row.openingHours || "",
+      openingHours: isStructured ? "" : (row.openingHours || ""),
+      openingHoursType: isStructured ? "structured" : "text",
+      structuredHours: isStructured ? row.openingHours : emptyForm.structuredHours,
       notes: row.notes || "",
       isActive: row.isActive !== false,
     });
@@ -113,19 +140,53 @@ const AdminDistributorsPage = () => {
   };
 
   const handleSave = async () => {
+    // ✅ Construire le payload avec le bon format d'heures
     const payload = {
-      ...form,
+      name: form.name,
+      contact: form.contactName,
+      region: form.region,
+      city: form.city,
+      address: form.address,
+      phone: form.phone,
+      whatsapp: form.contactPhone,
       latitude: form.latitude !== "" ? Number(form.latitude) : undefined,
       longitude: form.longitude !== "" ? Number(form.longitude) : undefined,
+      hasStock: form.hasStock,
+      notes: form.notes,
+      isActive: form.isActive,
+      // ✅ Heures : envoyer le bon format selon le type
+      openingHours: form.openingHoursType === "structured" 
+        ? form.structuredHours 
+        : (form.openingHours || null),
     };
 
     try {
+      let res;
       if (editingId) {
-        await API.put(`/distributors/${editingId}`, payload);
-        setSnack({ open: true, msg: "Distributeur mis à jour", sev: "success" });
+        res = await API.put(`/distributors/${editingId}`, payload);
+        let msg = "Distributeur mis à jour";
+        // ✅ Afficher l'avertissement si coordonnées hors Niger
+        if (res.data?.warning) {
+          msg += ` ⚠️ ${res.data.warning}`;
+        }
+        setSnack({ open: true, msg, sev: res.data?.warning ? "warning" : "success" });
       } else {
-        await API.post("/distributors", payload);
-        setSnack({ open: true, msg: "Distributeur créé", sev: "success" });
+        res = await API.post("/distributors", payload);
+        let msg = "Distributeur créé";
+        // ✅ Afficher l'avertissement si coordonnées hors Niger
+        if (res.data?.warning) {
+          msg += ` ⚠️ ${res.data.warning}`;
+        }
+        // ✅ Avertir si pas de coordonnées GPS
+        if (!payload.latitude || !payload.longitude) {
+          setSnack({ 
+            open: true, 
+            msg: "Distributeur créé, mais SANS coordonnées GPS. Il sera invisible pour les clients utilisant la géolocalisation.", 
+            sev: "warning" 
+          });
+        } else {
+          setSnack({ open: true, msg, sev: res.data?.warning ? "warning" : "success" });
+        }
       }
       setOpen(false);
       resetForm();
@@ -148,11 +209,13 @@ const AdminDistributorsPage = () => {
     }
   };
 
-  // Colonnes "virtuelles" pour le rendu
+  // ✅ Colonnes "virtuelles" pour le rendu avec badge
   const renderGeo = (row) => {
     const lat = row.location?.coordinates?.[1] ?? row.latitude;
     const lng = row.location?.coordinates?.[0] ?? row.longitude;
-    if (lat == null || lng == null) return "—";
+    if (lat == null || lng == null) {
+      return <Chip label="Non géolocalisé" color="warning" size="small" variant="outlined" />;
+    }
     const f = (v) => (typeof v === "number" ? v.toFixed(4) : v);
     return `${f(lat)}, ${f(lng)}`;
   };
@@ -161,7 +224,19 @@ const AdminDistributorsPage = () => {
     <PageLayout>
       <Box sx={{ p: 3, mt: 9 }}>
         <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
-          <Typography variant="h5" fontWeight={900}>Distributeurs Fahimta</Typography>
+          <Box>
+            <Typography variant="h5" fontWeight={900}>Distributeurs Fahimta</Typography>
+            {/* ✅ Compteur de distributeurs sans GPS */}
+            {noGpsCount > 0 && (
+              <Chip 
+                label={`⚠️ ${noGpsCount} distributeur${noGpsCount > 1 ? 's' : ''} sans GPS sur cette page`}
+                color="warning"
+                size="small"
+                variant="outlined"
+                sx={{ mt: 0.5 }}
+              />
+            )}
+          </Box>
           <Stack direction="row" spacing={1}>
             <Button variant="outlined" startIcon={<RefreshRoundedIcon />} onClick={fetchData}>
               Actualiser
@@ -355,6 +430,7 @@ const AdminDistributorsPage = () => {
                 fullWidth
                 value={form.latitude}
                 onChange={(e) => setForm({ ...form, latitude: e.target.value })}
+                placeholder="Ex: 13.5116"
               />
               <TextField
                 label="Longitude"
@@ -362,15 +438,160 @@ const AdminDistributorsPage = () => {
                 fullWidth
                 value={form.longitude}
                 onChange={(e) => setForm({ ...form, longitude: e.target.value })}
+                placeholder="Ex: 2.1254"
               />
             </Stack>
 
-            <TextField
-              label="Horaires d’ouverture"
-              fullWidth
-              value={form.openingHours}
-              onChange={(e) => setForm({ ...form, openingHours: e.target.value })}
-            />
+            {/* ✅ Helper pour obtenir les coordonnées GPS */}
+            <Box
+              sx={{
+                p: 1.5,
+                borderRadius: 1,
+                bgcolor: "info.lighter",
+                border: "1px solid",
+                borderColor: "info.light",
+              }}
+            >
+              <Stack spacing={1}>
+                <Stack direction="row" spacing={0.5} alignItems="center">
+                  <HelpOutlineIcon fontSize="small" color="info" />
+                  <Typography variant="body2" fontWeight={700} color="info.dark">
+                    Comment obtenir les coordonnées GPS ?
+                  </Typography>
+                </Stack>
+                
+                <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
+                  1. Cliquez sur le bouton ci-dessous pour ouvrir Google Maps
+                  <br />
+                  2. Recherchez l'adresse exacte du point de vente
+                  <br />
+                  3. Clic droit sur le lieu exact → les coordonnées s'affichent
+                  <br />
+                  4. Cliquez sur les coordonnées pour les copier automatiquement
+                  <br />
+                  5. Collez-les dans les champs Latitude et Longitude ci-dessus
+                </Typography>
+
+                <Button
+                  size="small"
+                  variant="outlined"
+                  startIcon={<OpenInNewIcon />}
+                  onClick={() => {
+                    const addr = `${form.address || ''} ${form.city || ''} ${form.region || ''} Niger`.trim();
+                    const url = addr && addr !== "Niger"
+                      ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addr)}`
+                      : "https://www.google.com/maps/@13.5116,2.1254,6z";
+                    window.open(url, "_blank");
+                  }}
+                  sx={{ alignSelf: "flex-start" }}
+                >
+                  Ouvrir Google Maps
+                </Button>
+              </Stack>
+            </Box>
+
+            {/* ✅ Section Horaires d'ouverture modernisée */}
+            <Box sx={{ p: 2, border: "1px solid", borderColor: "divider", borderRadius: 1 }}>
+              <Stack spacing={2}>
+                <Stack direction="row" alignItems="center" justifyContent="space-between">
+                  <Typography variant="subtitle2" fontWeight={700}>
+                    Horaires d'ouverture
+                  </Typography>
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <Typography variant="caption" color={form.openingHoursType === "text" ? "primary" : "text.secondary"}>
+                      Texte libre
+                    </Typography>
+                    <Switch
+                      checked={form.openingHoursType === "structured"}
+                      onChange={(e) => setForm({ ...form, openingHoursType: e.target.checked ? "structured" : "text" })}
+                      size="small"
+                    />
+                    <Typography variant="caption" color={form.openingHoursType === "structured" ? "primary" : "text.secondary"}>
+                      Structuré
+                    </Typography>
+                  </Stack>
+                </Stack>
+
+                {form.openingHoursType === "text" ? (
+                  <TextField
+                    label="Horaires (texte libre)"
+                    fullWidth
+                    value={form.openingHours}
+                    onChange={(e) => setForm({ ...form, openingHours: e.target.value })}
+                    placeholder="Ex: Lun-Sam 8h-18h, Dim Fermé"
+                    size="small"
+                  />
+                ) : (
+                  <Stack spacing={1}>
+                    {Object.keys(form.structuredHours).map((day) => {
+                      const dayLabels = {
+                        monday: "Lundi",
+                        tuesday: "Mardi",
+                        wednesday: "Mercredi",
+                        thursday: "Jeudi",
+                        friday: "Vendredi",
+                        saturday: "Samedi",
+                        sunday: "Dimanche"
+                      };
+                      return (
+                        <Stack key={day} direction="row" spacing={1} alignItems="center">
+                          <Typography sx={{ minWidth: 80, fontSize: 13 }}>{dayLabels[day]}</Typography>
+                          <FormControlLabel
+                            control={
+                              <Checkbox
+                                checked={!form.structuredHours[day].closed}
+                                onChange={(e) => setForm({
+                                  ...form,
+                                  structuredHours: {
+                                    ...form.structuredHours,
+                                    [day]: { ...form.structuredHours[day], closed: !e.target.checked }
+                                  }
+                                })}
+                                size="small"
+                              />
+                            }
+                            label="Ouvert"
+                            sx={{ mr: 1 }}
+                          />
+                          {!form.structuredHours[day].closed && (
+                            <>
+                              <TextField
+                                type="time"
+                                size="small"
+                                value={form.structuredHours[day].open}
+                                onChange={(e) => setForm({
+                                  ...form,
+                                  structuredHours: {
+                                    ...form.structuredHours,
+                                    [day]: { ...form.structuredHours[day], open: e.target.value }
+                                  }
+                                })}
+                                sx={{ width: 120 }}
+                              />
+                              <Typography variant="caption">à</Typography>
+                              <TextField
+                                type="time"
+                                size="small"
+                                value={form.structuredHours[day].close}
+                                onChange={(e) => setForm({
+                                  ...form,
+                                  structuredHours: {
+                                    ...form.structuredHours,
+                                    [day]: { ...form.structuredHours[day], close: e.target.value }
+                                  }
+                                })}
+                                sx={{ width: 120 }}
+                              />
+                            </>
+                          )}
+                        </Stack>
+                      );
+                    })}
+                  </Stack>
+                )}
+              </Stack>
+            </Box>
+
             <TextField
               label="Notes"
               fullWidth

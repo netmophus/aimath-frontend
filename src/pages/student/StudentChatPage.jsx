@@ -403,7 +403,7 @@
 import React, { useEffect, useState, useContext, useRef } from "react";
 import {
   Box, Paper, Typography, TextField, IconButton, Avatar, Stack, Chip, Button,
-  Drawer, List, ListItemButton, ListItemText, Divider, Snackbar
+  Drawer, List, ListItemButton, ListItemText, Divider, Snackbar, Tooltip
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
@@ -418,6 +418,10 @@ import MuiAlert from "@mui/material/Alert";
 import API from "../../api";
 import PageLayout from "../../components/PageLayout";
 import { AuthContext } from "../../context/AuthContext";
+import { useSocket } from "../../hooks/useSocket";
+import ImageCropModal from "../../components/ImageCropModal";
+import CameraModal from "../../components/CameraModal";
+import ContentRequestFAB from "../../components/ContentRequestFAB";
 
 const STORAGE_KEY_LAST_TEACHER = "fah:lastTeacherId";
 
@@ -426,7 +430,7 @@ const Alert = React.forwardRef(function Alert(props, ref) {
 });
 
 const StudentChatPage = () => {
-  const { user } = useContext(AuthContext);
+  const { user, token } = useContext(AuthContext);
   const theme = useTheme();
   const isSmall = useMediaQuery(theme.breakpoints.down("md"));
 
@@ -439,13 +443,36 @@ const StudentChatPage = () => {
 
   // files / camera
   const [file, setFile] = useState(null);
-  const fileInputRef = useRef();
-  const cameraInputRef = useRef();
+  const fileInputRef = useRef();       // Pour PDF, vidéo, audio
+  const galleryInputRef = useRef();    // ✅ Pour galerie d'images
+
+  // ✅ Caméra native
+  const [cameraModalOpen, setCameraModalOpen] = useState(false);
+
+  // ✅ Recadrage d'image
+  const [cropModalOpen, setCropModalOpen] = useState(false);
+  const [imageToCrop, setImageToCrop] = useState(null);
 
   // audio
   const [isRecording, setIsRecording] = useState(false);
   const [mediaRecorder, setMediaRecorder] = useState(null);
   const [audioJustSent, setAudioJustSent] = useState(false);
+
+  // ✅ Socket.io temps réel
+  const {
+    isConnected,
+    onlineUsers,
+    joinChat,
+    leaveChat,
+    sendMessage,
+    startTyping,
+    stopTyping,
+    onMessage,
+    onTyping,
+  } = useSocket(token);
+
+  // ✅ État "en train d'écrire"
+  const [isTeacherTyping, setIsTeacherTyping] = useState(false);
 
   // ui
   const [snack, setSnack] = useState({ open: false, msg: "", sev: "info" });
@@ -505,6 +532,72 @@ const StudentChatPage = () => {
     })();
   }, [user?._id]);
 
+  // ✅ Socket.io: Rejoindre/quitter room quand on change d'enseignant
+  useEffect(() => {
+    if (!teacher?._id) return;
+    
+    joinChat(teacher._id);
+    console.log(`🔌 Rejoint la room avec ${teacher.fullName}`);
+    
+    return () => {
+      leaveChat(teacher._id);
+    };
+  }, [teacher?._id, joinChat, leaveChat]);
+
+  // ✅ Socket.io: Écouter les nouveaux messages en temps réel
+  useEffect(() => {
+    if (!teacher?._id) return;
+
+    const unsubscribe = onMessage((message) => {
+      // Vérifier que c'est bien pour cette conversation
+      if (message.from._id === teacher._id || message.to._id === teacher._id) {
+        setMessages((prev) => {
+          // Éviter les doublons
+          if (prev.some((m) => m._id === message._id)) return prev;
+          return [...prev, message];
+        });
+      }
+    });
+
+    return unsubscribe;
+  }, [teacher?._id, onMessage]);
+
+  // ✅ Socket.io: Écouter l'indicateur "en train d'écrire"
+  useEffect(() => {
+    if (!teacher?._id) return;
+
+    const unsubscribe = onTyping((data) => {
+      if (data.from === teacher._id) {
+        setIsTeacherTyping(data.type !== "inactive");
+      }
+    });
+
+    return unsubscribe;
+  }, [teacher?._id, onTyping]);
+
+  // ✅ Socket.io: Envoyer indicateur "en train d'écrire"
+  const typingTimeoutRef = useRef(null);
+  useEffect(() => {
+    if (!teacher?._id) return;
+
+    if (newMsg.length > 0) {
+      startTyping(teacher._id);
+      
+      // Auto-stop après 3 secondes d'inactivité
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = setTimeout(() => {
+        stopTyping(teacher._id);
+      }, 3000);
+    } else {
+      stopTyping(teacher._id);
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    }
+
+    return () => {
+      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    };
+  }, [newMsg, teacher?._id, startTyping, stopTyping]);
+
   const switchTeacher = async (t) => {
     setDrawerOpen(false);
     if (!t || t._id === teacher?._id) return;
@@ -527,6 +620,9 @@ const StudentChatPage = () => {
       return showSnack("Message vide ou aucun fichier.", "warning");
     }
 
+    // ✅ Arrêter l'indicateur "en train d'écrire"
+    stopTyping(teacher._id);
+
     try {
       let created;
       if (file) {
@@ -544,19 +640,51 @@ const StudentChatPage = () => {
         created = res.data;
         setNewMsg("");
       }
-      if (created) setMessages((p) => [...p, created]);
+      if (created) {
+        setMessages((p) => [...p, created]);
+        // ✅ Envoyer via Socket.io pour livraison instantanée
+        sendMessage(teacher._id, created);
+      }
     } catch (err) {
       console.error("Send failed", err);
-      showSnack("Erreur lors de l’envoi.", "error");
+      showSnack("Erreur lors de l'envoi.", "error");
     }
   };
 
-  // --- camera + file
-  const handleFileChange = (e) => setFile(e.target.files?.[0] || null);
-  const openCamera = () => cameraInputRef.current?.click();
-  const handleCameraCapture = (e) => {
-    const shot = e.target.files?.[0];
-    if (shot) setFile(shot);
+  // --- fichiers (PDF, vidéo, audio - PAS d'images)
+  const handleFileChange = (e) => {
+    const selectedFile = e.target.files?.[0];
+    if (selectedFile) setFile(selectedFile);
+  };
+
+  // ✅ Galerie d'images → recadrage
+  const handleGallerySelect = (e) => {
+    const selectedFile = e.target.files?.[0];
+    if (!selectedFile) return;
+    
+    if (selectedFile.type.startsWith("image/")) {
+      const imageUrl = URL.createObjectURL(selectedFile);
+      setImageToCrop(imageUrl);
+      setCropModalOpen(true);
+    }
+  };
+  
+  // ✅ Caméra → ouvrir le modal caméra
+  const openCamera = () => {
+    setCameraModalOpen(true);
+  };
+  
+  // ✅ Photo capturée → recadrage
+  const handlePhotoCapture = (photoFile) => {
+    const imageUrl = URL.createObjectURL(photoFile);
+    setImageToCrop(imageUrl);
+    setCropModalOpen(true);
+  };
+
+  // ✅ Après recadrage, définir le fichier
+  const handleCropComplete = (croppedFile) => {
+    setFile(croppedFile);
+    setImageToCrop(null);
   };
 
   // --- audio
@@ -680,8 +808,23 @@ const StudentChatPage = () => {
                 {teacher?.fullName || "Enseignant"}
               </Typography>
               <Typography variant="caption" sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                <CircleIcon fontSize="inherit" color="success" /> Disponible
+                {/* ✅ Statut en ligne dynamique */}
+                {isConnected && onlineUsers.has(teacher?._id) ? (
+                  <>
+                    <CircleIcon fontSize="inherit" color="success" /> En ligne
+                  </>
+                ) : (
+                  <>
+                    <CircleIcon fontSize="inherit" sx={{ color: "grey.400" }} /> Hors ligne
+                  </>
+                )}
               </Typography>
+              {/* ✅ Indicateur "en train d'écrire" */}
+              {isTeacherTyping && (
+                <Typography variant="caption" color="primary" sx={{ fontStyle: "italic" }}>
+                  En train d'écrire...
+                </Typography>
+              )}
             </Box>
             <Box sx={{ ml: "auto" }}>
               <Button
@@ -719,33 +862,47 @@ const StudentChatPage = () => {
 
           {/* Composer */}
           <Box sx={{ p: 1.25, borderTop: "1px solid #eee", bgcolor: "#fff" }}>
-            {/* inputs cachés */}
+            {/* ✅ inputs cachés - séparés par fonction */}
+            
+            {/* Pièce jointe (PDF, vidéo, audio - PAS d'images) */}
             <input
               type="file"
-              accept="image/*,.pdf,video/*,audio/*"
+              accept=".pdf,video/*,audio/*"
               ref={fileInputRef}
               onChange={handleFileChange}
               style={{ display: "none" }}
             />
+            
+            {/* Galerie d'images (choisir image existante) */}
             <input
               type="file"
               accept="image/*"
-              capture="environment"
-              ref={cameraInputRef}
-              onChange={handleCameraCapture}
+              ref={galleryInputRef}
+              onChange={handleGallerySelect}
               style={{ display: "none" }}
             />
 
             <Stack direction="row" alignItems="center" spacing={1}>
-              <IconButton onClick={() => fileInputRef.current?.click()} title="Pièce jointe">
-                <AttachFileIcon />
-              </IconButton>
+              {/* ✅ Bouton Pièce jointe (PDF, vidéo, audio) */}
+              <Tooltip title="Fichier (PDF, vidéo, audio)">
+                <IconButton onClick={() => fileInputRef.current?.click()}>
+                  <AttachFileIcon />
+                </IconButton>
+              </Tooltip>
 
-              {isSmall && (
-                <IconButton onClick={() => cameraInputRef.current?.click()} title="Appareil photo">
+              {/* ✅ Bouton Galerie (images existantes) */}
+              <Tooltip title="Galerie d'images">
+                <IconButton onClick={() => galleryInputRef.current?.click()} color="info">
+                  🖼️
+                </IconButton>
+              </Tooltip>
+
+              {/* ✅ Bouton Caméra (OUVRE LA CAMÉRA) */}
+              <Tooltip title="📸 Prendre une photo">
+                <IconButton onClick={openCamera} color="secondary">
                   <CameraAltRoundedIcon />
                 </IconButton>
-              )}
+              </Tooltip>
 
               <IconButton color={isRecording ? "error" : "primary"} onClick={handleRecord} title="Message vocal">
                 <MicIcon />
@@ -796,6 +953,27 @@ const StudentChatPage = () => {
           </List>
         </Box>
       </Drawer>
+
+      {/* ✅ Modal caméra (prendre photo) */}
+      <CameraModal
+        open={cameraModalOpen}
+        onClose={() => setCameraModalOpen(false)}
+        onCapture={handlePhotoCapture}
+      />
+
+      {/* ✅ Modal de recadrage d'image */}
+      <ImageCropModal
+        open={cropModalOpen}
+        image={imageToCrop}
+        onClose={() => {
+          setCropModalOpen(false);
+          setImageToCrop(null);
+        }}
+        onCropComplete={handleCropComplete}
+      />
+
+      {/* ✅ Bouton FAB pour demander du contenu */}
+      <ContentRequestFAB />
 
       <Snackbar
         open={snack.open}

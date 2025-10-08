@@ -19,6 +19,7 @@ import MonComptePage from "../pages/MonComptePage";
 import AdminRegisterPage from "../pages/AdminRegisterPage";
 import AdminDashboardPage from "../pages/admin/AdminDashboardPage";
 import AdminAccessCodePage from "../pages/admin/AdminAccessCodePage";
+import AdminContentRequestsPage from "../pages/admin/AdminContentRequestsPage";
 import ProtectedActiveRoute from "./ProtectedActiveRoute";
 import ExerciceGratuitPage from "../pages/ExerciceGratuitPage"; // ✅ Ajout
 
@@ -45,6 +46,7 @@ import TeacherChatPage from "../pages/teacher/TeacherChatPage";
 import StudentChatPage from "../pages/student/StudentChatPage";
 import SupportRequestFormPage from "../pages/student/SupportRequestFormPage";
 import StudentChatHistory from "../components/student/StudentChatHistory";
+import ContentRequestPage from "../pages/student/ContentRequestPage";
 import PartnerDashboardPage from "../pages/admin/PartnerDashboardPage";
 
 
@@ -121,6 +123,7 @@ const AppRoutes = () => {
 <Route path="/admin-dashboard" element={<AdminDashboardPage />} />
  <Route path="/admin/codes" element={<AdminAccessCodePage />} />
  <Route path="/admin/teachers" element={<TeachersPage />} />
+ <Route path="/admin/content-requests" element={<AdminContentRequestsPage />} />
 <Route path="/teacher/chat" element={<TeacherChatPage />} />
 
 
@@ -130,6 +133,16 @@ const AppRoutes = () => {
 
 <Route path="/student/support-request" element={<SupportRequestFormPage />} />
 <Route path="/student/chat-history" element={<StudentChatHistory />} />
+
+{/* ✅ Route demandes de contenu (premium uniquement) */}
+<Route
+  path="/mes-demandes"
+  element={
+    <ProtectedRoute>
+      <ContentRequestPage />
+    </ProtectedRoute>
+  }
+/>
 
 
 

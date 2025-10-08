@@ -373,6 +373,7 @@ import {
 import API from "../../api";
 import { useNavigate } from "react-router-dom";
 import PageLayout from "../../components/PageLayout";
+import ContentRequestFAB from "../../components/ContentRequestFAB";
 import { AuthContext } from "../../context/AuthContext";
 import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
@@ -870,6 +871,9 @@ useEffect(() => {
           {snackbarMessage}
         </MuiAlert>
       </Snackbar>
+
+      {/* ✅ Bouton FAB pour demander du contenu */}
+      <ContentRequestFAB />
     </PageLayout>
   );
 };

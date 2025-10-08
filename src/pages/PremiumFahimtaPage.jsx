@@ -33,6 +33,7 @@ import VideoCardPremium from "../components/premuim/VideoCardPremium";
 import { AuthContext } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import VideoSearchBar from "../components/premuim/VideoSearchBar";
+import ContentRequestFAB from "../components/ContentRequestFAB";
 /* Icons */
 import LockIcon from "@mui/icons-material/Lock";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
@@ -237,6 +238,9 @@ const PremiumFahimtaPage = () => {
 
   // onglets ressources
   const [tabIndex, setTabIndex] = useState(0);
+
+  // ✅ Sélection de matière (par défaut Maths)
+  const [selectedSubject, setSelectedSubject] = useState("maths");
 
   // ressources
   const [livres, setLivres] = useState([]);
@@ -1736,6 +1740,55 @@ const totalVideosCount = React.useMemo(() => {
     }}
   >
 
+  {/* ✅ Onglets de sélection de matière */}
+  <Tabs
+    value={selectedSubject}
+    onChange={(_e, v) => setSelectedSubject(v)}
+    variant={downMd ? "scrollable" : "standard"}
+    centered={!downMd}
+    sx={{
+      mb: 2,
+      borderBottom: "1px solid rgba(0,0,0,0.08)",
+      "& .MuiTab-root": { 
+        fontWeight: 800, 
+        textTransform: "none", 
+        fontSize: { xs: 14, md: 15 },
+        minHeight: 48
+      },
+    }}
+  >
+    <Tab label="📐 Mathématiques" value="maths" />
+    <Tab 
+      label={
+        <Stack direction="row" spacing={0.5} alignItems="center">
+          <Typography sx={{ fontWeight: 800 }}>⚛️ Physique</Typography>
+          <Chip label="Bientôt" size="small" color="info" sx={{ height: 18, fontSize: 10, fontWeight: 700 }} />
+        </Stack>
+      } 
+      value="physique" 
+    />
+    <Tab 
+      label={
+        <Stack direction="row" spacing={0.5} alignItems="center">
+          <Typography sx={{ fontWeight: 800 }}>🧪 Chimie</Typography>
+          <Chip label="Bientôt" size="small" color="info" sx={{ height: 18, fontSize: 10, fontWeight: 700 }} />
+        </Stack>
+      } 
+      value="chimie" 
+    />
+    <Tab 
+      label={
+        <Stack direction="row" spacing={0.5} alignItems="center">
+          <Typography sx={{ fontWeight: 800 }}>🌱 SVT</Typography>
+          <Chip label="Bientôt" size="small" color="info" sx={{ height: 18, fontSize: 10, fontWeight: 700 }} />
+        </Stack>
+      } 
+      value="svt" 
+    />
+  </Tabs>
+
+  {/* Onglets de contenu (Livres/Examens/Vidéos) - visible uniquement pour Maths */}
+  {selectedSubject === "maths" && (
 <Tabs
   value={tabIndex}
   onChange={(_, v) => setTabIndex(v)}
@@ -1839,8 +1892,49 @@ const totalVideosCount = React.useMemo(() => {
         }
       />
     </Tabs>
+  )}
   </Paper>
 
+  {/* ✅ Message "Bientôt disponible" pour Physique, Chimie, SVT */}
+  {selectedSubject !== "maths" && (
+    <Box sx={{ py: 8, textAlign: "center" }}>
+      <Box
+        sx={{
+          display: "inline-block",
+          p: 4,
+          borderRadius: 3,
+          background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+          color: "white",
+          boxShadow: "0 8px 32px rgba(102, 126, 234, 0.3)",
+        }}
+      >
+        <Typography variant="h4" fontWeight={800} gutterBottom>
+          {selectedSubject === "physique" && "⚛️ Physique"}
+          {selectedSubject === "chimie" && "🧪 Chimie"}
+          {selectedSubject === "svt" && "🌱 SVT"}
+        </Typography>
+        <Typography variant="h6" sx={{ mt: 2, opacity: 0.95 }}>
+          Bientôt disponible ! 🚀
+        </Typography>
+        <Typography variant="body1" sx={{ mt: 1, opacity: 0.9 }}>
+          Vidéos, livres et examens corrigés disponibles dans les 4 prochains mois.
+        </Typography>
+        <Chip
+          label="En préparation"
+          sx={{
+            mt: 3,
+            bgcolor: "rgba(255,255,255,0.2)",
+            color: "white",
+            fontWeight: 700,
+          }}
+        />
+      </Box>
+    </Box>
+  )}
+
+  {/* Contenu (Livres/Examens/Vidéos) - visible uniquement pour Maths */}
+  {selectedSubject === "maths" && (
+  <>
   {/* Livres */}
 {/* Livres */}
 <Box role="tabpanel" hidden={tabIndex !== 0}>
@@ -2097,6 +2191,8 @@ const totalVideosCount = React.useMemo(() => {
     </>
   )}
 </Box>
+</>
+)}
 
 </Container>
 
@@ -2310,6 +2406,9 @@ const totalVideosCount = React.useMemo(() => {
           )}
         </DialogActions>
       </Dialog>
+
+      {/* ✅ Bouton FAB pour demander du contenu */}
+      <ContentRequestFAB />
 
     </PageLayout>
   );
