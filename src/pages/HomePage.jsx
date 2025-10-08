@@ -1,7 +1,7 @@
 
 import React, { useContext, useMemo, useState } from "react";
 // import { Box, Typography, Button, Card, CardContent, Divider } from "@mui/material";
-import { Box, Typography, Button, Card, CardContent, Divider, Alert, Stack } from "@mui/material";
+import { Box, Typography, Button, Card, CardContent, Divider, Alert, Stack, Chip } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import PageLayout from "../components/PageLayout";
 import headerImage from "../assets/head.png";
@@ -27,9 +27,19 @@ import PersonAddAlt1Icon from "@mui/icons-material/PersonAddAlt1";
 import PlayCircleOutlineIcon from "@mui/icons-material/PlayCircleOutline";
 import fahimtaMark from "../assets/fahimta.png";
 
+// Nouveaux icônes pour la section Premium
+import CameraAltIcon from "@mui/icons-material/CameraAlt";
+import HeadsetMicIcon from "@mui/icons-material/HeadsetMic";
+import MenuBookIcon from "@mui/icons-material/MenuBook";
+import AllInclusiveIcon from "@mui/icons-material/AllInclusive";
+import FlashOnIcon from "@mui/icons-material/FlashOn";
+import StarIcon from "@mui/icons-material/Star";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import RocketLaunchIcon from "@mui/icons-material/RocketLaunch";
 
 
-// Toujours la dernière release (asset doit s’appeler exactement "fahimta.apk")
+
+// Toujours la dernière release (asset doit s'appeler exactement "fahimta.apk")
 const APK_URL = "https://github.com/netmophus/fahimta-android/releases/latest/download/fahimta.apk";
 
 // Abonnement actif: booléen true OU date de fin future
@@ -108,6 +118,119 @@ const FeatureCard = ({ icon, title, description, accent = ["#22d3ee", "#3b82f6"]
   </Card>
 );
 
+// Nouvelle carte pour les fonctionnalités Premium
+const PremiumFeatureCard = ({ icon, title, description, isPremium = true }) => (
+  <Card
+    elevation={0}
+    sx={{
+      height: "100%",
+      borderRadius: 3,
+      overflow: "hidden",
+      background: isPremium 
+        ? "linear-gradient(145deg, rgba(255,215,0,0.08) 0%, rgba(255,165,0,0.05) 100%)"
+        : "rgba(255,255,255,0.04)",
+      border: isPremium 
+        ? "2px solid rgba(255,215,0,0.35)"
+        : "1px solid rgba(255,255,255,0.12)",
+      backdropFilter: "blur(12px)",
+      boxShadow: isPremium 
+        ? "0 12px 40px rgba(255,215,0,0.15)"
+        : "0 8px 24px rgba(0,0,0,0.15)",
+      position: "relative",
+      transition: "all 0.3s ease",
+      "&:hover": {
+        transform: "translateY(-4px)",
+        boxShadow: isPremium 
+          ? "0 16px 50px rgba(255,215,0,0.25)"
+          : "0 12px 32px rgba(0,0,0,0.2)",
+      }
+    }}
+  >
+    {isPremium && (
+      <Box
+        sx={{
+          position: "absolute",
+          top: 12,
+          right: 12,
+          zIndex: 1,
+        }}
+      >
+        <Chip
+          icon={<StarIcon sx={{ fontSize: 16, color: "#FFD700 !important" }} />}
+          label="PREMIUM"
+          size="small"
+          sx={{
+            background: "linear-gradient(135deg, #FFD700 0%, #FFA500 100%)",
+            color: "#000",
+            fontWeight: 900,
+            fontSize: 11,
+            height: 24,
+            "& .MuiChip-icon": { color: "#000" },
+          }}
+        />
+      </Box>
+    )}
+    
+    <CardContent sx={{ p: { xs: 2.5, md: 3.5 }, pt: isPremium ? 4.5 : 2.5 }}>
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          textAlign: "center",
+          gap: 1.5,
+        }}
+      >
+        {/* Icône */}
+        <Box
+          sx={{
+            p: 2,
+            borderRadius: 3,
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "#fff",
+            background: isPremium
+              ? "linear-gradient(135deg, #FFD700 0%, #FFA500 100%)"
+              : "linear-gradient(135deg, #3b82f6 0%, #1e40af 100%)",
+            boxShadow: isPremium
+              ? "0 10px 30px rgba(255,215,0,0.4)"
+              : "0 8px 24px rgba(59,130,246,0.3)",
+          }}
+        >
+          {icon}
+        </Box>
+
+        {/* Titre */}
+        <Typography
+          variant="h6"
+          fontWeight={900}
+          sx={{ 
+            color: "#fff", 
+            letterSpacing: 0.3,
+            fontSize: { xs: 17, md: 19 },
+            lineHeight: 1.3,
+          }}
+        >
+          {title}
+        </Typography>
+
+        {/* Description */}
+        <Typography 
+          variant="body2" 
+          sx={{ 
+            color: "rgba(255,255,255,0.9)",
+            lineHeight: 1.6,
+            fontSize: { xs: 14, md: 15 },
+          }}
+        >
+          {description}
+        </Typography>
+      </Box>
+    </CardContent>
+  </Card>
+);
+
 
   return (
     <PageLayout>
@@ -117,7 +240,7 @@ const FeatureCard = ({ icon, title, description, accent = ["#22d3ee", "#3b82f6"]
 {/* Bandeau */}
 {/* HERO – priorité à la web-app */}
 <Box sx={{ position: "relative", mt: 7, overflow: "hidden" }}>
-  {/* image d’arrière-plan très légère */}
+  {/* image d'arrière-plan très légère */}
   <Box
     component="img"
     src={headerImage}
@@ -184,7 +307,7 @@ const FeatureCard = ({ icon, title, description, accent = ["#22d3ee", "#3b82f6"]
       color: "#3b82f6",
       textTransform: "uppercase",
       textShadow:
-        // couche "3D" (empilement d’ombres pour le relief)
+        // couche "3D" (empilement d'ombres pour le relief)
         "0 1px 0 #1e3a8a, 0 2px 0 #1e3a8a, 0 3px 0 #1e3a8a, 0 4px 0 #1e3a8a, " +
         "0 6px 12px rgba(0,0,0,0.35)",
     }}
@@ -402,7 +525,7 @@ const FeatureCard = ({ icon, title, description, accent = ["#22d3ee", "#3b82f6"]
             color: "#E6F0FF",
           }}
         >
-          Avec Fahimta, vous n’avez plus d’excuse&nbsp;: les mathématiques n’ont plus
+          Avec Fahimta, vous n'avez plus d'excuse&nbsp;: les mathématiques n'ont plus
           de secret pour vous.
         </Typography>
       </Box>
@@ -425,156 +548,605 @@ const FeatureCard = ({ icon, title, description, accent = ["#22d3ee", "#3b82f6"]
 
 
 
-{/* Section téléchargement APK (en bas) */}
-{/* Section téléchargement APK — look moderne & compact */}
+{/* ========================================
+    NOUVELLE SECTION : DÉBLOQUEZ LE PREMIUM
+    ======================================== */}
 <Box
   sx={{
-    py: { xs: 4, md: 6 },
-    background:
-      "radial-gradient(900px 400px at 8% -10%, #173066 0%, #0c1431 45%) , linear-gradient(180deg, #0c1431 0%, #0b3f8a 100%)",
-    color: "#fff",
+    py: { xs: 7, md: 10 },
+    background: "linear-gradient(180deg, #0a0e1a 0%, #1a1f35 50%, #0a0e1a 100%)",
+    position: "relative",
+    overflow: "hidden",
   }}
 >
-  <Box sx={{ maxWidth: 1100, mx: "auto", px: { xs: 2, sm: 3, md: 4 } }}>
+  {/* Effet de lumière dorée en arrière-plan */}
+  <Box
+    sx={{
+      position: "absolute",
+      top: "50%",
+      left: "50%",
+      transform: "translate(-50%, -50%)",
+      width: "800px",
+      height: "800px",
+      background: "radial-gradient(circle, rgba(255,215,0,0.08) 0%, transparent 70%)",
+      pointerEvents: "none",
+      zIndex: 0,
+    }}
+  />
+
+  <Box sx={{ maxWidth: 1200, mx: "auto", px: { xs: 2, sm: 3, md: 4 }, position: "relative", zIndex: 1 }}>
+    
+    {/* En-tête de la section */}
+    <Box sx={{ textAlign: "center", mb: 6 }}>
+      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 1, mb: 2 }}>
+        <RocketLaunchIcon sx={{ fontSize: 40, color: "#FFD700" }} />
+        <Typography
+          variant="h3"
+          fontWeight={900}
+          sx={{
+            background: "linear-gradient(135deg, #FFD700 0%, #FFA500 100%)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            fontSize: { xs: 28, sm: 36, md: 44 },
+            letterSpacing: 1,
+            textShadow: "0 4px 20px rgba(255,215,0,0.3)",
+          }}
+        >
+          Passez à PREMIUM
+        </Typography>
+      </Box>
+      
+      <Typography
+        variant="h6"
+        sx={{
+          color: "rgba(255,255,255,0.95)",
+          fontWeight: 600,
+          fontSize: { xs: 16, md: 18 },
+          mb: 1,
+        }}
+      >
+        Débloquez <strong>TOUTES</strong> les fonctionnalités et propulsez votre réussite en maths
+      </Typography>
+
+      <Typography
+        sx={{
+          color: "rgba(255,255,255,0.75)",
+          fontSize: { xs: 14, md: 16 },
+          maxWidth: 700,
+          mx: "auto",
+        }}
+      >
+        Avec le Premium, vous accédez à des outils exclusifs qui transforment votre façon d'apprendre
+      </Typography>
+    </Box>
+
+    {/* Grille des fonctionnalités Premium */}
+    <Box
+      sx={{
+        display: "grid",
+        gridTemplateColumns: { 
+          xs: "1fr", 
+          sm: "repeat(2, 1fr)", 
+          md: "repeat(4, 1fr)" 
+        },
+        gap: 3,
+        mb: 5,
+      }}
+    >
+      {/* Fonctionnalité 1 : Photo d'exercice */}
+      <PremiumFeatureCard
+        icon={<CameraAltIcon sx={{ fontSize: 40 }} />}
+        title="Photo d'exercice"
+        description="Prenez simplement une photo de votre exercice et l'IA le résout instantanément avec explications détaillées, étape par étape."
+      />
+
+      {/* Fonctionnalité 2 : Soutien+ */}
+      <PremiumFeatureCard
+        icon={<HeadsetMicIcon sx={{ fontSize: 40 }} />}
+        title="Soutien+ Premium"
+        description="Accédez au Soutien+ : discutez avec un enseignant qualifié qui répond à vos questions et vous guide personnellement dans votre apprentissage."
+      />
+
+      {/* Fonctionnalité 3 : Cours sur demande */}
+      <PremiumFeatureCard
+        icon={<MenuBookIcon sx={{ fontSize: 40 }} />}
+        title="Cours sur mesure"
+        description="Demandez un cours ou une ressource sur un chapitre précis. L'équipe Fahimta vous répond sous 24h en vous fournissant le contenu adapté à votre besoin."
+      />
+
+      {/* Fonctionnalité 4 : Accès étendu */}
+      <PremiumFeatureCard
+        icon={<AllInclusiveIcon sx={{ fontSize: 40 }} />}
+        title="Accès complet"
+        description="Profitez pleinement de l'IA, de tous les livres, vidéos et examens. Toutes les ressources à portée de main pour accélérer votre réussite en maths."
+      />
+    </Box>
+
+    {/* Section comparative Gratuit vs Premium */}
     <Card
       elevation={0}
       sx={{
         borderRadius: 3,
         overflow: "hidden",
-        background: "rgba(255,255,255,0.06)",
-        border: "1px solid rgba(255,255,255,0.12)",
-        backdropFilter: "blur(8px)",
+        background: "linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 100%)",
+        border: "1px solid rgba(255,215,0,0.25)",
+        backdropFilter: "blur(12px)",
+        mb: 5,
       }}
     >
-      <CardContent sx={{ p: { xs: 2.25, sm: 3 } }}>
-        {/* En-tête */}
-        <Stack
-          direction={{ xs: "column", sm: "row" }}
-          spacing={1}
-          alignItems={{ xs: "flex-start", sm: "center" }}
-          justifyContent="space-between"
-          color={"white"}
+      <CardContent sx={{ p: { xs: 3, md: 4 } }}>
+        <Typography
+          variant="h5"
+          fontWeight={800}
+          sx={{ 
+            color: "#fff", 
+            mb: 3, 
+            textAlign: "center",
+            fontSize: { xs: 20, md: 24 },
+          }}
         >
-          <Box>
-            <Typography
-              variant="h6"
-              fontWeight={900}
-              sx={{ fontSize: { xs: 18, sm: 20, md: 22 } }}
-            >
-              Installer l’app Android (APK)
-            </Typography>
-            <Typography sx={{ mt: 0.5, opacity: 0.9, fontSize: { xs: 13, sm: 14 } }}>
-              Téléchargez l’APK ou scannez le QR. Vous pouvez aussi utiliser la version web.
-            </Typography>
-          </Box>
+          Ce que vous gagnez avec Premium
+        </Typography>
 
-          {/* CTA principal */}
-          <Button
-            component="a"
-            href={APK_URL}
-            download
-            startIcon={<AndroidIcon />}
-            variant="contained"
-            color="success"
-            size="medium"
-            sx={{
-              px: 2.25,
-              py: 1,
-              fontWeight: 900,
-              boxShadow: "0 6px 18px rgba(0,0,0,0.25)",
-              borderRadius: 2,
-            }}
-          >
-            Télécharger l’APK
-          </Button>
-        </Stack>
-
-        {/* Zone contenu : Infos + QR */}
         <Box
           sx={{
-            mt: 2,
             display: "grid",
-            gridTemplateColumns: { xs: "1fr", sm: "1fr auto" },
-            gap: 1.75,
+            gridTemplateColumns: { xs: "1fr", md: "repeat(2, 1fr)" },
+            gap: 2,
+          }}
+        >
+          {/* Colonne Gratuit */}
+          <Box>
+            <Typography
+              variant="subtitle1"
+              fontWeight={700}
+              sx={{ 
+                color: "rgba(255,255,255,0.6)", 
+                mb: 2,
+                fontSize: { xs: 16, md: 18 },
+              }}
+            >
+              Version Gratuite
+            </Typography>
+            <Stack spacing={1.5}>
+              <Box sx={{ display: "flex", gap: 1, alignItems: "flex-start" }}>
+                <CheckCircleIcon sx={{ fontSize: 20, color: "rgba(255,255,255,0.5)", mt: 0.2 }} />
+                <Typography sx={{ color: "rgba(255,255,255,0.7)", fontSize: 14 }}>
+                  Questions texte limitées (5/mois)
+                </Typography>
+              </Box>
+              <Box sx={{ display: "flex", gap: 1, alignItems: "flex-start" }}>
+                <CheckCircleIcon sx={{ fontSize: 20, color: "rgba(255,255,255,0.5)", mt: 0.2 }} />
+                <Typography sx={{ color: "rgba(255,255,255,0.7)", fontSize: 14 }}>
+                  Accès restreint aux contenus
+                </Typography>
+              </Box>
+              <Box sx={{ display: "flex", gap: 1, alignItems: "flex-start" }}>
+                <CheckCircleIcon sx={{ fontSize: 20, color: "rgba(255,255,255,0.5)", mt: 0.2 }} />
+                <Typography sx={{ color: "rgba(255,255,255,0.7)", fontSize: 14 }}>
+                  Pas de photo d'exercice
+                </Typography>
+              </Box>
+              <Box sx={{ display: "flex", gap: 1, alignItems: "flex-start" }}>
+                <CheckCircleIcon sx={{ fontSize: 20, color: "rgba(255,255,255,0.5)", mt: 0.2 }} />
+                <Typography sx={{ color: "rgba(255,255,255,0.7)", fontSize: 14 }}>
+                  Pas de Soutien+ avec prof
+                </Typography>
+              </Box>
+            </Stack>
+          </Box>
+
+          {/* Colonne Premium */}
+          <Box
+            sx={{
+              p: 3,
+              borderRadius: 2,
+              background: "linear-gradient(145deg, rgba(255,215,0,0.12) 0%, rgba(255,165,0,0.08) 100%)",
+              border: "2px solid rgba(255,215,0,0.3)",
+            }}
+          >
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
+              <StarIcon sx={{ fontSize: 24, color: "#FFD700" }} />
+              <Typography
+                variant="subtitle1"
+                fontWeight={900}
+                sx={{ 
+                  color: "#FFD700",
+                  fontSize: { xs: 16, md: 18 },
+                }}
+              >
+                Version PREMIUM
+              </Typography>
+            </Box>
+            <Stack spacing={1.5}>
+              <Box sx={{ display: "flex", gap: 1, alignItems: "flex-start" }}>
+                <FlashOnIcon sx={{ fontSize: 20, color: "#FFD700", mt: 0.2 }} />
+                <Typography sx={{ color: "#fff", fontSize: 14, fontWeight: 600 }}>
+                  <strong>Questions multipliées</strong> par texte et par photo
+                </Typography>
+              </Box>
+              <Box sx={{ display: "flex", gap: 1, alignItems: "flex-start" }}>
+                <FlashOnIcon sx={{ fontSize: 20, color: "#FFD700", mt: 0.2 }} />
+                <Typography sx={{ color: "#fff", fontSize: 14, fontWeight: 600 }}>
+                  <strong>PHOTO d'exercice</strong> avec résolution IA
+                </Typography>
+              </Box>
+              <Box sx={{ display: "flex", gap: 1, alignItems: "flex-start" }}>
+                <FlashOnIcon sx={{ fontSize: 20, color: "#FFD700", mt: 0.2 }} />
+                <Typography sx={{ color: "#fff", fontSize: 14, fontWeight: 600 }}>
+                  <strong>Soutien+ Premium</strong> avec enseignants qualifiés
+                </Typography>
+              </Box>
+              <Box sx={{ display: "flex", gap: 1, alignItems: "flex-start" }}>
+                <FlashOnIcon sx={{ fontSize: 20, color: "#FFD700", mt: 0.2 }} />
+                <Typography sx={{ color: "#fff", fontSize: 14, fontWeight: 600 }}>
+                  Tous les livres, vidéos, examens <strong>ACCESSIBLES</strong>
+                </Typography>
+              </Box>
+              <Box sx={{ display: "flex", gap: 1, alignItems: "flex-start" }}>
+                <FlashOnIcon sx={{ fontSize: 20, color: "#FFD700", mt: 0.2 }} />
+                <Typography sx={{ color: "#fff", fontSize: 14, fontWeight: 600 }}>
+                  <strong>Cours personnalisés</strong> sur demande
+                </Typography>
+              </Box>
+              <Box sx={{ display: "flex", gap: 1, alignItems: "flex-start" }}>
+                <FlashOnIcon sx={{ fontSize: 20, color: "#FFD700", mt: 0.2 }} />
+                <Typography sx={{ color: "#fff", fontSize: 14, fontWeight: 600 }}>
+                  Historique complet sauvegardé
+                </Typography>
+              </Box>
+            </Stack>
+          </Box>
+        </Box>
+      </CardContent>
+    </Card>
+
+    {/* Call to Action final */}
+    <Box
+      sx={{
+        textAlign: "center",
+        p: { xs: 3, md: 5 },
+        borderRadius: 3,
+        background: "linear-gradient(135deg, rgba(255,215,0,0.1) 0%, rgba(255,165,0,0.05) 100%)",
+        border: "2px solid rgba(255,215,0,0.3)",
+        boxShadow: "0 12px 40px rgba(255,215,0,0.15)",
+      }}
+    >
+      <Typography
+        variant="h4"
+        fontWeight={900}
+        sx={{
+          color: "#fff",
+          mb: 2,
+          fontSize: { xs: 22, md: 28 },
+        }}
+      >
+        Ne laissez plus les maths vous freiner !
+      </Typography>
+      
+      <Typography
+        sx={{
+          color: "rgba(255,255,255,0.85)",
+          mb: 3,
+          fontSize: { xs: 15, md: 17 },
+          maxWidth: 600,
+          mx: "auto",
+        }}
+      >
+        Rejoignez les milliers d'élèves qui ont transformé leurs résultats en maths grâce à Fahimta Premium
+      </Typography>
+
+      <Button
+        variant="contained"
+        size="large"
+        onClick={() => navigate(user ? "/premium" : "/login")}
+        startIcon={<RocketLaunchIcon />}
+        sx={{
+          px: 5,
+          py: 2,
+          fontSize: { xs: 16, md: 18 },
+          fontWeight: 900,
+          background: "linear-gradient(135deg, #FFD700 0%, #FFA500 100%)",
+          color: "#000",
+          borderRadius: 3,
+          boxShadow: "0 8px 32px rgba(255,215,0,0.4)",
+          "&:hover": {
+            background: "linear-gradient(135deg, #FFA500 0%, #FF8C00 100%)",
+            boxShadow: "0 12px 40px rgba(255,215,0,0.6)",
+            transform: "translateY(-2px)",
+          },
+          transition: "all 0.3s ease",
+        }}
+      >
+        {user ? "Activer Premium maintenant" : "S'inscrire et passer Premium"}
+      </Button>
+
+      <Typography
+        sx={{
+          mt: 2,
+          color: "rgba(255,255,255,0.6)",
+          fontSize: 13,
+        }}
+      >
+        🔒 Paiement sécurisé • ⚡ Activation instantanée • 💯 Satisfaction garantie
+      </Typography>
+    </Box>
+  </Box>
+</Box>
+
+
+
+
+
+{/* ========================================
+    SECTION : APPLICATION MOBILE ANDROID
+    ======================================== */}
+<Box
+  sx={{
+    py: { xs: 5, md: 7 },
+    background: "linear-gradient(180deg, #0a0e1a 0%, #152238 100%)",
+    position: "relative",
+    overflow: "hidden",
+  }}
+>
+  {/* Effet de fond subtil */}
+  <Box
+    sx={{
+      position: "absolute",
+      top: 0,
+      right: 0,
+      width: "600px",
+      height: "600px",
+      background: "radial-gradient(circle, rgba(59,130,246,0.1) 0%, transparent 70%)",
+      pointerEvents: "none",
+    }}
+  />
+
+  <Box sx={{ maxWidth: 1100, mx: "auto", px: { xs: 2, sm: 3, md: 4 }, position: "relative", zIndex: 1 }}>
+    
+    {/* En-tête de section */}
+    <Box sx={{ textAlign: "center", mb: 4 }}>
+      <Stack direction="row" alignItems="center" justifyContent="center" spacing={1} sx={{ mb: 1 }}>
+        <AndroidIcon sx={{ fontSize: 32, color: "#4CAF50" }} />
+        <Typography
+          variant="h4"
+          fontWeight={900}
+          sx={{
+            color: "#fff",
+            fontSize: { xs: 24, sm: 28, md: 32 },
+          }}
+        >
+          Téléchargez l'app mobile
+        </Typography>
+      </Stack>
+      <Typography
+        sx={{
+          color: "rgba(255,255,255,0.75)",
+          fontSize: { xs: 14, md: 16 },
+          maxWidth: 600,
+          mx: "auto",
+        }}
+      >
+        Installez Fahimta sur votre téléphone Android pour apprendre partout, même hors connexion
+      </Typography>
+    </Box>
+
+    {/* Carte principale */}
+    <Card
+      elevation={0}
+      sx={{
+        borderRadius: 3,
+        overflow: "hidden",
+        background: "linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.04) 100%)",
+        border: "1px solid rgba(255,255,255,0.15)",
+        backdropFilter: "blur(12px)",
+      }}
+    >
+      <CardContent sx={{ p: { xs: 3, md: 4 } }}>
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: { xs: "1fr", md: "2fr 1fr" },
+            gap: 4,
             alignItems: "center",
           }}
         >
-          {/* Colonne gauche : notice courte & étapes */}
+          {/* Colonne gauche : Infos et CTA */}
           <Box>
-            {/* Notice stylée (remplace l’Alert) */}
-            <Box
+            {/* Bouton de téléchargement principal */}
+            <Button
+              component="a"
+              href={APK_URL}
+              download
+              startIcon={<AndroidIcon sx={{ fontSize: 24 }} />}
+              variant="contained"
+              size="large"
               sx={{
-                p: 1.25,
-                borderRadius: 2,
-                background: "linear-gradient(135deg, rgba(255,255,255,0.10), rgba(255,255,255,0.06))",
-                border: "1px solid rgba(255,255,255,0.18)",
+                px: 4,
+                py: 1.75,
+                fontSize: { xs: 16, md: 18 },
+                fontWeight: 900,
+                background: "linear-gradient(135deg, #4CAF50 0%, #45a049 100%)",
+                color: "#fff",
+                borderRadius: 3,
+                boxShadow: "0 8px 24px rgba(76,175,80,0.35)",
+                mb: 3,
+                "&:hover": {
+                  background: "linear-gradient(135deg, #45a049 0%, #3d8b40 100%)",
+                  boxShadow: "0 12px 32px rgba(76,175,80,0.5)",
+                  transform: "translateY(-2px)",
+                },
+                transition: "all 0.3s ease",
               }}
             >
-              <Typography sx={{ fontSize: { xs: 12.5, sm: 13.5 }, lineHeight: 1.55 , color:'#fff'}}>
-                <strong>À l’installation de l’APK sur votre téléphone Android</strong>, il est possible
-                de voir <em>« application potentiellement dangereuse »</em> ou
-                <em> « autoriser cette source »</em>. C’est <strong>normal</strong> pour toute application
-                installée via un fichier APK (hors boutique officielle). Notre arrivée sur les stores
-                publics est <strong>en cours</strong>.
-              </Typography>
+              Télécharger l'APK Android
+            </Button>
 
-              <Stack
-                component="ol"
-                sx={{
-                  mt: 1,
-                  mb: 0,
-                  pl: 2.25,
-                  "& li": { mb: 0.25, fontSize: { xs: 12.5, sm: 13.5 } },
-                  color:'#fff'
-                }}
-                spacing={0.25}
+            {/* Instructions d'installation */}
+            <Box
+              sx={{
+                p: 2.5,
+                borderRadius: 2,
+                background: "rgba(59,130,246,0.08)",
+                border: "1px solid rgba(59,130,246,0.2)",
+                mb: 2,
+              }}
+            >
+              <Typography
+                variant="subtitle2"
+                fontWeight={700}
+                sx={{ color: "#fff", mb: 1.5, fontSize: { xs: 15, md: 16 } }}
               >
-                <li>Téléchargez l’APK et ouvrez-le depuis vos <em>Téléchargements</em>.</li>
-                <li>Si un avertissement s’affiche : <em>Paramètres</em> → <em>Autoriser cette source</em> (une fois).</li>
-                <li>Revenez à l’écran précédent puis touchez <strong>Installer</strong>.</li>
-              </Stack>
+                📱 Installation en 3 étapes simples :
+              </Typography>
+              
+              <Stack spacing={1.25}>
+                <Box sx={{ display: "flex", gap: 1.5, alignItems: "flex-start" }}>
+                  <Box
+                    sx={{
+                      minWidth: 24,
+                      height: 24,
+                      borderRadius: "50%",
+                      background: "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontWeight: 900,
+                      fontSize: 13,
+                      color: "#fff",
+                    }}
+                  >
+                    1
+                  </Box>
+                  <Typography sx={{ color: "rgba(255,255,255,0.9)", fontSize: { xs: 13.5, md: 14.5 }, flex: 1 }}>
+                    Téléchargez le fichier APK et ouvrez-le depuis vos <strong>Téléchargements</strong>
+                  </Typography>
+                </Box>
 
-              <Typography sx={{ mt: 1, fontSize: { xs: 12.5, sm: 13.5 }, color:'#fff' }}>
-                Astuce : la <strong>version web</strong> de FAHIMTA est
-                entièrement responsive (mobile, tablette, ordinateur).
+                <Box sx={{ display: "flex", gap: 1.5, alignItems: "flex-start" }}>
+                  <Box
+                    sx={{
+                      minWidth: 24,
+                      height: 24,
+                      borderRadius: "50%",
+                      background: "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontWeight: 900,
+                      fontSize: 13,
+                      color: "#fff",
+                    }}
+                  >
+                    2
+                  </Box>
+                  <Typography sx={{ color: "rgba(255,255,255,0.9)", fontSize: { xs: 13.5, md: 14.5 }, flex: 1 }}>
+                    Si un avertissement apparaît : allez dans <strong>Paramètres</strong> → <strong>Autoriser cette source</strong>
+                  </Typography>
+                </Box>
+
+                <Box sx={{ display: "flex", gap: 1.5, alignItems: "flex-start" }}>
+                  <Box
+                    sx={{
+                      minWidth: 24,
+                      height: 24,
+                      borderRadius: "50%",
+                      background: "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontWeight: 900,
+                      fontSize: 13,
+                      color: "#fff",
+                    }}
+                  >
+                    3
+                  </Box>
+                  <Typography sx={{ color: "rgba(255,255,255,0.9)", fontSize: { xs: 13.5, md: 14.5 }, flex: 1 }}>
+                    Revenez en arrière et appuyez sur <strong>Installer</strong>. C'est terminé !
+                  </Typography>
+                </Box>
+              </Stack>
+            </Box>
+
+            {/* Note d'information */}
+            <Box
+              sx={{
+                p: 1.75,
+                borderRadius: 2,
+                background: "rgba(255,193,7,0.08)",
+                border: "1px solid rgba(255,193,7,0.2)",
+              }}
+            >
+              <Typography sx={{ color: "rgba(255,255,255,0.85)", fontSize: { xs: 12.5, md: 13.5 }, lineHeight: 1.6 }}>
+                ℹ️ <strong>Pourquoi un avertissement ?</strong> C'est normal pour toute app installée hors Google Play Store. 
+                Fahimta est <strong>100% sécurisée</strong>. Nous arrivons bientôt sur les stores officiels !
               </Typography>
             </Box>
 
-            {/* Légende d’installation */}
+            {/* Alternative web */}
             <Typography
-              variant="caption"
-              sx={{ display: "block", mt: 0.75, opacity: 0.9 , color:'#fff'}}
+              sx={{
+                mt: 2,
+                color: "rgba(255,255,255,0.65)",
+                fontSize: { xs: 12, md: 13 },
+                fontStyle: "italic",
+              }}
             >
-              1ʳᵉ installation : Android peut demander d’« autoriser cette source ».
+              💡 <strong>Astuce :</strong> Vous préférez le web ? Notre plateforme est entièrement responsive sur mobile, tablette et ordinateur !
             </Typography>
           </Box>
 
-          {/* Colonne droite : QR très compact */}
-          <Box sx={{ display: "flex", justifyContent: { xs: "flex-start", sm: "center" } }}>
+          {/* Colonne droite : QR Code */}
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
             <Box
               sx={{
-                backgroundColor: "rgba(255,255,255,0.08)",
-                border: "1px solid rgba(255,255,255,0.18)",
-                borderRadius: 2,
-                p: 1.1,
+                p: 2.5,
+                borderRadius: 3,
+                background: "#fff",
+                boxShadow: "0 8px 32px rgba(0,0,0,0.2)",
                 textAlign: "center",
-                width: { xs: 138, sm: 150 }, // QR plus petit et responsive
               }}
             >
               <img
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(
-                  APK_URL
-                )}`}
-                alt="QR de téléchargement de l’APK"
-                style={{ width: "100%", height: "auto", borderRadius: 6 }}
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(APK_URL)}`}
+                alt="QR Code pour télécharger l'APK"
+                style={{
+                  width: "100%",
+                  maxWidth: "180px",
+                  height: "auto",
+                  borderRadius: 8,
+                }}
               />
               <Typography
-                variant="caption"
-                sx={{ display: "block", mt: 0.5, opacity: 0.95, fontSize: 11.5 , color:'#fff'}}
+                sx={{
+                  mt: 1.5,
+                  color: "#1a1a1a",
+                  fontWeight: 700,
+                  fontSize: 14,
+                }}
               >
-                Scannez pour installer
+                📲 Scannez pour télécharger
               </Typography>
             </Box>
+            
+            <Typography
+              sx={{
+                mt: 2,
+                color: "rgba(255,255,255,0.7)",
+                fontSize: 12,
+                textAlign: "center",
+              }}
+            >
+              Utilisez l'appareil photo de votre téléphone
+            </Typography>
           </Box>
         </Box>
       </CardContent>
@@ -624,7 +1196,7 @@ const FeatureCard = ({ icon, title, description, accent = ["#22d3ee", "#3b82f6"]
           accent={["#22d3ee", "#3b82f6"]}  // cyan → blue
           icon={<AutoAwesomeIcon fontSize="medium" />}
           title="Utilisez Fahimta AI - Notre intelligence artificielle"
-          description="Pose une question de maths, demande un rappel de cours, ou prends en photo ton exercice : l’IA analyse et résout étape par étape, avec des explications claires et adaptées à ton niveau."
+          description="Pose une question de maths, demande un rappel de cours, ou prends en photo ton exercice : l'IA analyse et résout étape par étape, avec des explications claires et adaptées à ton niveau."
         />
       </Box>
 
@@ -634,7 +1206,7 @@ const FeatureCard = ({ icon, title, description, accent = ["#22d3ee", "#3b82f6"]
           accent={["#a78bfa", "#6366f1"]}  // violet
           icon={<ChatBubbleOutlineIcon fontSize="medium" />}
           title="Livres et vidéos classés par niveau"
-description="Accède à une bibliothèque de livres et de vidéos du collège à l’université, organisées par niveau et par chapitre pour anticiper, réviser et mieux comprendre tes cours en mathématiques."
+description="Accède à une bibliothèque de livres et de vidéos du collège à l'université, organisées par niveau et par chapitre pour anticiper, réviser et mieux comprendre tes cours en mathématiques."
         />
       </Box>
 
@@ -643,8 +1215,8 @@ description="Accède à une bibliothèque de livres et de vidéos du collège à
         <FeatureCard
           accent={["#34d399", "#10b981"]}  // vert
           icon={<SchoolRoundedIcon fontSize="medium" />}
-          title="Sujets d’examens avec corrections"
-          description="Des sujets type et exercices de classe d’examen, corrigés pas à pas, à télécharger pour t’entraîner, prendre de l’avance et monter en puissance en maths."
+          title="Sujets d'examens avec corrections"
+          description="Des sujets type et exercices de classe d'examen, corrigés pas à pas, à télécharger pour t'entraîner, prendre de l'avance et monter en puissance en maths."
 
         />
       </Box>
@@ -655,7 +1227,7 @@ description="Accède à une bibliothèque de livres et de vidéos du collège à
           accent={["#f59e0b", "#ef4444"]}  // amber → red
           icon={<SecurityIcon fontSize="medium" />}
          title="Soutien+ : un prof en ligne"
-        description="Pose ton problème et échange en direct, comme sur WhatsApp, avec un enseignant disponible. L’historique des échanges et solutions est sauvegardé dans ton profil pour y revenir à tout moment."
+        description="Pose ton problème et échange en direct, comme sur WhatsApp, avec un enseignant disponible. L'historique des échanges et solutions est sauvegardé dans ton profil pour y revenir à tout moment."
 
         />
       </Box>
@@ -675,63 +1247,3 @@ description="Accède à une bibliothèque de livres et de vidéos du collège à
 };
 
 export default HomePage;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
