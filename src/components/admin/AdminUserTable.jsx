@@ -31,6 +31,11 @@ import {
   Card,
   CardContent,
   Grid,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  CircularProgress,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
@@ -42,6 +47,8 @@ import PeopleIcon from "@mui/icons-material/People";
 import PersonOffIcon from "@mui/icons-material/PersonOff";
 import SchoolIcon from "@mui/icons-material/School";
 import CardMembershipIcon from "@mui/icons-material/CardMembership";
+import SmsIcon from "@mui/icons-material/Sms";
+import CampaignIcon from "@mui/icons-material/Campaign";
 import API from "../../api";
 import UserDetailDrawer from "./UserDetailDrawer"; // ✅ Import du drawer
 
@@ -84,6 +91,18 @@ const AdminUserTable = () => {
   // ✅ Drawer pour détails utilisateur
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState(null);
+
+  // ✅ SMS Modal
+  const [smsModalOpen, setSmsModalOpen] = useState(false);
+  const [smsRecipient, setSmsRecipient] = useState(null);
+  const [smsMessage, setSmsMessage] = useState("");
+  const [smsSending, setSmsSending] = useState(false);
+
+  // ✅ SMS Marketing Modal
+  const [marketingModalOpen, setMarketingModalOpen] = useState(false);
+  const [marketingMessage, setMarketingMessage] = useState("");
+  const [marketingSending, setMarketingSending] = useState(false);
+  const [estimatedRecipients, setEstimatedRecipients] = useState(0);
 
   // ✅ Fetch users
   const fetchUsers = useCallback(async () => {
@@ -215,6 +234,117 @@ const AdminUserTable = () => {
     setDrawerOpen(true);
   };
 
+  // ✅ Ouvrir la modal SMS
+  const handleOpenSmsModal = (user) => {
+    setSmsRecipient(user);
+    setSmsMessage("");
+    setSmsModalOpen(true);
+  };
+
+  // ✅ Envoyer un SMS
+  const handleSendSMS = async () => {
+    if (!smsMessage.trim()) {
+      setMessage({ open: true, text: "Le message ne peut pas être vide", severity: "warning" });
+      return;
+    }
+
+    try {
+      setSmsSending(true);
+      const res = await API.post(`/admin/users/${smsRecipient._id}/send-sms`, { 
+        message: smsMessage 
+      });
+      setMessage({ open: true, text: res.data.message, severity: "success" });
+      setSmsModalOpen(false);
+      setSmsMessage("");
+    } catch (err) {
+      console.error("❌ Erreur envoi SMS", err);
+      setMessage({ 
+        open: true, 
+        text: err.response?.data?.message || "Erreur lors de l'envoi du SMS", 
+        severity: "error" 
+      });
+    } finally {
+      setSmsSending(false);
+    }
+  };
+
+  // ✅ Envoyer un SMS groupé
+  const handleSendBulkSMS = async () => {
+    if (selected.length === 0) {
+      setMessage({ open: true, text: "Aucun utilisateur sélectionné", severity: "warning" });
+      return;
+    }
+
+    const message = prompt("Entrez le message à envoyer à tous les utilisateurs sélectionnés:");
+    if (!message || !message.trim()) {
+      return;
+    }
+
+    try {
+      const res = await API.post(`/admin/users/send-bulk-sms`, { 
+        userIds: selected, 
+        message 
+      });
+      setMessage({ open: true, text: res.data.message, severity: "success" });
+      setSelected([]);
+    } catch (err) {
+      console.error("❌ Erreur envoi SMS groupé", err);
+      setMessage({ 
+        open: true, 
+        text: err.response?.data?.message || "Erreur lors de l'envoi des SMS", 
+        severity: "error" 
+      });
+    }
+  };
+
+  // ✅ Ouvrir la modal marketing
+  const handleOpenMarketingModal = () => {
+    setEstimatedRecipients(totalUsers);
+    setMarketingMessage("");
+    setMarketingModalOpen(true);
+  };
+
+  // ✅ Envoyer un SMS marketing à tous
+  const handleSendMarketingSMS = async () => {
+    if (!marketingMessage.trim()) {
+      setMessage({ open: true, text: "Le message ne peut pas être vide", severity: "warning" });
+      return;
+    }
+
+    // Confirmation avant envoi
+    const confirmed = window.confirm(
+      `⚠️ Vous êtes sur le point d'envoyer un SMS à environ ${estimatedRecipients} utilisateurs.\n\nVoulez-vous continuer ?`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      setMarketingSending(true);
+      const res = await API.post(`/admin/users/send-marketing-sms`, { 
+        message: marketingMessage,
+        filters: {
+          role: filters.role,
+          status: filters.status,
+          subscription: filters.subscription,
+        }
+      });
+      setMessage({ open: true, text: res.data.message, severity: "success" });
+      setMarketingModalOpen(false);
+      setMarketingMessage("");
+    } catch (err) {
+      console.error("❌ Erreur envoi SMS marketing", err);
+      setMessage({ 
+        open: true, 
+        text: err.response?.data?.message || "Erreur lors de l'envoi de la campagne SMS", 
+        severity: "error" 
+      });
+    } finally {
+      setMarketingSending(false);
+    }
+  };
+
   return (
     <Box>
       {/* ✅ Statistiques en haut */}
@@ -332,9 +462,27 @@ const AdminUserTable = () => {
               >
                 Désactiver
               </Button>
+              <Button
+                variant="contained"
+                color="info"
+                size="small"
+                startIcon={<SmsIcon />}
+                onClick={handleSendBulkSMS}
+              >
+                Envoyer SMS
+              </Button>
             </>
           )}
           <Box sx={{ flexGrow: 1 }} />
+          <Button 
+            variant="contained" 
+            size="small" 
+            color="warning"
+            startIcon={<CampaignIcon />} 
+            onClick={handleOpenMarketingModal}
+          >
+            Campagne SMS
+          </Button>
           <Button variant="outlined" size="small" startIcon={<FileDownloadIcon />} onClick={handleExportCSV}>
             Export CSV
           </Button>
@@ -384,7 +532,6 @@ const AdminUserTable = () => {
                   </TableSortLabel>
                 </TableCell>
                 <TableCell><strong>École</strong></TableCell>
-                <TableCell><strong>Rôle</strong></TableCell>
                 <TableCell><strong>Statut</strong></TableCell>
                 <TableCell><strong>Abonnement</strong></TableCell>
                 <TableCell>
@@ -404,14 +551,14 @@ const AdminUserTable = () => {
                 // Skeleton loader
                 Array.from({ length: rowsPerPage }).map((_, i) => (
                   <TableRow key={i}>
-                    <TableCell colSpan={9}>
+                    <TableCell colSpan={8}>
                       <Skeleton variant="rectangular" height={40} />
                     </TableCell>
                   </TableRow>
                 ))
               ) : users.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={9} align="center">
+                  <TableCell colSpan={8} align="center">
                     <Typography color="text.secondary">Aucun utilisateur trouvé</Typography>
                   </TableCell>
                 </TableRow>
@@ -434,13 +581,6 @@ const AdminUserTable = () => {
                     <TableCell>{user.schoolName || "—"}</TableCell>
                     <TableCell>
                       <Chip
-                        label={user.role === "student" ? "Élève" : user.role === "teacher" ? "Enseignant" : "Admin"}
-                        color={user.role === "admin" ? "secondary" : "primary"}
-                        size="small"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Chip
                         label={user.isActive ? "Actif" : "Inactif"}
                         color={user.isActive ? "success" : "error"}
                         size="small"
@@ -460,6 +600,11 @@ const AdminUserTable = () => {
                         <Tooltip title="Voir détails">
                           <IconButton size="small" color="info" onClick={() => handleViewDetails(user._id)}>
                             <VisibilityIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Envoyer un SMS">
+                          <IconButton size="small" color="primary" onClick={() => handleOpenSmsModal(user)}>
+                            <SmsIcon fontSize="small" />
                           </IconButton>
                         </Tooltip>
                         <Tooltip title={user.isActive ? "Désactiver" : "Activer"}>
@@ -503,6 +648,121 @@ const AdminUserTable = () => {
         onClose={() => setDrawerOpen(false)}
         userId={selectedUserId}
       />
+
+      {/* ✅ Modal envoi SMS */}
+      <Dialog 
+        open={smsModalOpen} 
+        onClose={() => setSmsModalOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>
+          📱 Envoyer un SMS
+        </DialogTitle>
+        <DialogContent sx={{ mt: 2 }}>
+          {smsRecipient && (
+            <Box mb={2} p={2} bgcolor="grey.100" borderRadius={1}>
+              <Typography variant="body2" color="text.secondary">
+                <strong>Destinataire:</strong> {smsRecipient.fullName || "N/A"}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                <strong>Téléphone:</strong> {smsRecipient.phone || "N/A"}
+              </Typography>
+            </Box>
+          )}
+          <TextField
+            fullWidth
+            multiline
+            rows={4}
+            label="Message"
+            value={smsMessage}
+            onChange={(e) => setSmsMessage(e.target.value)}
+            placeholder="Entrez votre message..."
+            variant="outlined"
+            helperText={`${smsMessage.length} caractères`}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setSmsModalOpen(false)} disabled={smsSending}>
+            Annuler
+          </Button>
+          <Button 
+            variant="contained" 
+            onClick={handleSendSMS} 
+            disabled={smsSending || !smsMessage.trim()}
+            startIcon={smsSending ? <CircularProgress size={20} /> : <SmsIcon />}
+          >
+            {smsSending ? "Envoi..." : "Envoyer"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* ✅ Modal campagne SMS marketing */}
+      <Dialog 
+        open={marketingModalOpen} 
+        onClose={() => !marketingSending && setMarketingModalOpen(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle sx={{ bgcolor: "warning.light", color: "warning.contrastText" }}>
+          📢 Campagne SMS Marketing
+        </DialogTitle>
+        <DialogContent sx={{ mt: 2 }}>
+          <Alert severity="warning" sx={{ mb: 3 }}>
+            <Typography variant="body2" fontWeight={700}>
+              ⚠️ Envoi massif de SMS
+            </Typography>
+            <Typography variant="body2">
+              Ce message sera envoyé à environ <strong>{estimatedRecipients} utilisateurs</strong>
+              {(filters.role || filters.status || filters.subscription) && " (selon les filtres appliqués)"}.
+            </Typography>
+          </Alert>
+
+          {(filters.role || filters.status || filters.subscription) && (
+            <Box mb={2} p={2} bgcolor="info.lighter" borderRadius={1}>
+              <Typography variant="body2" fontWeight={700} mb={1}>
+                📊 Filtres actifs:
+              </Typography>
+              {filters.role && (
+                <Chip label={`Rôle: ${filters.role}`} size="small" sx={{ mr: 1, mb: 1 }} />
+              )}
+              {filters.status && (
+                <Chip label={`Statut: ${filters.status}`} size="small" sx={{ mr: 1, mb: 1 }} />
+              )}
+              {filters.subscription && (
+                <Chip label={`Abonnement: ${filters.subscription}`} size="small" sx={{ mr: 1, mb: 1 }} />
+              )}
+            </Box>
+          )}
+
+          <TextField
+            fullWidth
+            multiline
+            rows={6}
+            label="Message marketing"
+            value={marketingMessage}
+            onChange={(e) => setMarketingMessage(e.target.value)}
+            placeholder="Ex: 🎉 Promotion spéciale! Bénéficiez de 20% de réduction sur votre abonnement..."
+            variant="outlined"
+            helperText={`${marketingMessage.length} caractères`}
+            disabled={marketingSending}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setMarketingModalOpen(false)} disabled={marketingSending}>
+            Annuler
+          </Button>
+          <Button 
+            variant="contained" 
+            color="warning"
+            onClick={handleSendMarketingSMS} 
+            disabled={marketingSending || !marketingMessage.trim()}
+            startIcon={marketingSending ? <CircularProgress size={20} /> : <CampaignIcon />}
+          >
+            {marketingSending ? "Envoi en cours..." : `Envoyer à ${estimatedRecipients} utilisateurs`}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

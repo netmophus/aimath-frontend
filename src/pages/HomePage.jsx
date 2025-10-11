@@ -17,6 +17,7 @@ import SchoolRoundedIcon from "@mui/icons-material/SchoolRounded";
 
 import { AuthContext } from "../context/AuthContext";
 import DistributeursModal from "../components/DistributeursModal";
+import TutorialsModal from "../components/TutorialsModal";
 
 
 
@@ -55,6 +56,7 @@ const HomePage = () => {
   const navigate = useNavigate();
   const premiumActive = useMemo(() => hasActiveSub(user), [user]);
   const [openDist, setOpenDist] = useState(false);
+  const [openTutorials, setOpenTutorials] = useState(false);
 
 
 
@@ -346,6 +348,66 @@ const PremiumFeatureCard = ({ icon, title, description, isPremium = true }) => (
         <strong> votre accélérateur de réussite en maths.</strong>
      </Typography>
 
+      {/* 🎥 BOUTON TUTORIELS - TRÈS VISIBLE */}
+      <Box
+        sx={{
+          mt: 2,
+          p: { xs: 2, sm: 2.5 },
+          borderRadius: 2,
+          background: "linear-gradient(135deg, rgba(255,215,0,0.25) 0%, rgba(255,165,0,0.2) 100%)",
+          border: "3px solid rgba(255,215,0,0.6)",
+          boxShadow: "0 8px 32px rgba(255,215,0,0.4), 0 0 60px rgba(255,215,0,0.2)",
+          animation: "pulse 2s ease-in-out infinite",
+          "@keyframes pulse": {
+            "0%, 100%": {
+              boxShadow: "0 8px 32px rgba(255,215,0,0.4), 0 0 60px rgba(255,215,0,0.2)",
+            },
+            "50%": {
+              boxShadow: "0 8px 40px rgba(255,215,0,0.6), 0 0 80px rgba(255,215,0,0.4)",
+            },
+          },
+        }}
+      >
+        <Box sx={{ display: "flex", alignItems: "center", gap: { xs: 1.5, sm: 2 }, mb: 1 }}>
+          <PlayCircleOutlineIcon sx={{ fontSize: { xs: 28, sm: 32 }, color: "#FFD700" }} />
+          <Typography
+            sx={{
+              fontSize: { xs: 16, sm: 18 },
+              fontWeight: 900,
+              color: "#FFD700",
+              textShadow: "0 2px 8px rgba(0,0,0,0.3)",
+            }}
+          >
+            NOUVEAU : Tutoriels vidéo disponibles !
+          </Typography>
+        </Box>
+        <Button
+          onClick={() => setOpenTutorials(true)}
+          variant="contained"
+          size="large"
+          startIcon={<PlayCircleOutlineIcon sx={{ fontSize: 24 }} />}
+          sx={{
+            width: "100%",
+            px: 3,
+            py: { xs: 1.5, sm: 2 },
+            fontSize: { xs: 16, sm: 18 },
+            fontWeight: 900,
+            background: "linear-gradient(135deg, #FFD700 0%, #FFA500 100%)",
+            color: "#000",
+            borderRadius: 2,
+            boxShadow: "0 6px 24px rgba(255,215,0,0.5)",
+            "&:hover": {
+              background: "linear-gradient(135deg, #FFA500 0%, #FF8C00 100%)",
+              boxShadow: "0 8px 32px rgba(255,215,0,0.7)",
+              transform: "translateY(-2px)",
+            },
+            transition: "all 0.3s ease",
+          }}
+        >
+          🎥 comment utiliser Fahimta
+        </Button>
+      </Box>
+
       {/* boutons principaux */}
       <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.2, mt: 2.5 }}>
         <Button
@@ -419,23 +481,23 @@ const PremiumFeatureCard = ({ icon, title, description, isPremium = true }) => (
           flexWrap: "wrap",
           gap: 1,
           color: "rgba(255,255,255,0.9)",
-          fontSize: 14,
+          fontSize: { xs: 13, sm: 14 },
         }}
       >
-        <Box sx={{ px: 1, py: 0.5, border: "1px solid rgba(255,255,255,0.25)", borderRadius: 1 }}>
+        <Box sx={{ px: { xs: 1, sm: 1.5 }, py: { xs: 0.6, sm: 0.75 }, border: "1px solid rgba(255,255,255,0.25)", borderRadius: 1 }}>
           📱 Optimisée mobile
         </Box>
-        <Box sx={{ px: 1, py: 0.5, border: "1px solid rgba(255,255,255,0.25)", borderRadius: 1 }}>
+        <Box sx={{ px: { xs: 1, sm: 1.5 }, py: { xs: 0.6, sm: 0.75 }, border: "1px solid rgba(255,255,255,0.25)", borderRadius: 1 }}>
           ⚡ Démarrage instantané
         </Box>
-        <Box sx={{ px: 1, py: 0.5, border: "1px solid rgba(255,255,255,0.25)", borderRadius: 1 }}>
+        <Box sx={{ px: { xs: 1, sm: 1.5 }, py: { xs: 0.6, sm: 0.75 }, border: "1px solid rgba(255,255,255,0.25)", borderRadius: 1 }}>
           🔄 Historique synchronisé
         </Box>
         <Box 
           onClick={() => setOpenDist(true)}
           sx={{ 
-            px: 1, 
-            py: 0.5, 
+            px: { xs: 1, sm: 1.5 }, 
+            py: { xs: 0.6, sm: 0.75 }, 
             border: "1px solid rgba(255,255,255,0.35)", 
             borderRadius: 1,
             cursor: "pointer",
@@ -1242,6 +1304,9 @@ description="Accède à une bibliothèque de livres et de vidéos du collège à
 
       {/* Modal distributeurs */}
       <DistributeursModal open={openDist} onClose={() => setOpenDist(false)} />
+      
+      {/* Modal tutoriels */}
+      <TutorialsModal open={openTutorials} onClose={() => setOpenTutorials(false)} />
     </PageLayout>
   );
 };
