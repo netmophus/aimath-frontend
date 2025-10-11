@@ -57,6 +57,7 @@ import PartnerCodesPage from "../pages/admin/PartnerCodesPage";
 
 
 import AdminDistributorsPage from "../pages/admin/AdminDistributorsPage";
+import TutorialsManagePage from "../pages/admin/TutorialsManagePage";
 
 
 
@@ -229,7 +230,17 @@ const AppRoutes = () => {
 
 <Route path="/admin/partner-codes" element={<PartnerCodesPage />} />
 
-      {/* 📝 Création Sujet d’Examen */}
+      {/* 🎥 Gestion des tutoriels */}
+      <Route
+        path="/admin/tutorials"
+        element={
+          <ProtectedRoute allowedRoles={["admin"]}>
+            <TutorialsManagePage />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* 📝 Création Sujet d'Examen */}
       <Route
         path="/admin/exams/create"
         element={

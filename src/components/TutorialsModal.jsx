@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -11,6 +11,7 @@ import {
   Grid,
   useTheme,
   useMediaQuery,
+  CircularProgress,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import PlayCircleOutlineIcon from "@mui/icons-material/PlayCircleOutline";
@@ -22,89 +23,79 @@ import PersonAddIcon from "@mui/icons-material/PersonAdd";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
 import AssignmentIcon from "@mui/icons-material/Assignment";
+import API from "../api";
 
 const TutorialsModal = ({ open, onClose }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const isTablet = useMediaQuery(theme.breakpoints.down("md"));
 
-  // Tutoriels avec liens YouTube (remplacez par vos vraies URLs)
-  const tutorials = [
-    {
-      id: 1,
-      title: "Comment créer un compte",
-      description: "Inscription rapide et simple",
-      icon: <PersonAddIcon sx={{ fontSize: 40 }} />,
-      youtubeId: "0HUzbFN5w9w", // ✅ Vidéo tutoriel Fahimta
-      color: "#4CAF50",
-    },
-    {
-      id: 2,
-      title: "Comment faire un abonnement",
-      description: "Activez Premium facilement",
-      icon: <CreditCardIcon sx={{ fontSize: 40 }} />,
-      youtubeId: "dQw4w9WgXcQ", // Remplacez
-      color: "#FF9800",
-    },
-    {
-      id: 3,
-      title: "Comment questionner l'IA",
-      description: "Posez vos questions de maths",
-      icon: <ChatBubbleOutlineIcon sx={{ fontSize: 40 }} />,
-      youtubeId: "dQw4w9WgXcQ", // Remplacez
-      color: "#2196F3",
-    },
-    {
-      id: 4,
-      title: "Comment prendre une photo",
-      description: "Résolvez par photo d'exercice",
-      icon: <CameraAltIcon sx={{ fontSize: 40 }} />,
-      youtubeId: "dQw4w9WgXcQ", // Remplacez
-      color: "#9C27B0",
-    },
-    {
-      id: 5,
-      title: "Comment utiliser Soutien+",
-      description: "Chattez avec un enseignant",
-      icon: <SchoolIcon sx={{ fontSize: 40 }} />,
-      youtubeId: "dQw4w9WgXcQ", // Remplacez
-      color: "#F44336",
-    },
-    {
-      id: 6,
-      title: "Accéder aux livres",
-      description: "Consultez la bibliothèque",
-      icon: <MenuBookIcon sx={{ fontSize: 40 }} />,
-      youtubeId: "dQw4w9WgXcQ", // Remplacez
-      color: "#00BCD4",
-    },
-    {
-      id: 7,
-      title: "Accéder aux vidéos",
-      description: "Regardez les cours vidéo",
-      icon: <PlayCircleOutlineIcon sx={{ fontSize: 40 }} />,
-      youtubeId: "dQw4w9WgXcQ", // Remplacez
-      color: "#E91E63",
-    },
-    {
-      id: 8,
-      title: "Télécharger les examens",
-      description: "Accédez aux sujets corrigés",
-      icon: <AssignmentIcon sx={{ fontSize: 40 }} />,
-      youtubeId: "dQw4w9WgXcQ", // Remplacez
-      color: "#673AB7",
-    },
-    {
-      id: 9,
-      title: "Guide complet Fahimta",
-      description: "Toutes les fonctionnalités",
-      icon: <HelpOutlineIcon sx={{ fontSize: 40 }} />,
-      youtubeId: "dQw4w9WgXcQ", // Remplacez
-      color: "#009688",
-    },
-  ];
+  const [tutorials, setTutorials] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  const [selectedVideo, setSelectedVideo] = React.useState(null);
+  // Charger les tutoriels depuis l'API
+  useEffect(() => {
+    if (open) {
+      loadTutorials();
+    }
+  }, [open]);
+
+  const loadTutorials = async () => {
+    setLoading(true);
+    try {
+      const res = await API.get("/tutorials");
+      setTutorials(res.data.tutorials || []);
+    } catch (error) {
+      console.error("Erreur chargement tutoriels:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Extraire l'ID YouTube du lien complet ou utiliser l'ID tel quel
+  const extractYoutubeId = (youtubeIdOrUrl) => {
+    if (!youtubeIdOrUrl) return "";
+    
+    // Si c'est déjà un ID simple (11 caractères alphanumériques)
+    if (/^[a-zA-Z0-9_-]{11}$/.test(youtubeIdOrUrl)) {
+      return youtubeIdOrUrl;
+    }
+    
+    // Extraire l'ID depuis différents formats de liens YouTube
+    const patterns = [
+      /(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/,
+      /youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/,
+      /youtube\.com\/v\/([a-zA-Z0-9_-]{11})/,
+    ];
+    
+    for (const pattern of patterns) {
+      const match = youtubeIdOrUrl.match(pattern);
+      if (match && match[1]) {
+        return match[1];
+      }
+    }
+    
+    // Si aucun pattern ne correspond, retourner tel quel
+    return youtubeIdOrUrl;
+  };
+
+  // Mapper les icônes
+  const getIcon = (iconName) => {
+    const icons = {
+      PersonAdd: <PersonAddIcon sx={{ fontSize: 40 }} />,
+      CreditCard: <CreditCardIcon sx={{ fontSize: 40 }} />,
+      ChatBubbleOutline: <ChatBubbleOutlineIcon sx={{ fontSize: 40 }} />,
+      CameraAlt: <CameraAltIcon sx={{ fontSize: 40 }} />,
+      School: <SchoolIcon sx={{ fontSize: 40 }} />,
+      MenuBook: <MenuBookIcon sx={{ fontSize: 40 }} />,
+      PlayCircleOutline: <PlayCircleOutlineIcon sx={{ fontSize: 40 }} />,
+      Assignment: <AssignmentIcon sx={{ fontSize: 40 }} />,
+      HelpOutline: <HelpOutlineIcon sx={{ fontSize: 40 }} />,
+    };
+    return icons[iconName] || icons.HelpOutline;
+  };
+
+  const [selectedVideo, setSelectedVideo] = useState(null);
 
   const handleVideoClick = (tutorial) => {
     setSelectedVideo(tutorial);
@@ -174,11 +165,14 @@ const TutorialsModal = ({ open, onClose }) => {
         sx={{
           p: { xs: 2, sm: 3, md: 4 },
           minHeight: { xs: "auto", sm: 500 },
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
         }}
       >
         {!selectedVideo ? (
           // Liste des tutoriels
-          <>
+          <Box sx={{ width: "100%", maxWidth: 1200, mx: "auto" }}>
             <Typography
               variant="body1"
               sx={{
@@ -191,14 +185,45 @@ const TutorialsModal = ({ open, onClose }) => {
               Sélectionnez un tutoriel pour commencer
             </Typography>
 
-            <Grid container spacing={{ xs: 2, sm: 2.5, md: 3 }}>
-              {tutorials.map((tutorial) => (
-                <Grid item xs={12} sm={6} md={4} key={tutorial.id}>
+            {loading ? (
+              <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
+                <CircularProgress sx={{ color: "#FFD700" }} />
+              </Box>
+            ) : tutorials.length === 0 ? (
+              <Typography
+                sx={{
+                  color: "rgba(255,255,255,0.6)",
+                  textAlign: "center",
+                  py: 8,
+                }}
+              >
+                Aucun tutoriel disponible pour le moment
+              </Typography>
+            ) : (
+              <Grid 
+                container 
+                spacing={{ xs: 2, sm: 2.5, md: 3 }}
+                justifyContent="center"
+                alignItems="stretch"
+              >
+                {tutorials.map((tutorial) => (
+                <Grid 
+                  item 
+                  xs={12} 
+                  sm={6} 
+                  md={4} 
+                  key={tutorial.id}
+                  sx={{
+                    display: "flex",
+                    justifyContent: "center",
+                  }}
+                >
                   <Card
                     onClick={() => handleVideoClick(tutorial)}
                     sx={{
-                      height: "100%",
-                      minHeight: { xs: 200, sm: 220, md: 240 }, // Hauteur minimale fixe
+                      width: "100%",
+                      maxWidth: { xs: "100%", sm: 320, md: 360 }, // Largeur maximale pour uniformité
+                      height: { xs: 220, sm: 240, md: 260 }, // Hauteur FIXE pour toutes les cartes
                       borderRadius: 2,
                       cursor: "pointer",
                       background: "rgba(255,255,255,0.05)",
@@ -241,7 +266,7 @@ const TutorialsModal = ({ open, onClose }) => {
                             border: `2px solid ${tutorial.color}50`,
                           }}
                         >
-                          {tutorial.icon}
+                          {getIcon(tutorial.icon)}
                         </Box>
 
                         {/* Titre */}
@@ -250,11 +275,14 @@ const TutorialsModal = ({ open, onClose }) => {
                           fontWeight={800}
                           sx={{
                             color: "#fff",
-                            fontSize: { xs: 14, sm: 15 },
-                            lineHeight: 1.3,
-                            minHeight: { xs: 36, sm: 40 }, // Hauteur fixe pour aligner les titres
+                            fontSize: { xs: 13.5, sm: 14.5 },
+                            lineHeight: 1.25,
+                            height: { xs: 34, sm: 38 }, // Hauteur FIXE
                             display: "flex",
                             alignItems: "center",
+                            justifyContent: "center",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
                           }}
                         >
                           {tutorial.title}
@@ -265,9 +293,14 @@ const TutorialsModal = ({ open, onClose }) => {
                           variant="body2"
                           sx={{
                             color: "rgba(255,255,255,0.7)",
-                            fontSize: { xs: 12, sm: 13 },
-                            lineHeight: 1.4,
-                            minHeight: { xs: 32, sm: 36 }, // Hauteur fixe pour aligner les descriptions
+                            fontSize: { xs: 11.5, sm: 12.5 },
+                            lineHeight: 1.35,
+                            height: { xs: 32, sm: 34 }, // Hauteur FIXE
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            display: "-webkit-box",
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: "vertical",
                           }}
                         >
                           {tutorial.description}
@@ -291,12 +324,13 @@ const TutorialsModal = ({ open, onClose }) => {
                     </CardContent>
                   </Card>
                 </Grid>
-              ))}
-            </Grid>
-          </>
+                ))}
+              </Grid>
+            )}
+          </Box>
         ) : (
           // Lecteur vidéo
-          <Box>
+          <Box sx={{ width: "100%", maxWidth: 900, mx: "auto" }}>
             <Typography
               variant={isMobile ? "h6" : "h5"}
               fontWeight={800}
@@ -304,6 +338,7 @@ const TutorialsModal = ({ open, onClose }) => {
                 color: "#fff",
                 mb: 2,
                 fontSize: { xs: 18, sm: 22 },
+                textAlign: "center",
               }}
             >
               {selectedVideo.title}
@@ -315,6 +350,7 @@ const TutorialsModal = ({ open, onClose }) => {
                 color: "rgba(255,255,255,0.7)",
                 mb: 3,
                 fontSize: { xs: 13, sm: 14 },
+                textAlign: "center",
               }}
             >
               {selectedVideo.description}
@@ -329,6 +365,7 @@ const TutorialsModal = ({ open, onClose }) => {
                 overflow: "hidden",
                 borderRadius: 2,
                 boxShadow: "0 8px 32px rgba(0,0,0,0.3)",
+                mx: "auto",
               }}
             >
               <iframe
@@ -341,7 +378,7 @@ const TutorialsModal = ({ open, onClose }) => {
                   border: "none",
                   borderRadius: "8px",
                 }}
-                src={`https://www.youtube.com/embed/${selectedVideo.youtubeId}?autoplay=1`}
+                src={`https://www.youtube.com/embed/${extractYoutubeId(selectedVideo.youtubeId)}?autoplay=1`}
                 title={selectedVideo.title}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
@@ -359,7 +396,7 @@ const TutorialsModal = ({ open, onClose }) => {
               <Box
                 onClick={handleBackToList}
                 sx={{
-                  px: 3,
+                  px: { xs: 2.5, sm: 3 },
                   py: 1.5,
                   borderRadius: 2,
                   background: "rgba(255,255,255,0.1)",
@@ -369,6 +406,7 @@ const TutorialsModal = ({ open, onClose }) => {
                   cursor: "pointer",
                   transition: "all 0.3s ease",
                   fontSize: { xs: 14, sm: 16 },
+                  textAlign: "center",
                   "&:hover": {
                     background: "rgba(255,255,255,0.15)",
                     transform: "translateY(-2px)",

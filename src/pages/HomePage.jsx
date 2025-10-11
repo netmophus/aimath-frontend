@@ -348,64 +348,125 @@ const PremiumFeatureCard = ({ icon, title, description, isPremium = true }) => (
         <strong> votre accélérateur de réussite en maths.</strong>
      </Typography>
 
-      {/* 🎥 BOUTON TUTORIELS - TRÈS VISIBLE */}
+      {/* 🎥 BOUTONS TRÈS VISIBLES - TUTORIELS & DISTRIBUTEURS */}
       <Box
         sx={{
           mt: 2,
-          p: { xs: 2, sm: 2.5 },
-          borderRadius: 2,
-          background: "linear-gradient(135deg, rgba(255,215,0,0.25) 0%, rgba(255,165,0,0.2) 100%)",
-          border: "3px solid rgba(255,215,0,0.6)",
-          boxShadow: "0 8px 32px rgba(255,215,0,0.4), 0 0 60px rgba(255,215,0,0.2)",
-          animation: "pulse 2s ease-in-out infinite",
-          "@keyframes pulse": {
-            "0%, 100%": {
-              boxShadow: "0 8px 32px rgba(255,215,0,0.4), 0 0 60px rgba(255,215,0,0.2)",
-            },
-            "50%": {
-              boxShadow: "0 8px 40px rgba(255,215,0,0.6), 0 0 80px rgba(255,215,0,0.4)",
-            },
-          },
+          display: "flex",
+          flexDirection: { xs: "column", md: "row" },
+          gap: 2,
         }}
       >
-        <Box sx={{ display: "flex", alignItems: "center", gap: { xs: 1.5, sm: 2 }, mb: 1 }}>
-          <PlayCircleOutlineIcon sx={{ fontSize: { xs: 28, sm: 32 }, color: "#FFD700" }} />
-          <Typography
-            sx={{
-              fontSize: { xs: 16, sm: 18 },
-              fontWeight: 900,
-              color: "#FFD700",
-              textShadow: "0 2px 8px rgba(0,0,0,0.3)",
-            }}
-          >
-            NOUVEAU : Tutoriels vidéo disponibles !
-          </Typography>
-        </Box>
-        <Button
-          onClick={() => setOpenTutorials(true)}
-          variant="contained"
-          size="large"
-          startIcon={<PlayCircleOutlineIcon sx={{ fontSize: 24 }} />}
+        {/* Bouton Tutoriels */}
+        <Box
           sx={{
-            width: "100%",
-            px: 3,
-            py: { xs: 1.5, sm: 2 },
-            fontSize: { xs: 16, sm: 18 },
-            fontWeight: 900,
-            background: "linear-gradient(135deg, #FFD700 0%, #FFA500 100%)",
-            color: "#000",
+            flex: 1,
+            p: { xs: 2, sm: 2.5 },
             borderRadius: 2,
-            boxShadow: "0 6px 24px rgba(255,215,0,0.5)",
-            "&:hover": {
-              background: "linear-gradient(135deg, #FFA500 0%, #FF8C00 100%)",
-              boxShadow: "0 8px 32px rgba(255,215,0,0.7)",
-              transform: "translateY(-2px)",
+            background: "linear-gradient(135deg, rgba(255,215,0,0.25) 0%, rgba(255,165,0,0.2) 100%)",
+            border: "3px solid rgba(255,215,0,0.6)",
+            boxShadow: "0 8px 32px rgba(255,215,0,0.4), 0 0 60px rgba(255,215,0,0.2)",
+            animation: "pulse 2s ease-in-out infinite",
+            "@keyframes pulse": {
+              "0%, 100%": {
+                boxShadow: "0 8px 32px rgba(255,215,0,0.4), 0 0 60px rgba(255,215,0,0.2)",
+              },
+              "50%": {
+                boxShadow: "0 8px 40px rgba(255,215,0,0.6), 0 0 80px rgba(255,215,0,0.4)",
+              },
             },
-            transition: "all 0.3s ease",
           }}
         >
-          🎥 comment utiliser Fahimta
-        </Button>
+          <Box sx={{ display: "flex", alignItems: "center", gap: { xs: 1.5, sm: 2 }, mb: 1 }}>
+            <PlayCircleOutlineIcon sx={{ fontSize: { xs: 28, sm: 32 }, color: "#FFD700" }} />
+            <Typography
+              sx={{
+                fontSize: { xs: 14, sm: 16 },
+                fontWeight: 900,
+                color: "#FFD700",
+                textShadow: "0 2px 8px rgba(0,0,0,0.3)",
+              }}
+            >
+              NOUVEAU : Tutoriels vidéo !
+            </Typography>
+          </Box>
+          <Button
+            onClick={() => setOpenTutorials(true)}
+            variant="contained"
+            size="large"
+            startIcon={<PlayCircleOutlineIcon sx={{ fontSize: 24 }} />}
+            sx={{
+              width: "100%",
+              px: 3,
+              py: { xs: 1.5, sm: 2 },
+              fontSize: { xs: 15, sm: 17 },
+              fontWeight: 900,
+              background: "linear-gradient(135deg, #FFD700 0%, #FFA500 100%)",
+              color: "#000",
+              borderRadius: 2,
+              boxShadow: "0 6px 24px rgba(255,215,0,0.5)",
+              "&:hover": {
+                background: "linear-gradient(135deg, #FFA500 0%, #FF8C00 100%)",
+                boxShadow: "0 8px 32px rgba(255,215,0,0.7)",
+                transform: "translateY(-2px)",
+              },
+              transition: "all 0.3s ease",
+            }}
+          >
+            🎥 Comment utiliser Fahimta
+          </Button>
+        </Box>
+
+        {/* Bouton Distributeurs */}
+        <Box
+          sx={{
+            flex: 1,
+            p: { xs: 2, sm: 2.5 },
+            borderRadius: 2,
+            background: "linear-gradient(135deg, rgba(59,130,246,0.25) 0%, rgba(37,99,235,0.2) 100%)",
+            border: "3px solid rgba(59,130,246,0.6)",
+            boxShadow: "0 8px 32px rgba(59,130,246,0.4)",
+          }}
+        >
+          <Box sx={{ display: "flex", alignItems: "center", gap: { xs: 1.5, sm: 2 }, mb: 1 }}>
+            <LanguageIcon sx={{ fontSize: { xs: 28, sm: 32 }, color: "#3b82f6" }} />
+            <Typography
+              sx={{
+                fontSize: { xs: 14, sm: 16 },
+                fontWeight: 900,
+                color: "#60a5fa",
+                textShadow: "0 2px 8px rgba(0,0,0,0.3)",
+              }}
+            >
+              Où acheter vos cartes ?
+            </Typography>
+          </Box>
+          <Button
+            onClick={() => setOpenDist(true)}
+            variant="contained"
+            size="large"
+            startIcon={<LanguageIcon sx={{ fontSize: 24 }} />}
+            sx={{
+              width: "100%",
+              px: 3,
+              py: { xs: 1.5, sm: 2 },
+              fontSize: { xs: 15, sm: 17 },
+              fontWeight: 900,
+              background: "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)",
+              color: "#fff",
+              borderRadius: 2,
+              boxShadow: "0 6px 24px rgba(59,130,246,0.5)",
+              "&:hover": {
+                background: "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)",
+                boxShadow: "0 8px 32px rgba(59,130,246,0.7)",
+                transform: "translateY(-2px)",
+              },
+              transition: "all 0.3s ease",
+            }}
+          >
+            📍 Trouver un distributeur
+          </Button>
+        </Box>
       </Box>
 
       {/* boutons principaux */}
@@ -493,23 +554,8 @@ const PremiumFeatureCard = ({ icon, title, description, isPremium = true }) => (
         <Box sx={{ px: { xs: 1, sm: 1.5 }, py: { xs: 0.6, sm: 0.75 }, border: "1px solid rgba(255,255,255,0.25)", borderRadius: 1 }}>
           🔄 Historique synchronisé
         </Box>
-        <Box 
-          onClick={() => setOpenDist(true)}
-          sx={{ 
-            px: { xs: 1, sm: 1.5 }, 
-            py: { xs: 0.6, sm: 0.75 }, 
-            border: "1px solid rgba(255,255,255,0.35)", 
-            borderRadius: 1,
-            cursor: "pointer",
-            transition: "all 0.2s",
-            "&:hover": {
-              backgroundColor: "rgba(255,255,255,0.15)",
-              borderColor: "rgba(255,255,255,0.5)",
-              transform: "translateY(-1px)"
-            }
-          }}
-        >
-          📍 Trouver un distributeur
+        <Box sx={{ px: { xs: 1, sm: 1.5 }, py: { xs: 0.6, sm: 0.75 }, border: "1px solid rgba(255,255,255,0.25)", borderRadius: 1 }}>
+          💯 100% sécurisé
         </Box>
       </Box>
     </Box>
@@ -563,11 +609,11 @@ const PremiumFeatureCard = ({ icon, title, description, isPremium = true }) => (
           textShadow: "0 2px 10px rgba(0,0,0,0.25)",
         }}
       >
-       Révèle ton potentiel en maths, maintenant.
+       Révèle ton potentiel, maintenant.
       </Typography>
 
-      <Typography variant="body2" sx={{ opacity: 0.95 }}>
-       Fahimta réunit IA de maths, vidéos claires, livres et rappels de cours,  sujets type BEPC ou BAC corrigés. Encore bloqué ? Passe en Soutien+ : un enseignant en ligne répond à toutes tes questions et te guide pas à pas. Résultat : moins de stress, plus de déclics, de meilleures notes.
+      <Typography variant="body2" sx={{ opacity: 0.95, lineHeight: 1.6 }}>
+        Pour les élèves du collège, lycée et université : des révisions efficaces et des résultats concrets en mathématiques (physique, chimie et SVT à venir). Fahimta propose IA de maths, vidéos structurées, livres/rappels et sujets BEPC/BAC corrigés. Avec Soutien+, un enseignant accompagne l'élève en ligne jusqu'à la compréhension. Résultat : confiance retrouvée et notes qui progressent.
       </Typography>
 
       {/* Message marketing ajouté */}
@@ -587,8 +633,7 @@ const PremiumFeatureCard = ({ icon, title, description, isPremium = true }) => (
             color: "#E6F0FF",
           }}
         >
-          Avec Fahimta, vous n'avez plus d'excuse&nbsp;: les mathématiques n'ont plus
-          de secret pour vous.
+          🎯 Rejoignez des milliers d'élèves qui transforment leurs résultats avec Fahimta.
         </Typography>
       </Box>
 

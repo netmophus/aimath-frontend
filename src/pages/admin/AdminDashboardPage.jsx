@@ -634,6 +634,13 @@ useEffect(() => {
   onClick: () => navigate("/admin/distributors"),
 },
 
+{
+  title: "Tutoriels vidéo 🎥",
+  description: "Gérer les vidéos tutorielles affichées dans le modal d'aide.",
+  buttonLabel: "Gérer les tutoriels",
+  onClick: () => navigate("/admin/tutorials"),
+},
+
   
   ];
 
