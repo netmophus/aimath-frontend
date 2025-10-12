@@ -47,6 +47,7 @@ import StudentChatPage from "../pages/student/StudentChatPage";
 import SupportRequestFormPage from "../pages/student/SupportRequestFormPage";
 import StudentChatHistory from "../components/student/StudentChatHistory";
 import ContentRequestPage from "../pages/student/ContentRequestPage";
+import MesAchatsCartesPage from "../pages/student/MesAchatsCartesPage";
 import PartnerDashboardPage from "../pages/admin/PartnerDashboardPage";
 
 
@@ -141,6 +142,16 @@ const AppRoutes = () => {
   element={
     <ProtectedRoute>
       <ContentRequestPage />
+    </ProtectedRoute>
+  }
+/>
+
+{/* 💳 Route achats de cartes (élèves non abonnés) */}
+<Route
+  path="/mes-achats-cartes"
+  element={
+    <ProtectedRoute>
+      <MesAchatsCartesPage />
     </ProtectedRoute>
   }
 />

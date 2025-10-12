@@ -16,6 +16,15 @@ import {
   CircularProgress,
   useMediaQuery,
   Fab,
+  IconButton,
+  Tooltip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Snackbar,
+  TextField,
+  Alert,
 } from "@mui/material";
 import { useTheme, alpha } from "@mui/material/styles";
 import PageLayout from "../../components/PageLayout";
@@ -35,6 +44,17 @@ import Inventory2RoundedIcon from "@mui/icons-material/Inventory2Rounded";
 import DownloadRoundedIcon from "@mui/icons-material/DownloadRounded";
 import ViewKanbanRoundedIcon from "@mui/icons-material/ViewKanbanRounded";
 import AddShoppingCartRoundedIcon from "@mui/icons-material/AddShoppingCartRounded";
+import {
+  CheckCircle as CheckCircleIcon,
+  Schedule as ScheduleIcon,
+  Cancel as CancelIcon,
+  ContentCopy as ContentCopyIcon,
+  QrCode as QrCodeIcon,
+  Visibility as VisibilityIcon,
+  VisibilityOff as VisibilityOffIcon,
+  Sell as SellIcon,
+  PersonAdd as PersonAddIcon,
+} from "@mui/icons-material";
 
 const currency = (n) => `${Number(n || 0).toLocaleString("fr-FR")} FCFA`;
 const fmtDateTime = (d) => {
@@ -58,6 +78,18 @@ const PartnerDashboardPage = () => {
   const [stats, setStats] = useState(null);
   const [codes, setCodes] = useState([]);
   const [me, setMe] = useState(null);
+  const [snackbar, setSnackbar] = useState({ open: false, message: "" });
+  const [qrDialog, setQrDialog] = useState({ open: false, card: null });
+  const [sellDialog, setSellDialog] = useState({ open: false, card: null });
+  const [sellForm, setSellForm] = useState({
+    studentName: "",
+    studentPhone: "+227",
+    paymentMethod: "cash",
+    notes: "",
+  });
+  const [selling, setSelling] = useState(false);
+  const [studentInfo, setStudentInfo] = useState(null);
+  const [loadingStudent, setLoadingStudent] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -111,7 +143,8 @@ const PartnerDashboardPage = () => {
     const activationRate = sold > 0 ? (activated / sold) * 100 : 0;
     const grossSales = sold * faceValue;
     const commissionTotal = Number(stats?.commissionCfa || 0);
-    const commissionPerActivation = activated > 0 ? Math.round(commissionTotal / activated) : 0;
+    // La commission est par carte vendue, pas par activation
+    const commissionPerSale = sold > 0 ? Math.round(commissionTotal / sold) : 0;
     return {
       assigned,
       sold,
@@ -120,7 +153,7 @@ const PartnerDashboardPage = () => {
       activationRate,
       grossSales,
       commissionTotal,
-      commissionPerActivation,
+      commissionPerSale,
       faceValue,
     };
   }, [stats, faceValue]);
@@ -192,7 +225,404 @@ const PartnerDashboardPage = () => {
     URL.revokeObjectURL(url);
   }, [codes]);
 
+  // Fonctions pour gérer l'affichage des cartes
+  const handleCopyCode = useCallback((code) => {
+    // Extraire seulement la partie après "FAH-"
+    const codeToCopy = code.includes('FAH-') ? code.split('FAH-')[1] : code;
+    navigator.clipboard.writeText(codeToCopy);
+    setSnackbar({
+      open: true,
+      message: `Code ${codeToCopy} copié dans le presse-papiers!`,
+    });
+  }, []);
+
+  const handleShowQR = useCallback((card) => {
+    setQrDialog({ open: true, card });
+  }, []);
+
+  const handleCloseQR = useCallback(() => {
+    setQrDialog({ open: false, card: null });
+  }, []);
+
+  // Fonctions pour gérer la vente
+  const handleSellCard = useCallback((card) => {
+    setSellDialog({ open: true, card });
+    setSellForm({
+      studentName: "",
+      studentPhone: "",
+      paymentMethod: "cash",
+      notes: "",
+    });
+  }, []);
+
+  const handleCloseSellDialog = useCallback(() => {
+    setSellDialog({ open: false, card: null });
+    setSellForm({
+      studentName: "",
+      studentPhone: "+227",
+      paymentMethod: "cash",
+      notes: "",
+    });
+    setSelling(false);
+    setStudentInfo(null);
+    setLoadingStudent(false);
+  }, []);
+
+  const handleSellFormChange = useCallback((field, value) => {
+    setSellForm(prev => ({ ...prev, [field]: value }));
+  }, []);
+
+  // Fonction pour rechercher l'élève par téléphone
+  const searchStudentByPhone = useCallback(async (phone) => {
+    if (!phone || phone.length < 8) {
+      setStudentInfo(null);
+      return;
+    }
+
+    setLoadingStudent(true);
+    try {
+      const response = await API.get(`/users/by-phone/${phone.trim()}`);
+      const student = response.data;
+      
+      if (student && student.isActive) {
+        setStudentInfo(student);
+        setSellForm(prev => ({ 
+          ...prev, 
+          studentName: student.fullName || "",
+          studentPhone: phone.trim()
+        }));
+        setSnackbar({
+          open: true,
+          message: `✅ Élève trouvé: ${student.fullName}`,
+        });
+      } else {
+        setStudentInfo(null);
+        setSellForm(prev => ({ ...prev, studentName: "" }));
+        setSnackbar({
+          open: true,
+          message: `❌ Aucun élève actif trouvé pour ce numéro`,
+        });
+      }
+    } catch (error) {
+      console.error("Erreur recherche élève:", error);
+      setStudentInfo(null);
+      setSellForm(prev => ({ ...prev, studentName: "" }));
+      setSnackbar({
+        open: true,
+        message: `❌ Aucun compte trouvé pour ${phone}. L'élève doit s'inscrire d'abord.`,
+      });
+    } finally {
+      setLoadingStudent(false);
+    }
+  }, []);
+
+  const handleConfirmSale = useCallback(async () => {
+    if (!sellDialog.card || !studentInfo || !sellForm.studentName.trim() || !sellForm.studentPhone.trim()) {
+      setSnackbar({
+        open: true,
+        message: "Veuillez d'abord rechercher et valider l'élève",
+      });
+      return;
+    }
+
+    setSelling(true);
+    try {
+      // L'élève est déjà validé par la recherche
+      const student = studentInfo;
+
+      // 2. Vendre la carte (marquer comme vendue)
+      const saleData = {
+        cardId: sellDialog.card.code, // Utiliser le code de la carte comme identifiant
+        studentId: student._id,
+        studentName: sellForm.studentName,
+        studentPhone: sellForm.studentPhone,
+        paymentMethod: sellForm.paymentMethod,
+        notes: sellForm.notes,
+        partnerId: me._id,
+        saleAmount: sellDialog.card.price,
+      };
+
+      const saleResult = await API.post("/payments/partners/sell-card", saleData);
+
+      // 3. Créer la carte dans l'interface de l'élève
+      const studentCardData = {
+        code: sellDialog.card.code,
+        price: sellDialog.card.price,
+        status: "en_attente", // L'élève doit activer
+        serialNumber: sellDialog.card.serialNumber,
+        batchId: sellDialog.card.batchId,
+        purchaseDate: new Date().toISOString(),
+        partnerName: me.fullName,
+        partnerPhone: me.phone,
+        saleId: saleResult.data.saleId,
+      };
+
+      await API.post(`/users/${student._id}/cards`, studentCardData);
+
+      // 4. Envoyer SMS à l'élève
+      const smsMessage = `Votre carte Fahimta a ete envoyee. Code: ${sellDialog.card.code}`;
+
+      await API.post(`/payments/partners/send-sms-to-student`, {
+        studentId: student._id,
+        message: smsMessage,
+      });
+
+      setSnackbar({
+        open: true,
+        message: `✅ Carte vendue! SMS envoyé à ${sellForm.studentName} (${sellForm.studentPhone})`,
+      });
+
+      handleCloseSellDialog();
+      
+      // Recharger les données du partenaire
+      window.location.reload();
+      
+    } catch (error) {
+      console.error("Erreur vente:", error);
+      setSnackbar({
+        open: true,
+        message: `❌ Erreur lors de la vente: ${error.response?.data?.message || error.message}`,
+      });
+    } finally {
+      setSelling(false);
+    }
+  }, [sellDialog.card, sellForm, handleCloseSellDialog, me]);
+
+  // Cartes disponibles (non vendues)
+  const availableCardsTotal = useMemo(() => {
+    return codes.filter(c => c.status !== "sold" && c.status !== "used").length;
+  }, [codes]);
+
+  const availableCards = useMemo(() => {
+    return codes
+      .filter(c => c.status !== "sold" && c.status !== "used")
+      .slice(0, 6) // Afficher seulement 6 cartes pour éviter l'encombrement
+      .map(c => ({
+        id: c._id || c.id,
+        code: c.code,
+        codeMasked: c.codeMasked ?? maskCode(c.code),
+        price: c.faceValueCfa || faceValue,
+        status: c.status === "assigned" ? "disponible" : c.status,
+        serialNumber: c._id || c.id,
+        batchId: c.batchId,
+        assignedDate: c.assignedAt,
+      }));
+  }, [codes, faceValue]);
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "disponible":
+      case "available":
+        return { color: "success", icon: CheckCircleIcon };
+      case "assigned":
+        return { color: "info", icon: ScheduleIcon };
+      case "sold":
+        return { color: "warning", icon: ShoppingCartRoundedIcon };
+      case "used":
+        return { color: "success", icon: CheckCircleIcon };
+      default:
+        return { color: "default", icon: CheckCircleIcon };
+    }
+  };
+
   // ————— UI Components —————
+  
+  // Composant pour afficher une carte individuelle
+  const PartnerCardItem = ({ card }) => {
+    const statusInfo = getStatusColor(card.status);
+    const StatusIcon = statusInfo.icon;
+
+    return (
+      <Box
+        sx={{
+          maxWidth: 400,
+          p: 3,
+          backgroundColor: "#FFFFFF",
+          border: "2px solid #000",
+          borderRadius: 1,
+          boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+          position: "relative",
+          transition: "transform 0.2s ease-in-out",
+          "&:hover": {
+            transform: "translateY(-2px)",
+            boxShadow: "0 6px 20px rgba(0,0,0,0.2)",
+          },
+        }}
+      >
+        {/* En-tête FAHIMTA */}
+        <Typography
+          variant="h4"
+          fontWeight={900}
+          textAlign="center"
+          sx={{
+            color: "#000",
+            mb: 2,
+            letterSpacing: "2px",
+          }}
+        >
+          FAHIMTA
+        </Typography>
+
+        {/* Informations de la carte */}
+        <Grid container spacing={2} sx={{ mb: 2 }}>
+          <Grid item xs={8}>
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
+              <Box display="flex" alignItems="center" justifyContent="space-between">
+                <Typography variant="body2" fontWeight={700} sx={{ minWidth: 60 }}>
+                  Code :
+                </Typography>
+                <Typography 
+                  variant="body2" 
+                  sx={{ 
+                    fontFamily: "monospace",
+                    backgroundColor: "#f5f5f5",
+                    px: 1,
+                    py: 0.5,
+                    borderRadius: 0.5,
+                  }}
+                >
+                  {card.codeMasked}
+                </Typography>
+              </Box>
+              
+              <Box display="flex" alignItems="center" justifyContent="space-between">
+                <Typography variant="body2" fontWeight={700} sx={{ minWidth: 60 }}>
+                  Prix :
+                </Typography>
+                <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                  {currency(card.price)}
+                </Typography>
+              </Box>
+              
+              <Box display="flex" alignItems="center" justifyContent="space-between">
+                <Typography variant="body2" fontWeight={700} sx={{ minWidth: 60 }}>
+                  Statut :
+                </Typography>
+                <Box display="flex" alignItems="center" gap={0.5}>
+                  <StatusIcon 
+                    sx={{ 
+                      fontSize: 16, 
+                      color: `${statusInfo.color}.main` 
+                    }} 
+                  />
+                  <Typography 
+                    variant="body2" 
+                    sx={{ 
+                      color: `${statusInfo.color}.main`,
+                      fontWeight: 600,
+                      textTransform: "capitalize"
+                    }}
+                  >
+                    {card.status}
+                  </Typography>
+                </Box>
+              </Box>
+              
+              <Box display="flex" alignItems="center" justifyContent="space-between">
+                <Typography variant="body2" fontWeight={700} sx={{ minWidth: 60 }}>
+                  Lot :
+                </Typography>
+                <Typography 
+                  variant="body2" 
+                  sx={{ 
+                    fontFamily: "monospace", 
+                    fontSize: "0.75rem",
+                    backgroundColor: "#f5f5f5",
+                    px: 1,
+                    py: 0.5,
+                    borderRadius: 0.5,
+                  }}
+                >
+                  {card.batchId}
+                </Typography>
+              </Box>
+
+              {card.assignedDate && (
+                <Box display="flex" alignItems="center" justifyContent="space-between">
+                  <Typography variant="body2" fontWeight={700} sx={{ minWidth: 60 }}>
+                    Affecté le :
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {fmtDateTime(card.assignedDate)}
+                  </Typography>
+                </Box>
+              )}
+            </Box>
+          </Grid>
+
+          {/* QR Code */}
+          <Grid item xs={4}>
+            <Box
+              sx={{
+                width: 80,
+                height: 80,
+                backgroundColor: "#f5f5f5",
+                border: "1px solid #ddd",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                mx: "auto",
+                mb: 1,
+                cursor: "pointer",
+                transition: "background-color 0.2s",
+                "&:hover": {
+                  backgroundColor: "#e0e0e0",
+                }
+              }}
+              onClick={() => handleShowQR(card)}
+            >
+              <QrCodeIcon sx={{ fontSize: 40, color: "text.secondary" }} />
+            </Box>
+            <Typography variant="caption" textAlign="center" display="block" color="text.secondary">
+              Cliquez pour voir le QR
+            </Typography>
+          </Grid>
+        </Grid>
+
+        {/* Numéro de téléphone */}
+        <Typography
+          variant="body2"
+          fontWeight={700}
+          textAlign="center"
+          sx={{ mb: 1 }}
+        >
+          +227 80 64 83 83
+        </Typography>
+
+        {/* Disclaimer */}
+        <Typography
+          variant="caption"
+          textAlign="center"
+          display="block"
+          color="text.secondary"
+          sx={{ fontSize: "0.7rem" }}
+        >
+          Les cartes ne sont ni échangées, ni retournées, ni remboursées une fois
+        </Typography>
+
+        {/* Bouton Vendre */}
+        <Box sx={{ mt: 2, textAlign: "center" }}>
+          <Button
+            variant="contained"
+            color="primary"
+            size="small"
+            startIcon={<SellIcon />}
+            onClick={() => handleSellCard(card)}
+            sx={{
+              borderRadius: 2,
+              textTransform: "none",
+              fontWeight: 600,
+              px: 3,
+              py: 1,
+            }}
+          >
+            Vendre à un élève
+          </Button>
+        </Box>
+      </Box>
+    );
+  };
+
   const Hero = () => {
     const firstName = (me?.fullName || "Partenaire").split(" ")[0];
     return (
@@ -257,17 +687,107 @@ const PartnerDashboardPage = () => {
         >
           <Box className="info">
             <PhoneIphoneRoundedIcon fontSize="small" />
-            <Typography variant="body2">{me?.phone || "—"}</Typography>
+            <Typography variant="body2">{me?.phone || "Non renseigné"}</Typography>
           </Box>
           <Box className="info">
             <BusinessRoundedIcon fontSize="small" />
-            <Typography variant="body2">{me?.companyName || "—"}</Typography>
+            <Typography variant="body2">{me?.companyName || "Entreprise non renseignée"}</Typography>
           </Box>
           <Box className="info">
             <PlaceRoundedIcon fontSize="small" />
-            <Typography variant="body2">{me?.region || me?.city || "—"}</Typography>
+            <Typography variant="body2">{me?.region || me?.city || "Localisation non renseignée"}</Typography>
           </Box>
         </Stack>
+
+        {/* Section Commissions */}
+        <Box sx={{ mt: 2, p: 2, bgcolor: alpha("#fff", 0.1), borderRadius: 2, border: `1px solid ${alpha("#fff", 0.2)}` }}>
+          <Typography variant="h6" sx={{ mb: 1.5, fontWeight: 700, fontSize: "1.1rem" }}>
+            💰 Commissions
+          </Typography>
+          
+          {(!me?.commissionDefaultCfa || me.commissionDefaultCfa === 0) && (
+            <Alert severity="warning" sx={{ mb: 2, bgcolor: alpha("#FF9800", 0.1), color: "#fff" }}>
+              ⚠️ Aucune commission configurée. Contactez l'administrateur pour définir votre commission par carte.
+            </Alert>
+          )}
+          
+          {me?.commissionDefaultCfa > 0 && summary.commissionTotal === 0 && summary.sold > 0 && (
+            <Alert severity="info" sx={{ mb: 2, bgcolor: alpha("#2196F3", 0.1), color: "#fff" }}>
+              💡 Vous avez des cartes vendues mais sans commission. 
+              <Button 
+                size="small" 
+                variant="contained" 
+                onClick={async () => {
+                  try {
+                    const response = await API.post("/payments/partners/recalculate-commissions");
+                    setSnackbar({
+                      open: true,
+                      message: `✅ ${response.data.message} - ${response.data.totalCommission} FCFA ajoutés`,
+                    });
+                    // Recharger les données
+                    window.location.reload();
+                  } catch (error) {
+                    setSnackbar({
+                      open: true,
+                      message: `❌ Erreur: ${error.response?.data?.message || error.message}`,
+                    });
+                  }
+                }}
+                sx={{ ml: 1, fontSize: "0.75rem" }}
+              >
+                Recalculer
+              </Button>
+            </Alert>
+          )}
+          <Grid container spacing={2}>
+            <Grid item xs={6} sm={3}>
+              <Box sx={{ textAlign: "center" }}>
+                <Typography variant="h4" sx={{ fontWeight: 800, color: "#4CAF50" }}>
+                  {currency(summary.commissionTotal)}
+                </Typography>
+                <Typography variant="caption" sx={{ opacity: 0.9 }}>
+                  Commissions cumulées
+                </Typography>
+                {me?.commissionDefaultCfa > 0 && (
+                  <Typography variant="caption" sx={{ opacity: 0.7, display: "block", mt: 0.5 }}>
+                    ({currency(me.commissionDefaultCfa)} / carte)
+                  </Typography>
+                )}
+              </Box>
+            </Grid>
+            <Grid item xs={6} sm={3}>
+              <Box sx={{ textAlign: "center" }}>
+                <Typography variant="h4" sx={{ fontWeight: 800, color: "#2196F3" }}>
+                  {summary.activated}
+                </Typography>
+                <Typography variant="caption" sx={{ opacity: 0.9 }}>
+                  Cartes activées
+                </Typography>
+              </Box>
+            </Grid>
+            <Grid item xs={6} sm={3}>
+              <Box sx={{ textAlign: "center" }}>
+                <Typography variant="h4" sx={{ fontWeight: 800, color: "#FF9800" }}>
+                  {summary.sold}
+                </Typography>
+                <Typography variant="caption" sx={{ opacity: 0.9 }}>
+                  Cartes vendues
+                </Typography>
+              </Box>
+            </Grid>
+            <Grid item xs={6} sm={3}>
+              <Box sx={{ textAlign: "center" }}>
+                <Typography variant="h4" sx={{ fontWeight: 800, color: "#9C27B0" }}>
+                  {summary.remaining}
+                </Typography>
+                <Typography variant="caption" sx={{ opacity: 0.9 }}>
+                  Cartes restantes
+                </Typography>
+              </Box>
+            </Grid>
+          </Grid>
+        </Box>
+
         <Typography variant="caption" sx={{ mt: 1.25, display: "block", opacity: 0.9 }}>
           Créé le {fmtDateTime(me?.createdAt)} · Dernière connexion {fmtDateTime(me?.lastLoginAt)}
         </Typography>
@@ -559,7 +1079,6 @@ const PartnerDashboardPage = () => {
                     title="Activations"
                     value={summary.activated}
                     chip={`${summary.activationRate.toFixed(0)}%`}
-                    subtitle="Taux d’activation / vendues"
                     paletteKey="success"
                     icon={<RocketLaunchRoundedIcon fontSize="small" />}
                   />
@@ -568,13 +1087,53 @@ const PartnerDashboardPage = () => {
                   <StatCard
                     title="Commissions cumulées"
                     value={currency(summary.commissionTotal)}
-                    subtitle={`~ ${currency(summary.commissionPerActivation)} / activation`}
-                    chip="Cumul"
                     paletteKey="secondary"
                     icon={<SavingsRoundedIcon fontSize="small" />}
                   />
                 </Grid>
               </Grid>
+
+              {/* Section Cartes affectées */}
+              {availableCards.length > 0 && (
+                <Paper
+                  variant="outlined"
+                  sx={{
+                    p: { xs: 2, sm: 2.5 },
+                    borderRadius: 3,
+                    bgcolor: toneBg(theme, "primary"),
+                    borderColor: toneBorder(theme, "primary"),
+                  }}
+                >
+                  <Stack direction="row" alignItems="center" spacing={1} mb={1.5}>
+                    <CreditCardRoundedIcon />
+                    <Typography variant="h6" fontWeight="bold" sx={{ fontSize: { xs: 16, sm: 18 } }}>
+                      Mes cartes affectées
+                    </Typography>
+                    <Chip 
+                      size="small" 
+                      label={`${availableCardsTotal} disponibles`} 
+                      color="primary" 
+                      sx={{ ml: "auto" }}
+                    />
+                  </Stack>
+                  <Divider sx={{ mb: 2 }} />
+                  
+                  {/* Liste des cartes */}
+                  <Grid container spacing={3} justifyContent="center">
+                    {availableCards.map((card) => (
+                      <Grid item key={card.id}>
+                        <PartnerCardItem card={card} />
+                      </Grid>
+                    ))}
+                  </Grid>
+                  
+                  <Box sx={{ textAlign: "center", mt: 2 }}>
+                    <Typography variant="body2" color="text.secondary">
+                      💡 Cliquez sur l'icône 👁️ pour afficher/masquer les codes complets
+                    </Typography>
+                  </Box>
+                </Paper>
+              )}
 
               {/* Progression activations – bloc coloré */}
               <Paper
@@ -625,16 +1184,6 @@ const PartnerDashboardPage = () => {
                     onClick={() => navigate("/admin/partner-codes")}
                   >
                     Voir mes cartes
-                  </Button>
-                  <Button variant="outlined" startIcon={<DownloadRoundedIcon />} onClick={onExportCSV}>
-                    Exporter (CSV)
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    startIcon={<AddShoppingCartRoundedIcon />}
-                    onClick={() => alert("Demande de réassort envoyée ✅")}
-                  >
-                    Demander réassort
                   </Button>
                 </Stack>
               </Paper>
@@ -723,23 +1272,230 @@ const PartnerDashboardPage = () => {
           )}
         </Stack>
 
-        {/* FAB "Réassort" – style app mobile */}
-        {!loading && !err && (
-          <Fab
-            color="primary"
-            aria-label="réassort"
-            onClick={() => alert("Demande de réassort envoyée ✅")}
-            sx={{
-              position: "fixed",
-              bottom: { xs: 20, md: 28 },
-              right: { xs: 20, md: 32 },
-              boxShadow: `0 12px 24px ${alpha(theme.palette.primary.main, 0.3)}`,
-            }}
-          >
-            <AddShoppingCartRoundedIcon />
-          </Fab>
-        )}
       </Box>
+
+      {/* Snackbar pour les notifications */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        message={snackbar.message}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      />
+
+      {/* Modal QR Code */}
+      <Dialog
+        open={qrDialog.open}
+        onClose={handleCloseQR}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>
+          QR Code - {qrDialog.card?.code || "Carte"}
+        </DialogTitle>
+        <DialogContent>
+          <Box sx={{ textAlign: "center", py: 2 }}>
+            <Box
+              sx={{
+                width: 200,
+                height: 200,
+                backgroundColor: "#f5f5f5",
+                border: "2px solid #ddd",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                mx: "auto",
+                mb: 2,
+              }}
+            >
+              <Typography variant="h6" color="text.secondary">
+                QR Code
+              </Typography>
+            </Box>
+            <Typography variant="body2" color="text.secondary">
+              Scannez ce code pour accéder à votre carte
+            </Typography>
+            {qrDialog.card && (
+              <Box sx={{ mt: 2, p: 2, backgroundColor: "#f5f5f5", borderRadius: 1 }}>
+                <Typography variant="body2" fontWeight={700}>
+                  Informations de la carte:
+                </Typography>
+                <Typography variant="body2">
+                  Code: {qrDialog.card.codeMasked}
+                </Typography>
+                <Typography variant="body2">
+                  Prix: {currency(qrDialog.card.price)}
+                </Typography>
+                <Typography variant="body2">
+                  Statut: {qrDialog.card.status}
+                </Typography>
+                <Typography variant="body2">
+                  Lot: {qrDialog.card.batchId}
+                </Typography>
+              </Box>
+            )}
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseQR}>Fermer</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Modal Vendre une carte */}
+      <Dialog
+        open={sellDialog.open}
+        onClose={handleCloseSellDialog}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>
+          <Box display="flex" alignItems="center" gap={1}>
+            <SellIcon color="primary" />
+            Vendre une carte
+          </Box>
+        </DialogTitle>
+        <DialogContent>
+          {sellDialog.card && (
+            <Box sx={{ mb: 3 }}>
+              <Alert severity="info" sx={{ mb: 2 }}>
+                <Typography variant="body2">
+                  <strong>Carte:</strong> {sellDialog.card.codeMasked}
+                </Typography>
+                <Typography variant="body2">
+                  <strong>Prix:</strong> {currency(sellDialog.card.price)}
+                </Typography>
+              </Alert>
+            </Box>
+          )}
+
+          <Stack spacing={2} sx={{ mt: 1 }}>
+            <TextField
+              label="Numéro de téléphone de l'élève"
+              value={sellForm.studentPhone.replace("+227", "")}
+              onChange={(e) => {
+                let input = e.target.value.replace(/\D/g, ""); // Garder seulement les chiffres
+                if (input.length > 8) input = input.slice(0, 8); // Max 8 chiffres
+                const phone = "+227" + input;
+                handleSellFormChange("studentPhone", phone);
+              }}
+              onBlur={(e) => {
+                const phone = sellForm.studentPhone;
+                if (phone.length >= 12) { // +227 + 8 chiffres = 12
+                  searchStudentByPhone(phone);
+                }
+              }}
+              fullWidth
+              required
+              placeholder="90 12 34 56"
+              InputProps={{
+                startAdornment: (
+                  <Typography variant="body1" sx={{ mr: 1, color: "text.secondary" }}>
+                    +227
+                  </Typography>
+                ),
+                endAdornment: loadingStudent ? <CircularProgress size={20} /> : null,
+              }}
+              helperText="Saisissez les 8 chiffres du numéro (le préfixe +227 est automatique)"
+            />
+
+            {/* Bouton de recherche manuel */}
+            <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={() => searchStudentByPhone(sellForm.studentPhone)}
+                disabled={!sellForm.studentPhone || sellForm.studentPhone.length < 12 || loadingStudent}
+                startIcon={<PersonAddIcon />}
+              >
+                {loadingStudent ? "Recherche..." : "Rechercher l'élève"}
+              </Button>
+              {studentInfo && (
+                <Button
+                  variant="text"
+                  size="small"
+                  onClick={() => {
+                    setStudentInfo(null);
+                    setSellForm(prev => ({ ...prev, studentName: "" }));
+                  }}
+                  color="error"
+                >
+                  Effacer
+                </Button>
+              )}
+            </Box>
+
+            {/* Affichage des informations de l'élève trouvé */}
+            {studentInfo && (
+              <Alert severity="success" sx={{ mb: 2 }}>
+                <Typography variant="body2" fontWeight={600}>
+                  ✅ Élève trouvé et validé
+                </Typography>
+                <Typography variant="body2">
+                  <strong>Nom:</strong> {studentInfo.fullName}
+                </Typography>
+                <Typography variant="body2">
+                  <strong>Téléphone:</strong> {studentInfo.phone}
+                </Typography>
+                <Typography variant="body2">
+                  <strong>Email:</strong> {studentInfo.email || "Non renseigné"}
+                </Typography>
+                <Typography variant="body2">
+                  <strong>Statut:</strong> {studentInfo.isActive ? "Actif" : "Inactif"}
+                </Typography>
+              </Alert>
+            )}
+
+            <TextField
+              label="Nom complet de l'élève"
+              value={sellForm.studentName}
+              onChange={(e) => handleSellFormChange("studentName", e.target.value)}
+              fullWidth
+              required
+              placeholder="Sera rempli automatiquement"
+              disabled={!!studentInfo}
+              helperText={studentInfo ? "Nom récupéré automatiquement" : "Saisissez le nom si l'élève n'est pas trouvé"}
+            />
+
+            <TextField
+              label="Méthode de paiement"
+              value={sellForm.paymentMethod}
+              onChange={(e) => handleSellFormChange("paymentMethod", e.target.value)}
+              fullWidth
+              select
+              SelectProps={{
+                native: true,
+              }}
+            >
+              <option value="cash">💵 Espèces</option>
+              <option value="mobile_money">📱 Mobile Money</option>
+              <option value="bank_transfer">🏦 Virement bancaire</option>
+            </TextField>
+
+            <TextField
+              label="Notes (optionnel)"
+              value={sellForm.notes}
+              onChange={(e) => handleSellFormChange("notes", e.target.value)}
+              fullWidth
+              multiline
+              rows={3}
+              placeholder="Informations supplémentaires sur la vente..."
+            />
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseSellDialog} disabled={selling}>
+            Annuler
+          </Button>
+          <Button 
+            onClick={handleConfirmSale} 
+            variant="contained" 
+            disabled={selling}
+            startIcon={selling ? <CircularProgress size={16} /> : <SellIcon />}
+          >
+            {selling ? "Vente en cours..." : "Confirmer la vente"}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </PageLayout>
   );
 };

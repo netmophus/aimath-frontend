@@ -159,11 +159,13 @@ const fmtDT = (d) => (d ? new Date(d).toLocaleString("fr-FR") : "—");
 const statusChip = (s) => {
   if (s === "used") return <Chip size="small" label="Utilisée" color="success" />;
   if (s === "activated") return <Chip size="small" label="Activée" color="info" />;
+  if (s === "sold") return <Chip size="small" label="Vendue" color="warning" />;
+  if (s === "assigned") return <Chip size="small" label="Disponible" color="primary" />;
   return <Chip size="small" label="Générée" />;
 };
 
 export default function PartnerCodesPage() {
-  const [status, setStatus] = useState("all");
+  const [status, setStatus] = useState("activated"); // Par défaut, afficher les cartes activées
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
   const [items, setItems] = useState([]);
@@ -234,9 +236,10 @@ export default function PartnerCodesPage() {
               onChange={(e) => setStatus(e.target.value)}
               sx={{ minWidth: 200 }}
             >
+              <MenuItem value="available">Disponibles (non vendues)</MenuItem>
+              <MenuItem value="sold">Vendues</MenuItem>
+              <MenuItem value="used">Utilisées</MenuItem>
               <MenuItem value="all">Tous</MenuItem>
-              <MenuItem value="activated">Activés</MenuItem>
-              <MenuItem value="used">Utilisés</MenuItem>
             </TextField>
 
             <TextField

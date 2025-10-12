@@ -1,5 +1,5 @@
 
-import React, { useContext, useMemo, useState } from "react";
+import React, { useContext, useMemo, useState, useCallback } from "react";
 
 
 
@@ -32,7 +32,7 @@ const Navbar = () => {
   const navigate = useNavigate();
 
   const theme = useTheme();
-  const isSmallScreen = useMediaQuery(theme.breakpoints.down("md"));
+  const isSmallScreen = useMediaQuery(theme.breakpoints.down("lg"));
 
   const [openDrawer, setOpenDrawer] = useState(false);
 
@@ -40,10 +40,10 @@ const Navbar = () => {
 
 
 
-  const handleLogout = () => {
+  const handleLogout = useCallback(() => {
     logout();
     navigate("/login");
-  };
+  }, [logout, navigate]);
 
   const premiumActive = useMemo(() => hasActiveSub(user), [user]);
 
@@ -93,11 +93,12 @@ const Navbar = () => {
     // 👤 Élève non abonné
     return [
       { label: "Accueil", path: "/" },
-      { label: "Fahimta Gratuit", path: "/gratuit" },
-        { label: "Nos Prix", path: "/pricing" },
+      { label: "Gratuit", path: "/gratuit" },
+      { label: "💳 Mes cartes", path: "/mes-achats-cartes" },
+      { label: "Prix", path: "/pricing" },
       { label: "Déconnexion", action: handleLogout },
     ];
-  }, [user, premiumActive]);
+  }, [user, premiumActive, handleLogout]);
 
   return (
     <>
@@ -122,14 +123,30 @@ const Navbar = () => {
    position="fixed"
    sx={{ bgcolor: "#1976D2", boxShadow: "none" }}
 >
-        <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
-          <Box display="flex" alignItems="center" gap={1}>
-            <SchoolIcon sx={{ mr: 1, color: "#FFF" }} />
+        <Toolbar sx={{ 
+          display: "flex", 
+          justifyContent: "space-between", 
+          alignItems: "center",
+          px: { xs: 1, sm: 2, md: 3 },
+          minHeight: { xs: 56, sm: 64, md: 64 }
+        }}>
+          <Box display="flex" alignItems="center" gap={{ xs: 0.5, sm: 1 }}>
+            <SchoolIcon sx={{ 
+              mr: { xs: 0.5, sm: 1 }, 
+              color: "#FFF",
+              fontSize: { xs: 24, sm: 28, md: 32 }
+            }} />
             <Typography
               variant="h6"
               component={Link}
               to="/"
-              sx={{ color: "#FFF", textDecoration: "none", fontWeight: "bold" }}
+              sx={{ 
+                color: "#FFF", 
+                textDecoration: "none", 
+                fontWeight: "bold",
+                fontSize: { xs: "1rem", sm: "1.25rem", md: "1.5rem" },
+                letterSpacing: { xs: "0.5px", sm: "1px", md: "1.5px" }
+              }}
             >
               FAHIMTA
             </Typography>
@@ -137,14 +154,37 @@ const Navbar = () => {
 
           {/* Menu desktop */}
           {!isSmallScreen && (
-            <Box>
+            <Box sx={{ display: "flex", alignItems: "center", gap: { xs: 0.5, sm: 1 } }}>
               {menuItems.map((item, idx) =>
                 item.path ? (
-                  <Button key={idx} sx={{ color: "#FFF" }} component={Link} to={item.path}>
+                  <Button 
+                    key={idx} 
+                    sx={{ 
+                      color: "#FFF", 
+                      fontSize: { xs: "0.75rem", sm: "0.875rem", md: "0.875rem" },
+                      minWidth: "auto",
+                      px: { xs: 1, sm: 1.5, md: 2 },
+                      textTransform: "uppercase",
+                      fontWeight: 600
+                    }} 
+                    component={Link} 
+                    to={item.path}
+                  >
                     {item.label}
                   </Button>
                 ) : (
-                  <Button key={idx} sx={{ color: "#FFF" }} onClick={item.action}>
+                  <Button 
+                    key={idx} 
+                    sx={{ 
+                      color: "#FFF", 
+                      fontSize: { xs: "0.75rem", sm: "0.875rem", md: "0.875rem" },
+                      minWidth: "auto",
+                      px: { xs: 1, sm: 1.5, md: 2 },
+                      textTransform: "uppercase",
+                      fontWeight: 600
+                    }} 
+                    onClick={item.action}
+                  >
                     {item.label}
                   </Button>
                 )
@@ -177,30 +217,61 @@ const Navbar = () => {
   <Box
     display="flex"
     alignItems="center"
-    gap={1.25}
-    sx={{ backgroundColor: "#1565C0", color: "#FFF", px: 2, py: 1, borderRadius: 2, ml: 2 }}
+    gap={{ xs: 0.75, sm: 1, md: 1.25 }}
+    sx={{ 
+      backgroundColor: "#1565C0", 
+      color: "#FFF", 
+      px: { xs: 1, sm: 1.5, md: 2 }, 
+      py: 1, 
+      borderRadius: 2, 
+      ml: { xs: 1, sm: 1.5, md: 2 },
+      minWidth: "fit-content"
+    }}
   >
     <Tooltip title="Profil utilisateur">
-      <Avatar sx={{ bgcolor: "#FFB300", width: 40, height: 40 }}>
+      <Avatar sx={{ 
+        bgcolor: "#FFB300", 
+        width: { xs: 32, sm: 36, md: 40 }, 
+        height: { xs: 32, sm: 36, md: 40 },
+        fontSize: { xs: "0.75rem", sm: "0.875rem", md: "1rem" }
+      }}>
         {user?.fullName ? user.fullName.split(" ").map((n) => n[0]).join("").toUpperCase() : "U"}
       </Avatar>
     </Tooltip>
 
-    <Box mr={1}>
-      <Typography variant="body1" sx={{ fontWeight: "bold" }}>
+    <Box sx={{ 
+      mr: { xs: 0.5, sm: 0.75, md: 1 },
+      display: { xs: "none", sm: "block" } // Cache sur très petits écrans
+    }}>
+      <Typography 
+        variant="body1" 
+        sx={{ 
+          fontWeight: "bold",
+          fontSize: { xs: "0.75rem", sm: "0.875rem", md: "1rem" },
+          lineHeight: 1.2
+        }}
+      >
         {user?.fullName}
       </Typography>
-      <Typography variant="body2" sx={{ fontSize: "0.85rem" }}>
+      <Typography 
+        variant="body2" 
+        sx={{ 
+          fontSize: { xs: "0.7rem", sm: "0.75rem", md: "0.85rem" },
+          lineHeight: 1.2
+        }}
+      >
         {user?.phone}
       </Typography>
     </Box>
 
     {/* ✅ Badge Premium desktop */}
     {premiumActive && (
-      <PremiumBadge
-        subscriptionEnd={user?.subscriptionEnd}
-        onClick={() => navigate("/pricing")}
-      />
+      <Box sx={{ display: { xs: "none", sm: "block" } }}>
+        <PremiumBadge
+          subscriptionEnd={user?.subscriptionEnd}
+          onClick={() => navigate("/pricing")}
+        />
+      </Box>
     )}
   </Box>
 )}
