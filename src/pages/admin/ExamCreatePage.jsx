@@ -319,7 +319,7 @@ const ExamCreatePage = () => {
                 onChange={handleChange}
                 label="Niveau"
               >
-                {["3eme", "terminale"].map((niveau) => (
+                {["6eme", "5eme", "4eme", "3eme", "seconde", "premiere", "terminale"].map((niveau) => (
                   <MenuItem key={niveau} value={niveau}>
                     {niveau.toUpperCase()}
                   </MenuItem>
