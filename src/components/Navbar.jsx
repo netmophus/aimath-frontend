@@ -18,7 +18,7 @@ import { useTheme } from "@mui/material/styles";
 
 import { AuthContext } from "../context/AuthContext";
 
-// Lien direct vers l'APK
+
 
 
 // ✅ Abonnement actif : isSubscribed === true OU subscriptionEnd > maintenant
