@@ -41,8 +41,11 @@ const Navbar = () => {
 
 
   const handleLogout = useCallback(() => {
-    logout();
-    navigate("/login");
+    // Confirmation avant déconnexion pour éviter les déconnexions accidentelles
+    if (window.confirm("Êtes-vous sûr de vouloir vous déconnecter ?")) {
+      logout();
+      navigate("/login");
+    }
   }, [logout, navigate]);
 
   const premiumActive = useMemo(() => hasActiveSub(user), [user]);
@@ -283,7 +286,16 @@ const Navbar = () => {
       </AppBar>
 
       {/* Drawer mobile */}
-      <Drawer anchor="right" open={openDrawer} onClose={() => setOpenDrawer(false)}>
+      <Drawer 
+        anchor="right" 
+        open={openDrawer} 
+        onClose={() => setOpenDrawer(false)}
+        // Empêcher la fermeture accidentelle avec le bouton retour
+        disableEscapeKeyDown={false}
+        ModalProps={{
+          keepMounted: true, // Améliore les performances sur mobile
+        }}
+      >
         {/* Header utilisateur (mobile) */}
 {user && (
   <Box sx={{ px: 2, pt: 2, pb: 1.5, display: "flex", alignItems: "center", gap: 1.25 }}>

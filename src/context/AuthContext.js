@@ -76,11 +76,13 @@ export const AuthProvider = ({ children }) => {
     if (!stored) return;
     try {
       const res = await API.get("/auth/me");
-      // 🔁 MERGE (on n’écrase pas isSubscribed si /me ne le renvoie pas)
+      // 🔁 MERGE (on n'écrase pas isSubscribed si /me ne le renvoie pas)
       setUser((prev) => ({ ...prev, ...res.data }));
       console.log("🔄 User actualisé :", res.data);
     } catch (err) {
       console.error("Erreur lors du rafraîchissement du user :", err);
+      // ❌ Ne pas déconnecter automatiquement sur erreur réseau
+      // Le token peut être valide mais le serveur temporairement indisponible
     }
   };
 
