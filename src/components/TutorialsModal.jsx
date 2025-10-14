@@ -52,31 +52,31 @@ const TutorialsModal = ({ open, onClose }) => {
     }
   };
 
-  // Extraire l'ID YouTube du lien complet ou utiliser l'ID tel quel
-  const extractYoutubeId = (youtubeIdOrUrl) => {
-    if (!youtubeIdOrUrl) return "";
+  // Fonction pour extraire l'ID Vimeo depuis différents formats
+  const extractVimeoId = (vimeoUrlOrId) => {
+    if (!vimeoUrlOrId) return "";
     
-    // Si c'est déjà un ID simple (11 caractères alphanumériques)
-    if (/^[a-zA-Z0-9_-]{11}$/.test(youtubeIdOrUrl)) {
-      return youtubeIdOrUrl;
+    // Si c'est déjà un ID simple (que des chiffres)
+    if (/^\d+$/.test(vimeoUrlOrId)) {
+      return vimeoUrlOrId;
     }
     
-    // Extraire l'ID depuis différents formats de liens YouTube
+    // Extraire l'ID depuis différents formats de liens Vimeo
     const patterns = [
-      /(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/,
-      /youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/,
-      /youtube\.com\/v\/([a-zA-Z0-9_-]{11})/,
+      /vimeo\.com\/(\d+)/,              // https://vimeo.com/123456789
+      /vimeo\.com\/video\/(\d+)/,       // https://vimeo.com/video/123456789
+      /player\.vimeo\.com\/video\/(\d+)/, // https://player.vimeo.com/video/123456789
     ];
     
     for (const pattern of patterns) {
-      const match = youtubeIdOrUrl.match(pattern);
+      const match = vimeoUrlOrId.match(pattern);
       if (match && match[1]) {
         return match[1];
       }
     }
     
     // Si aucun pattern ne correspond, retourner tel quel
-    return youtubeIdOrUrl;
+    return vimeoUrlOrId;
   };
 
   // Mapper les icônes
@@ -356,7 +356,7 @@ const TutorialsModal = ({ open, onClose }) => {
               {selectedVideo.description}
             </Typography>
 
-            {/* Vidéo YouTube responsive */}
+            {/* Lecteur vidéo Vimeo */}
             <Box
               sx={{
                 position: "relative",
@@ -368,6 +368,7 @@ const TutorialsModal = ({ open, onClose }) => {
                 mx: "auto",
               }}
             >
+              {/* Vidéo Vimeo uniquement */}
               <iframe
                 style={{
                   position: "absolute",
@@ -378,9 +379,9 @@ const TutorialsModal = ({ open, onClose }) => {
                   border: "none",
                   borderRadius: "8px",
                 }}
-                src={`https://www.youtube.com/embed/${extractYoutubeId(selectedVideo.youtubeId)}?autoplay=1`}
+                src={`https://player.vimeo.com/video/${extractVimeoId(selectedVideo.videoUrl)}?autoplay=1&title=0&byline=0&portrait=0`}
                 title={selectedVideo.title}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allow="autoplay; fullscreen; picture-in-picture"
                 allowFullScreen
               />
             </Box>

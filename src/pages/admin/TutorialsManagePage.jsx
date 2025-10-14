@@ -43,7 +43,8 @@ const TutorialsManagePage = () => {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    youtubeId: "",
+    videoUrl: "",
+    videoType: "vimeo",
     icon: "HelpOutline",
     color: "#2196F3",
     order: 0,
@@ -72,6 +73,10 @@ const TutorialsManagePage = () => {
     { value: "#E91E63", label: "Rose" },
     { value: "#673AB7", label: "Violet foncé" },
     { value: "#009688", label: "Turquoise" },
+  ];
+
+  const videoTypeOptions = [
+    { value: "vimeo", label: "Vimeo (ID ou lien)" },
   ];
 
   // Charger les tutoriels
@@ -104,7 +109,8 @@ const TutorialsManagePage = () => {
       setFormData({
         title: tutorial.title,
         description: tutorial.description,
-        youtubeId: tutorial.youtubeId,
+        videoUrl: tutorial.videoUrl,
+        videoType: tutorial.videoType || "vimeo",
         icon: tutorial.icon,
         color: tutorial.color,
         order: tutorial.order,
@@ -116,7 +122,8 @@ const TutorialsManagePage = () => {
       setFormData({
         title: "",
         description: "",
-        youtubeId: "",
+        videoUrl: "",
+        videoType: "vimeo",
         icon: "HelpOutline",
         color: "#2196F3",
         order: tutorials.length,
@@ -134,7 +141,7 @@ const TutorialsManagePage = () => {
 
   const handleSubmit = async () => {
     try {
-      if (!formData.title || !formData.description || !formData.youtubeId) {
+      if (!formData.title || !formData.description || !formData.videoUrl) {
         showMessage("Tous les champs sont requis", "warning");
         return;
       }
@@ -208,7 +215,8 @@ const TutorialsManagePage = () => {
                 <TableCell><strong>Ordre</strong></TableCell>
                 <TableCell><strong>Titre</strong></TableCell>
                 <TableCell><strong>Description</strong></TableCell>
-                <TableCell><strong>Lien YouTube</strong></TableCell>
+                <TableCell><strong>Type</strong></TableCell>
+                <TableCell><strong>Lien vidéo</strong></TableCell>
                 <TableCell><strong>Icône</strong></TableCell>
                 <TableCell><strong>Couleur</strong></TableCell>
                 <TableCell><strong>Statut</strong></TableCell>
@@ -218,7 +226,7 @@ const TutorialsManagePage = () => {
             <TableBody>
               {tutorials.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} align="center">
+                  <TableCell colSpan={9} align="center">
                     Aucun tutoriel. Cliquez sur "Ajouter" pour créer le premier.
                   </TableCell>
                 </TableRow>
@@ -229,13 +237,20 @@ const TutorialsManagePage = () => {
                     <TableCell>{tutorial.title}</TableCell>
                     <TableCell>{tutorial.description.substring(0, 50)}...</TableCell>
                     <TableCell>
+                      <Chip 
+                        label="Vimeo"
+                        size="small"
+                        color="secondary"
+                      />
+                    </TableCell>
+                    <TableCell>
                       <a
-                        href={tutorial.youtubeId.startsWith('http') ? tutorial.youtubeId : `https://youtu.be/${tutorial.youtubeId}`}
+                        href={tutorial.videoUrl}
                         target="_blank"
                         rel="noopener noreferrer"
                         style={{ fontSize: '12px' }}
                       >
-                        {tutorial.youtubeId.length > 30 ? tutorial.youtubeId.substring(0, 30) + '...' : tutorial.youtubeId}
+                        {tutorial.videoUrl && tutorial.videoUrl.length > 30 ? tutorial.videoUrl.substring(0, 30) + '...' : tutorial.videoUrl || 'URL non définie'}
                       </a>
                     </TableCell>
                     <TableCell>{tutorial.icon}</TableCell>
@@ -312,12 +327,13 @@ const TutorialsManagePage = () => {
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               />
+              {/* Type fixé à Vimeo - pas besoin de sélecteur */}
               <TextField
-                label="Lien YouTube"
+                label="Lien Vimeo"
                 fullWidth
-                value={formData.youtubeId}
-                onChange={(e) => setFormData({ ...formData, youtubeId: e.target.value })}
-                helperText="Collez le lien complet: https://youtu.be/gLZ0rhWfyf8?si=... (ou juste l'ID)"
+                value={formData.videoUrl}
+                onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })}
+                helperText="Ex: https://vimeo.com/123456789 ou juste 123456789"
               />
               <TextField
                 select
