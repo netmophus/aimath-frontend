@@ -34,7 +34,9 @@ const [form, setForm] = useState({
   title: "",
   description: "",
   imageFile: null,
-  bookFile: null,              // ✅ ← à ajouter ici
+  bookFile: null,
+  imageSupabaseUrl: "",        // ✅ Lien Supabase pour la couverture
+  bookSupabaseUrl: "",         // ✅ Lien Supabase pour le PDF
   existingImageName: "",
   level: "",
   classe: "",
@@ -153,8 +155,19 @@ const handleSubmit = async () => {
     formData.append("classe", form.classe);
     formData.append("serie", form.serie);
 
-    if (form.imageFile) formData.append("image", form.imageFile);
-    if (form.bookFile) formData.append("file", form.bookFile); // ✅ Ajout ici
+    // ✅ Gestion des images : soit upload, soit lien Supabase
+    if (form.imageFile) {
+      formData.append("cover", form.imageFile);
+    } else if (form.imageSupabaseUrl) {
+      formData.append("imageSupabaseUrl", form.imageSupabaseUrl);
+    }
+
+    // ✅ Gestion des fichiers : soit upload, soit lien Supabase
+    if (form.bookFile) {
+      formData.append("pdf", form.bookFile);
+    } else if (form.bookSupabaseUrl) {
+      formData.append("bookSupabaseUrl", form.bookSupabaseUrl);
+    }
 
     await API.post("/admin/books", formData, {
       headers: { "Content-Type": "multipart/form-data" },
@@ -165,7 +178,9 @@ const handleSubmit = async () => {
       title: "",
       description: "",
       imageFile: null,
-      bookFile: null, // ✅ Réinitialiser aussi
+      bookFile: null,
+      imageSupabaseUrl: "",
+      bookSupabaseUrl: "",
       level: form.level,
       classe: form.classe,
       serie: form.serie,
@@ -207,7 +222,9 @@ const handleEditBook = (book) => {
     description: book.description,
     imageFile: null,
     existingImageName: lastPart,
-    bookFile: null, // ✅ Ajouté ici
+    bookFile: null,
+    imageSupabaseUrl: "",
+    bookSupabaseUrl: "",
     level: book.level || "",
     classe: book.classe || "",
     serie: book.serie || "",
@@ -259,8 +276,19 @@ const handleUpdateBook = async () => {
     formData.append("classe", form.classe);
     formData.append("serie", form.serie);
 
-    if (form.imageFile) formData.append("image", form.imageFile);
-    if (form.bookFile) formData.append("file", form.bookFile); // ✅ Ajout
+    // ✅ Gestion des images : soit upload, soit lien Supabase
+    if (form.imageFile) {
+      formData.append("cover", form.imageFile);
+    } else if (form.imageSupabaseUrl) {
+      formData.append("imageSupabaseUrl", form.imageSupabaseUrl);
+    }
+
+    // ✅ Gestion des fichiers : soit upload, soit lien Supabase
+    if (form.bookFile) {
+      formData.append("pdf", form.bookFile);
+    } else if (form.bookSupabaseUrl) {
+      formData.append("bookSupabaseUrl", form.bookSupabaseUrl);
+    }
 
     await API.put(`/admin/books/${editingBookId}`, formData, {
       headers: { "Content-Type": "multipart/form-data" },
@@ -272,7 +300,9 @@ const handleUpdateBook = async () => {
       title: "",
       description: "",
       imageFile: null,
-      bookFile: null, // ✅ Réinitialisé
+      bookFile: null,
+      imageSupabaseUrl: "",
+      bookSupabaseUrl: "",
       level: form.level,
       classe: form.classe,
       serie: form.serie,
@@ -320,7 +350,7 @@ const handleDeleteBook = async (id) => {
       />
 
       <Button component="label" variant="outlined" fullWidth sx={{ mb: 2 }}>
-        Uploader une image
+        Uploader une image (Cloudinary)
         <input
           type="file"
           accept="image/*"
@@ -330,6 +360,19 @@ const handleDeleteBook = async (id) => {
           }
         />
       </Button>
+
+      <Typography variant="body2" sx={{ textAlign: 'center', my: 1 }}>OU</Typography>
+
+      <TextField
+        fullWidth
+        label="Lien Supabase de la couverture"
+        name="imageSupabaseUrl"
+        value={form.imageSupabaseUrl}
+        onChange={handleChange}
+        placeholder="https://[PROJECT_REF].supabase.co/storage/v1/object/public/..."
+        sx={{ mb: 2 }}
+      />
+
      {form.imageFile ? (
   <Box
     mt={1}
@@ -396,7 +439,7 @@ const handleDeleteBook = async (id) => {
 
 {/* 📄 Upload du fichier du livre (PDF) */}
 <Button component="label" variant="outlined" fullWidth sx={{ mb: 2 }}>
-  Uploader le fichier du livre (PDF)
+  Uploader le fichier du livre (PDF - Cloudinary)
   <input
     type="file"
     accept=".pdf"
@@ -420,6 +463,18 @@ const handleDeleteBook = async (id) => {
     <Typography variant="body2">📄 {form.bookFile.name}</Typography>
   </Box>
 )}
+
+<Typography variant="body2" sx={{ textAlign: 'center', my: 1 }}>OU</Typography>
+
+<TextField
+  fullWidth
+  label="Lien Supabase du fichier PDF"
+  name="bookSupabaseUrl"
+  value={form.bookSupabaseUrl}
+  onChange={handleChange}
+  placeholder="https://[PROJECT_REF].supabase.co/storage/v1/object/public/..."
+  sx={{ mb: 2 }}
+/>
 
 
 

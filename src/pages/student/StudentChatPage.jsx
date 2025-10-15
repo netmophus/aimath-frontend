@@ -755,16 +755,30 @@ const StudentChatPage = () => {
           {msg.text && <Typography variant="body2" sx={{ whiteSpace: "pre-wrap" }}>{msg.text}</Typography>}
           {msg.fileUrl && (
             <Box mt={0.5}>
+              {/* ✅ Images en priorité */}
+              {msg.fileType === "image" && (
+                <img src={msg.fileUrl} alt="photo" style={{ maxWidth: "100%", borderRadius: 8 }} />
+              )}
+              
+              {/* ✅ Vidéos */}
               {msg.fileType === "video" && (
                 <video src={msg.fileUrl} controls style={{ maxWidth: "100%", borderRadius: 6 }} />
               )}
-              {msg.fileType?.startsWith("audio") && <audio controls src={msg.fileUrl} style={{ width: "100%" }} />}
+              
+              {/* ✅ Audio */}
+              {(msg.fileType === "audio" || msg.fileType?.startsWith("audio")) && (
+                <audio controls src={msg.fileUrl} style={{ width: "100%" }} />
+              )}
+              
+              {/* ✅ PDF */}
               {msg.fileType === "pdf" && (
                 <a href={msg.fileUrl} target="_blank" rel="noreferrer" style={{ color: mine ? "#fff" : undefined }}>
                   📄 Ouvrir le PDF
                 </a>
               )}
-              {!["pdf", "video"].includes(msg.fileType) && !msg.fileType?.startsWith("audio") && (
+              
+              {/* ✅ Fallback pour tout le reste */}
+              {!["image", "video", "audio", "pdf"].includes(msg.fileType) && (
                 <img src={msg.fileUrl} alt="pièce jointe" style={{ maxWidth: "100%", borderRadius: 8 }} />
               )}
             </Box>

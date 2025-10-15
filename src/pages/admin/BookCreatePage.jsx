@@ -23,6 +23,8 @@ const BookCreatePage = () => {
     level: "",
     badge: "gratuit",
     fileUrl: "", // 🔗 Lien Cloudinary du PDF
+    imageSupabaseUrl: "", // 🔗 Lien Supabase de la couverture
+    bookSupabaseUrl: "", // 🔗 Lien Supabase du PDF
   });
 
   const [message, setMessage] = useState("");
@@ -37,8 +39,13 @@ const BookCreatePage = () => {
     e.preventDefault();
     setMessage("");
 
-    if (!cover || !form.fileUrl || !form.fileUrl.startsWith("https://res.cloudinary.com")) {
-      setMessage("❌ Veuillez charger une couverture et fournir un lien PDF valide (Cloudinary).");
+    // ✅ Vérification : soit upload, soit lien Supabase pour la couverture
+    const hasCoverImage = cover || form.imageSupabaseUrl;
+    // ✅ Vérification : soit upload, soit lien Supabase pour le PDF
+    const hasBookFile = form.fileUrl || form.bookSupabaseUrl;
+
+    if (!hasCoverImage || !hasBookFile) {
+      setMessage("❌ Veuillez charger une couverture ET fournir un fichier PDF (via upload ou lien).");
       return;
     }
 
@@ -49,8 +56,20 @@ const BookCreatePage = () => {
       formData.append("description", form.description);
       formData.append("level", form.level);
       formData.append("badge", form.badge);
-      formData.append("fileUrl", form.fileUrl); // ✅ lien PDF Cloudinary
-      formData.append("cover", cover); // ✅ upload image
+
+      // ✅ Gestion de l'image : soit upload, soit lien Supabase
+      if (cover) {
+        formData.append("cover", cover); // Upload Cloudinary
+      } else if (form.imageSupabaseUrl) {
+        formData.append("imageSupabaseUrl", form.imageSupabaseUrl); // Lien Supabase
+      }
+
+      // ✅ Gestion du fichier : soit upload, soit lien Supabase
+      if (form.fileUrl) {
+        formData.append("fileUrl", form.fileUrl); // Lien Cloudinary
+      } else if (form.bookSupabaseUrl) {
+        formData.append("bookSupabaseUrl", form.bookSupabaseUrl); // Lien Supabase
+      }
 
       await API.post("/admin/books", formData, {
         headers: { "Content-Type": "multipart/form-data" },
@@ -64,6 +83,8 @@ const BookCreatePage = () => {
         level: "",
         badge: "gratuit",
         fileUrl: "",
+        imageSupabaseUrl: "",
+        bookSupabaseUrl: "",
       });
       setCover(null);
     } catch (err) {
@@ -150,7 +171,7 @@ const BookCreatePage = () => {
             </FormControl>
 
             <Button variant="outlined" component="label" sx={{ mt: 2 }}>
-              📷 Charger la couverture
+              📷 Charger la couverture (Cloudinary)
               <input
                 type="file"
                 hidden
@@ -164,6 +185,18 @@ const BookCreatePage = () => {
               </Typography>
             )}
 
+            <Typography variant="body2" sx={{ textAlign: 'center', my: 1 }}>OU</Typography>
+
+            <TextField
+              label="Lien Supabase de la couverture"
+              name="imageSupabaseUrl"
+              fullWidth
+              value={form.imageSupabaseUrl}
+              onChange={handleChange}
+              margin="normal"
+              placeholder="https://[PROJECT_REF].supabase.co/storage/v1/object/public/..."
+            />
+
             <TextField
               label="Lien Cloudinary du fichier PDF"
               name="fileUrl"
@@ -171,7 +204,18 @@ const BookCreatePage = () => {
               value={form.fileUrl}
               onChange={handleChange}
               margin="normal"
-              required
+            />
+
+            <Typography variant="body2" sx={{ textAlign: 'center', my: 1 }}>OU</Typography>
+
+            <TextField
+              label="Lien Supabase du fichier PDF"
+              name="bookSupabaseUrl"
+              fullWidth
+              value={form.bookSupabaseUrl}
+              onChange={handleChange}
+              margin="normal"
+              placeholder="https://[PROJECT_REF].supabase.co/storage/v1/object/public/..."
             />
 
             <Button

@@ -221,6 +221,9 @@ const ExamCreatePage = () => {
     level: "",
     description: "",
     badge: "gratuit",
+    coverSupabaseUrl: "", // 🔗 Lien Supabase de la couverture
+    subjectSupabaseUrl: "", // 🔗 Lien Supabase du sujet
+    correctionSupabaseUrl: "", // 🔗 Lien Supabase de la correction
   });
 
   const [cover, setCover] = useState(null);
@@ -243,8 +246,11 @@ const ExamCreatePage = () => {
     e.preventDefault();
     setMessage("");
 
-    if (!subjectFile) {
-      setMessage("Le fichier du sujet est requis.");
+    // ✅ Vérification : soit upload, soit lien Supabase pour le sujet
+    const hasSubject = subjectFile || form.subjectSupabaseUrl;
+    
+    if (!hasSubject) {
+      setMessage("Le fichier du sujet est requis (via upload ou lien Supabase).");
       return;
     }
 
@@ -253,13 +259,31 @@ const ExamCreatePage = () => {
 
       // Champs texte
       for (let key in form) {
-        formData.append(key, form[key]);
+        if (key !== 'coverSupabaseUrl' && key !== 'subjectSupabaseUrl' && key !== 'correctionSupabaseUrl') {
+          formData.append(key, form[key]);
+        }
       }
 
-      // Fichiers
-      if (cover) formData.append("cover", cover);
-      formData.append("subject", subjectFile);
-      if (correctionFile) formData.append("correction", correctionFile);
+      // ✅ Gestion de la couverture : soit upload, soit lien Supabase
+      if (cover) {
+        formData.append("cover", cover); // Upload Cloudinary
+      } else if (form.coverSupabaseUrl) {
+        formData.append("coverSupabaseUrl", form.coverSupabaseUrl); // Lien Supabase
+      }
+
+      // ✅ Gestion du sujet : soit upload, soit lien Supabase
+      if (subjectFile) {
+        formData.append("subject", subjectFile); // Upload Cloudinary
+      } else if (form.subjectSupabaseUrl) {
+        formData.append("subjectSupabaseUrl", form.subjectSupabaseUrl); // Lien Supabase
+      }
+
+      // ✅ Gestion de la correction : soit upload, soit lien Supabase
+      if (correctionFile) {
+        formData.append("correction", correctionFile); // Upload Cloudinary
+      } else if (form.correctionSupabaseUrl) {
+        formData.append("correctionSupabaseUrl", form.correctionSupabaseUrl); // Lien Supabase
+      }
 
       await API.post("/exams", formData, {
         headers: { "Content-Type": "multipart/form-data" },
@@ -271,6 +295,9 @@ const ExamCreatePage = () => {
         level: "",
         description: "",
         badge: "gratuit",
+        coverSupabaseUrl: "",
+        subjectSupabaseUrl: "",
+        correctionSupabaseUrl: "",
       });
       setCover(null);
       setSubjectFile(null);
@@ -340,9 +367,10 @@ const ExamCreatePage = () => {
               </Select>
             </FormControl>
 
+            {/* 📸 COUVERTURE */}
             <Box mt={2}>
               <Button variant="outlined" component="label">
-                🖼 Charger une image (facultatif)
+                🖼 Charger une image (Cloudinary)
                 <input
                   type="file"
                   hidden
@@ -357,9 +385,22 @@ const ExamCreatePage = () => {
               )}
             </Box>
 
+            <Typography variant="body2" sx={{ textAlign: 'center', my: 1 }}>OU</Typography>
+
+            <TextField
+              label="Lien Supabase de la couverture"
+              name="coverSupabaseUrl"
+              fullWidth
+              value={form.coverSupabaseUrl}
+              onChange={handleChange}
+              margin="normal"
+              placeholder="https://[PROJECT_REF].supabase.co/storage/v1/object/public/..."
+            />
+
+            {/* 📄 SUJET */}
             <Box mt={2}>
               <Button variant="outlined" component="label">
-                📄 Charger le fichier sujet (obligatoire)
+                📄 Charger le fichier sujet (Cloudinary)
                 <input
                   type="file"
                   hidden
@@ -374,9 +415,22 @@ const ExamCreatePage = () => {
               )}
             </Box>
 
+            <Typography variant="body2" sx={{ textAlign: 'center', my: 1 }}>OU</Typography>
+
+            <TextField
+              label="Lien Supabase du fichier sujet"
+              name="subjectSupabaseUrl"
+              fullWidth
+              value={form.subjectSupabaseUrl}
+              onChange={handleChange}
+              margin="normal"
+              placeholder="https://[PROJECT_REF].supabase.co/storage/v1/object/public/..."
+            />
+
+            {/* 📘 CORRECTION */}
             <Box mt={2}>
               <Button variant="outlined" component="label">
-                📘 Charger le fichier correction (facultatif)
+                📘 Charger le fichier correction (Cloudinary)
                 <input
                   type="file"
                   hidden
@@ -390,6 +444,18 @@ const ExamCreatePage = () => {
                 </Typography>
               )}
             </Box>
+
+            <Typography variant="body2" sx={{ textAlign: 'center', my: 1 }}>OU</Typography>
+
+            <TextField
+              label="Lien Supabase du fichier correction"
+              name="correctionSupabaseUrl"
+              fullWidth
+              value={form.correctionSupabaseUrl}
+              onChange={handleChange}
+              margin="normal"
+              placeholder="https://[PROJECT_REF].supabase.co/storage/v1/object/public/..."
+            />
 
             <Button
               variant="contained"

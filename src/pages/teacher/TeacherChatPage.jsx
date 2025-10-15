@@ -5,6 +5,7 @@ import {
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
+import { useSearchParams } from "react-router-dom";
 import SendIcon from "@mui/icons-material/Send";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
 import MicIcon from "@mui/icons-material/Mic";
@@ -34,6 +35,7 @@ const TeacherChatPage = () => {
   const { user, token } = useContext(AuthContext);
   const theme = useTheme();
   const isSmall = useMediaQuery(theme.breakpoints.down("md"));
+  const [searchParams] = useSearchParams();
 
   // --- state
   const [students, setStudents] = useState([]);
@@ -101,10 +103,25 @@ const [mediaRecorder, setMediaRecorder] = useState(null);
         const list = listRes.data || [];
         setStudents(list);
 
-        // Charger le dernier élève utilisé ou le premier
-        const lastId = localStorage.getItem(STORAGE_KEY_LAST_STUDENT);
-        let chosen = pickStudent(list, lastId);
-        if (!chosen) chosen = pickStudent(list);
+        // ✅ Priorité 1 : paramètre URL ?student=...
+        const urlStudentId = searchParams.get("student");
+        let chosen = null;
+
+        if (urlStudentId) {
+          chosen = pickStudent(list, urlStudentId);
+          console.log(`🔍 Élève depuis URL : ${urlStudentId}`, chosen);
+        }
+
+        // ✅ Priorité 2 : dernier élève utilisé (localStorage)
+        if (!chosen) {
+          const lastId = localStorage.getItem(STORAGE_KEY_LAST_STUDENT);
+          chosen = pickStudent(list, lastId);
+        }
+
+        // ✅ Priorité 3 : premier élève de la liste
+        if (!chosen) {
+          chosen = pickStudent(list);
+        }
 
         if (chosen) {
           setStudent(chosen);
@@ -116,13 +133,15 @@ const [mediaRecorder, setMediaRecorder] = useState(null);
           } catch (e) {
             console.warn("Load messages failed", e);
           }
+        } else {
+          console.warn("❌ Aucun élève disponible ou trouvé");
         }
       } catch (err) {
         console.error("Bootstrap chat failed", err);
         showSnack("Impossible de charger les élèves.", "error");
       }
     })();
-  }, [user?._id]);
+  }, [user?._id, searchParams]);
 
   // ✅ Socket.io: Rejoindre/quitter room quand on change d'élève
   useEffect(() => {
@@ -207,8 +226,11 @@ const [mediaRecorder, setMediaRecorder] = useState(null);
   // --- send text/file
   const handleSend = async () => {
     if (!student) return showSnack("Aucun élève sélectionné.", "warning");
+    
+    // ✅ Ignorer silencieusement si un audio vient d'être envoyé
+    if (audioJustSent) return;
+    
     if (!newMsg.trim() && !file) {
-      if (audioJustSent) return;
       return showSnack("Message vide ou aucun fichier.", "warning");
     }
 
@@ -282,6 +304,10 @@ const [mediaRecorder, setMediaRecorder] = useState(null);
   // --- audio
   const handleSendAudio = async (blob) => {
     if (!student) return showSnack("Aucun élève sélectionné.", "warning");
+    
+    // ✅ Mettre le flag AVANT l'envoi pour éviter les erreurs de timing
+    setAudioJustSent(true);
+    
     const form = new FormData();
     form.append("to", student._id);
     form.append("file", blob, "audioMessage.webm");
@@ -290,11 +316,16 @@ const [mediaRecorder, setMediaRecorder] = useState(null);
         headers: { "Content-Type": "multipart/form-data" },
       });
       setMessages((p) => [...p, res.data]);
-      setAudioJustSent(true);
-      setTimeout(() => setAudioJustSent(false), 1200);
+      
+      // ✅ Envoyer via Socket.io pour livraison instantanée
+      sendMessage(student._id, res.data);
+      
+      // Réinitialiser après un délai
+      setTimeout(() => setAudioJustSent(false), 1500);
     } catch (err) {
       console.error("Audio failed", err);
       showSnack("Erreur envoi vocal.", "error");
+      setAudioJustSent(false); // ✅ Réinitialiser en cas d'erreur
     }
   };
 
@@ -347,16 +378,33 @@ const [mediaRecorder, setMediaRecorder] = useState(null);
           {msg.text && <Typography variant="body2" sx={{ whiteSpace: "pre-wrap" }}>{msg.text}</Typography>}
           {msg.fileUrl && (
             <Box mt={0.5}>
+              {/* 🔍 Debug log pour voir le type de fichier reçu */}
+              {console.log("🔍 Message avec fichier reçu:", { fileType: msg.fileType, fileUrl: msg.fileUrl })}
+              
+              {/* ✅ Images en priorité */}
+              {msg.fileType === "image" && (
+                <img src={msg.fileUrl} alt="photo" style={{ maxWidth: "100%", borderRadius: 8 }} />
+              )}
+              
+              {/* ✅ Vidéos */}
               {msg.fileType === "video" && (
                 <video src={msg.fileUrl} controls style={{ maxWidth: "100%", borderRadius: 6 }} />
               )}
-              {msg.fileType?.startsWith("audio") && <audio controls src={msg.fileUrl} style={{ width: "100%" }} />}
+              
+              {/* ✅ Audio */}
+              {(msg.fileType === "audio" || msg.fileType?.startsWith("audio")) && (
+                <audio controls src={msg.fileUrl} style={{ width: "100%" }} />
+              )}
+              
+              {/* ✅ PDF */}
               {msg.fileType === "pdf" && (
                 <a href={msg.fileUrl} target="_blank" rel="noreferrer" style={{ color: mine ? "#fff" : undefined }}>
                   📄 Ouvrir le PDF
                 </a>
               )}
-              {!["pdf", "video"].includes(msg.fileType) && !msg.fileType?.startsWith("audio") && (
+              
+              {/* ✅ Fallback pour tout le reste */}
+              {!["image", "video", "audio", "pdf"].includes(msg.fileType) && (
                 <img src={msg.fileUrl} alt="pièce jointe" style={{ maxWidth: "100%", borderRadius: 8 }} />
               )}
             </Box>
