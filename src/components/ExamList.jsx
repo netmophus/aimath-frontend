@@ -125,6 +125,7 @@ import API from "../api";
 const initialForm = {
   title: "",
   level: "",
+  subject: "maths",
   description: "",
   badge: "gratuit",
 };
@@ -141,6 +142,7 @@ const ExamList = () => {
   // ✅ Recherche et filtres
   const [searchTerm, setSearchTerm] = useState("");
   const [levelFilter, setLevelFilter] = useState("");
+  const [subjectFilter, setSubjectFilter] = useState("");
   const [badgeFilter, setBadgeFilter] = useState("");
 
   // Edition
@@ -215,6 +217,11 @@ const ExamList = () => {
       filtered = filtered.filter(exam => exam.level === levelFilter);
     }
 
+    // Filtre par matière
+    if (subjectFilter) {
+      filtered = filtered.filter(exam => (exam.subject || "maths") === subjectFilter);
+    }
+
     // Filtre par badge
     if (badgeFilter) {
       filtered = filtered.filter(exam => exam.badge === badgeFilter);
@@ -222,7 +229,7 @@ const ExamList = () => {
 
     setFilteredExams(filtered);
     setPage(0); // Reset à la première page quand on filtre
-  }, [allExams, searchTerm, levelFilter, badgeFilter]);
+  }, [allExams, searchTerm, levelFilter, subjectFilter, badgeFilter]);
 
   useEffect(() => {
     applyFilters();
@@ -238,6 +245,7 @@ const ExamList = () => {
   const handleResetFilters = () => {
     setSearchTerm("");
     setLevelFilter("");
+    setSubjectFilter("");
     setBadgeFilter("");
     setPage(0);
   };
@@ -255,6 +263,7 @@ const ExamList = () => {
     setForm({
       title: exam.title || "",
       level: exam.level || "",
+      subject: exam.subject || "maths",
       description: exam.description || "",
       badge: exam.badge || "gratuit",
     });
@@ -286,8 +295,8 @@ const ExamList = () => {
   const handleSubmitEdit = async () => {
     if (!currentExam?._id) return;
 
-    // champs requis côté backend : title, level, description, badge
-    if (!form.title || !form.level || !form.description || !form.badge) {
+    // champs requis côté backend : title, level, subject, description, badge
+    if (!form.title || !form.level || !form.subject || !form.description || !form.badge) {
       showSnack("warning", "Tous les champs sont requis.");
       return;
     }
@@ -299,6 +308,7 @@ const ExamList = () => {
       // champs texte
       fd.append("title", form.title);
       fd.append("level", form.level);
+      fd.append("subject", form.subject);
       fd.append("description", form.description);
       fd.append("badge", form.badge);
 
@@ -433,8 +443,28 @@ const ExamList = () => {
               label="Niveau"
             >
               <MenuItem value="">Tous</MenuItem>
-              <MenuItem value="college">Collège</MenuItem>
-              <MenuItem value="lycee">Lycée</MenuItem>
+              <MenuItem value="6eme">6ème</MenuItem>
+              <MenuItem value="5eme">5ème</MenuItem>
+              <MenuItem value="4eme">4ème</MenuItem>
+              <MenuItem value="3eme">3ème</MenuItem>
+              <MenuItem value="seconde">Seconde</MenuItem>
+              <MenuItem value="premiere">Première</MenuItem>
+              <MenuItem value="terminale">Terminale</MenuItem>
+            </Select>
+          </FormControl>
+
+          <FormControl size="small" sx={{ minWidth: 120 }}>
+            <InputLabel>Matière</InputLabel>
+            <Select
+              value={subjectFilter}
+              onChange={(e) => setSubjectFilter(e.target.value)}
+              label="Matière"
+            >
+              <MenuItem value="">Toutes</MenuItem>
+              <MenuItem value="maths">Mathématiques</MenuItem>
+              <MenuItem value="physique">Physique</MenuItem>
+              <MenuItem value="chimie">Chimie</MenuItem>
+              <MenuItem value="svt">SVT</MenuItem>
             </Select>
           </FormControl>
 
@@ -615,6 +645,15 @@ const ExamList = () => {
           <Stack spacing={2} mt={1}>
             <TextField label="Titre" name="title" value={form.title} onChange={handleFormChange} fullWidth required />
             <TextField label="Niveau (ex: 3eme, terminale)" name="level" value={form.level} onChange={handleFormChange} fullWidth required />
+            <FormControl fullWidth>
+              <InputLabel id="subject-label">Matière</InputLabel>
+              <Select labelId="subject-label" label="Matière" name="subject" value={form.subject} onChange={handleFormChange}>
+                <MenuItem value="maths">Mathématiques</MenuItem>
+                <MenuItem value="physique">Physique</MenuItem>
+                <MenuItem value="chimie">Chimie</MenuItem>
+                <MenuItem value="svt">SVT</MenuItem>
+              </Select>
+            </FormControl>
             <TextField label="Description" name="description" value={form.description} onChange={handleFormChange} fullWidth multiline minRows={3} required />
             <FormControl fullWidth>
               <InputLabel id="badge-label">Badge</InputLabel>

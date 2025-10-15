@@ -525,6 +525,17 @@ useEffect(() => {
     fetchAll();
   }, []);
 
+  // ✅ Réinitialiser les filtres et recherches quand on change de matière
+  useEffect(() => {
+    setVideoQuery("");
+    setBookQuery("");
+    setExamQuery("");
+    setVf({ badge: [], level: [], matiere: [], classe: [], tags: [] });
+    setBf({ badge: [], level: [], matiere: [], classe: [], tags: [] });
+    setEf({ badge: [], level: [], matiere: [], classe: [], tags: [] });
+    setTabIndex(0);
+  }, [selectedSubject]);
+
   /* ---------- handlers IA texte ---------- */
   const handleSubmit = async () => {
     if (!input.trim()) return;
@@ -976,6 +987,10 @@ const filteredVideos = React.useMemo(() => {
   const q = videoQuery.trim().toLowerCase();
 
   return (videos || []).filter((v) => {
+    // 0) ✅ Filtre par matière sélectionnée (subject)
+    const videoSubject = v?.subject || "maths";
+    if (videoSubject !== selectedSubject) return false;
+
     // 1) Recherche texte
     if (q) {
       const hay = [
@@ -1004,7 +1019,7 @@ const filteredVideos = React.useMemo(() => {
 
     return true;
   });
-}, [videos, videoQuery, vf]);
+}, [videos, videoQuery, vf, selectedSubject]);
 
 
 
@@ -1055,6 +1070,10 @@ const filteredBooks = React.useMemo(() => {
   const q = bookQuery.trim().toLowerCase();
 
   return (livres || []).filter((b) => {
+    // 0) ✅ Filtre par matière sélectionnée (subject)
+    const bookSubject = b?.subject || "maths";
+    if (bookSubject !== selectedSubject) return false;
+
     // 1) recherche texte
     if (q) {
       const hay = [
@@ -1082,7 +1101,7 @@ const filteredBooks = React.useMemo(() => {
 
     return true;
   });
-}, [livres, bookQuery, bf]);
+}, [livres, bookQuery, bf, selectedSubject]);
 
 
 // --- Recherche texte (examens)
@@ -1124,6 +1143,10 @@ const filteredExams = React.useMemo(() => {
   const q = examQuery.trim().toLowerCase();
 
   return (exams || []).filter((e) => {
+    // 0) ✅ Filtre par matière sélectionnée (subject)
+    const examSubject = e?.subject || "maths";
+    if (examSubject !== selectedSubject) return false;
+
     // 1) recherche texte
     if (q) {
       const hay = [
@@ -1151,7 +1174,7 @@ const filteredExams = React.useMemo(() => {
 
     return true;
   });
-}, [exams, examQuery, ef]);
+}, [exams, examQuery, ef, selectedSubject]);
 
 
 
@@ -1159,13 +1182,24 @@ const filteredExams = React.useMemo(() => {
 const totalVideosCount = React.useMemo(() => {
   let total = 0;
   for (const v of videos || []) {
+    // ✅ Filtrer par matière sélectionnée
+    const videoSubject = v?.subject || "maths";
+    if (videoSubject !== selectedSubject) continue;
+
     total += 1; // la vidéo principale
     total += Array.isArray(v?.videosSupplementaires)
       ? v.videosSupplementaires.length
       : 0;      // les vidéos complémentaires
   }
   return total;
-}, [videos]);
+}, [videos, selectedSubject]);
+
+// ✅ Compteurs filtrés par matière pour les onglets
+const countBySubject = React.useMemo(() => {
+  const countLivres = (livres || []).filter(b => (b?.subject || "maths") === selectedSubject).length;
+  const countExams = (exams || []).filter(e => (e?.subject || "maths") === selectedSubject).length;
+  return { livres: countLivres, exams: countExams, videos: totalVideosCount };
+}, [livres, exams, selectedSubject, totalVideosCount]);
 
 
 
@@ -1787,8 +1821,8 @@ const totalVideosCount = React.useMemo(() => {
     />
   </Tabs>
 
-  {/* Onglets de contenu (Livres/Examens/Vidéos) - visible uniquement pour Maths */}
-  {selectedSubject === "maths" && (
+  {/* Onglets de contenu (Livres/Examens/Vidéos) - visible si du contenu existe pour la matière */}
+  {(selectedSubject === "maths" || countBySubject.livres > 0 || countBySubject.exams > 0 || countBySubject.videos > 0) && (
 <Tabs
   value={tabIndex}
   onChange={(_, v) => setTabIndex(v)}
@@ -1835,7 +1869,7 @@ const totalVideosCount = React.useMemo(() => {
             Livres PDF
             <Chip
               size="small"
-              label={livres?.length ?? 0}
+              label={countBySubject.livres}
               sx={{
                 ml: .5,
                 height: 18,
@@ -1854,7 +1888,7 @@ const totalVideosCount = React.useMemo(() => {
             Examens corrigés
             <Chip
               size="small"
-              label={exams?.length ?? 0}
+              label={countBySubject.exams}
               sx={{
                 ml: .5,
                 height: 18,
@@ -1874,7 +1908,7 @@ const totalVideosCount = React.useMemo(() => {
            
  <Chip
    size="small"
-   label={totalVideosCount}
+   label={countBySubject.videos}
    sx={{
      ml: .5,
      height: 18,
@@ -1895,8 +1929,8 @@ const totalVideosCount = React.useMemo(() => {
   )}
   </Paper>
 
-  {/* ✅ Message "Bientôt disponible" pour Physique, Chimie, SVT */}
-  {selectedSubject !== "maths" && (
+  {/* ✅ Message "Bientôt disponible" SEULEMENT si aucun contenu pour cette matière */}
+  {selectedSubject !== "maths" && countBySubject.livres === 0 && countBySubject.exams === 0 && countBySubject.videos === 0 && (
     <Box sx={{ py: 8, textAlign: "center" }}>
       <Box
         sx={{
@@ -1917,7 +1951,7 @@ const totalVideosCount = React.useMemo(() => {
           Bientôt disponible ! 🚀
         </Typography>
         <Typography variant="body1" sx={{ mt: 1, opacity: 0.9 }}>
-          Vidéos, livres et examens corrigés disponibles dans les 4 prochains mois.
+          Vidéos, livres et examens corrigés disponibles prochainement.
         </Typography>
         <Chip
           label="En préparation"
@@ -1932,8 +1966,8 @@ const totalVideosCount = React.useMemo(() => {
     </Box>
   )}
 
-  {/* Contenu (Livres/Examens/Vidéos) - visible uniquement pour Maths */}
-  {selectedSubject === "maths" && (
+  {/* Contenu (Livres/Examens/Vidéos) - affichage pour toutes les matières SI du contenu existe */}
+  {(selectedSubject === "maths" || countBySubject.livres > 0 || countBySubject.exams > 0 || countBySubject.videos > 0) && (
   <>
   {/* Livres */}
 {/* Livres */}

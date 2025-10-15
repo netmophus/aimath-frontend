@@ -21,6 +21,7 @@ const BookCreatePage = () => {
     author: "",
     description: "",
     level: "",
+    subject: "maths", // 🔬 Matière par défaut
     badge: "gratuit",
     fileUrl: "", // 🔗 Lien Cloudinary du PDF
     imageSupabaseUrl: "", // 🔗 Lien Supabase de la couverture
@@ -55,6 +56,7 @@ const BookCreatePage = () => {
       formData.append("author", form.author);
       formData.append("description", form.description);
       formData.append("level", form.level);
+      formData.append("subject", form.subject);
       formData.append("badge", form.badge);
 
       // ✅ Gestion de l'image : soit upload, soit lien Supabase
@@ -81,6 +83,7 @@ const BookCreatePage = () => {
         author: "",
         description: "",
         level: "",
+        subject: "maths",
         badge: "gratuit",
         fileUrl: "",
         imageSupabaseUrl: "",
@@ -154,6 +157,21 @@ const BookCreatePage = () => {
                     {niveau.toUpperCase()}
                   </MenuItem>
                 ))}
+              </Select>
+            </FormControl>
+
+            <FormControl fullWidth margin="normal" required>
+              <InputLabel>Matière</InputLabel>
+              <Select
+                name="subject"
+                value={form.subject}
+                onChange={handleChange}
+                label="Matière"
+              >
+                <MenuItem value="maths">Mathématiques</MenuItem>
+                <MenuItem value="physique">Physique</MenuItem>
+                <MenuItem value="chimie">Chimie</MenuItem>
+                <MenuItem value="svt">SVT</MenuItem>
               </Select>
             </FormControl>
 

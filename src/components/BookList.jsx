@@ -25,6 +25,7 @@ const initialForm = {
   author: "",
   description: "",
   level: "",
+  subject: "maths",
   badge: "gratuit",
 };
 
@@ -50,6 +51,7 @@ const BookList = () => {
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 500);
   const [filterLevel, setFilterLevel] = useState("");
+  const [filterSubject, setFilterSubject] = useState("");
   const [filterBadge, setFilterBadge] = useState("");
   
   // ✅ Tri
@@ -110,6 +112,11 @@ const BookList = () => {
       result = result.filter((b) => b.level === filterLevel);
     }
 
+    // Filtre matière
+    if (filterSubject) {
+      result = result.filter((b) => (b.subject || "maths") === filterSubject);
+    }
+
     // Filtre badge
     if (filterBadge) {
       result = result.filter((b) => b.badge === filterBadge);
@@ -136,7 +143,7 @@ const BookList = () => {
     });
 
     return result;
-  }, [books, debouncedSearch, filterLevel, filterBadge, sortBy, sortOrder]);
+  }, [books, debouncedSearch, filterLevel, filterSubject, filterBadge, sortBy, sortOrder]);
 
   // ✅ Pagination côté client
   const paginatedBooks = React.useMemo(() => {
@@ -167,6 +174,7 @@ const BookList = () => {
   const handleResetFilters = () => {
     setSearch("");
     setFilterLevel("");
+    setFilterSubject("");
     setFilterBadge("");
     setSortBy("createdAt");
     setSortOrder("desc");
@@ -181,6 +189,7 @@ const BookList = () => {
       author: book.author || "",
       description: book.description || "",
       level: book.level || "",
+      subject: book.subject || "maths",
       badge: book.badge || "gratuit",
     });
     setCoverFile(null);
@@ -204,7 +213,7 @@ const BookList = () => {
   const handleSubmitEdit = async () => {
     if (!currentBook?._id) return;
 
-    if (!form.title || !form.author || !form.description || !form.level || !form.badge) {
+    if (!form.title || !form.author || !form.description || !form.level || !form.subject || !form.badge) {
       showSnack("warning", "Tous les champs texte sont requis.");
       return;
     }
@@ -216,6 +225,7 @@ const BookList = () => {
       fd.append("author", form.author);
       fd.append("description", form.description);
       fd.append("level", form.level);
+      fd.append("subject", form.subject);
       fd.append("badge", form.badge);
       if (coverFile) fd.append("cover", coverFile);
       if (pdfFile) fd.append("pdf", pdfFile);
@@ -332,6 +342,16 @@ const BookList = () => {
                 <MenuItem value="premiere">Première</MenuItem>
                 <MenuItem value="terminale">Terminale</MenuItem>
                 <MenuItem value="universite">Université</MenuItem>
+              </Select>
+            </FormControl>
+            <FormControl size="small" sx={{ minWidth: 150 }}>
+              <InputLabel>Matière</InputLabel>
+              <Select value={filterSubject} onChange={(e) => setFilterSubject(e.target.value)} label="Matière">
+                <MenuItem value="">Toutes</MenuItem>
+                <MenuItem value="maths">Mathématiques</MenuItem>
+                <MenuItem value="physique">Physique</MenuItem>
+                <MenuItem value="chimie">Chimie</MenuItem>
+                <MenuItem value="svt">SVT</MenuItem>
               </Select>
             </FormControl>
             <FormControl size="small" sx={{ minWidth: 150 }}>
@@ -538,6 +558,16 @@ const BookList = () => {
             <TextField label="Auteur" name="author" value={form.author} onChange={onFormChange} fullWidth required />
             <TextField label="Description" name="description" value={form.description} onChange={onFormChange} fullWidth multiline minRows={3} required />
             <TextField label="Niveau" name="level" value={form.level} onChange={onFormChange} fullWidth required />
+
+            <FormControl fullWidth>
+              <InputLabel id="subject-label">Matière</InputLabel>
+              <Select labelId="subject-label" label="Matière" name="subject" value={form.subject} onChange={onFormChange}>
+                <MenuItem value="maths">Mathématiques</MenuItem>
+                <MenuItem value="physique">Physique</MenuItem>
+                <MenuItem value="chimie">Chimie</MenuItem>
+                <MenuItem value="svt">SVT</MenuItem>
+              </Select>
+            </FormControl>
 
             <FormControl fullWidth>
               <InputLabel id="badge-label">Badge</InputLabel>

@@ -219,6 +219,7 @@ const ExamCreatePage = () => {
   const [form, setForm] = useState({
     title: "",
     level: "",
+    subject: "maths", // 🔬 Matière par défaut
     description: "",
     badge: "gratuit",
     coverSupabaseUrl: "", // 🔗 Lien Supabase de la couverture
@@ -293,6 +294,7 @@ const ExamCreatePage = () => {
       setForm({
         title: "",
         level: "",
+        subject: "maths",
         description: "",
         badge: "gratuit",
         coverSupabaseUrl: "",
@@ -351,6 +353,21 @@ const ExamCreatePage = () => {
                     {niveau.toUpperCase()}
                   </MenuItem>
                 ))}
+              </Select>
+            </FormControl>
+
+            <FormControl fullWidth margin="normal" required>
+              <InputLabel>Matière</InputLabel>
+              <Select
+                name="subject"
+                value={form.subject}
+                onChange={handleChange}
+                label="Matière"
+              >
+                <MenuItem value="maths">Mathématiques</MenuItem>
+                <MenuItem value="physique">Physique</MenuItem>
+                <MenuItem value="chimie">Chimie</MenuItem>
+                <MenuItem value="svt">SVT</MenuItem>
               </Select>
             </FormControl>
 

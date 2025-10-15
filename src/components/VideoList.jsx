@@ -221,6 +221,7 @@ const VideoList = () => {
   // -- État pour les filtres et recherche
   const [searchTerm, setSearchTerm] = useState("");
   const [levelFilter, setLevelFilter] = useState("");
+  const [subjectFilter, setSubjectFilter] = useState("");
   const [badgeFilter, setBadgeFilter] = useState("");
 
   const fetchVideos = useCallback(async () => {
@@ -271,6 +272,11 @@ const VideoList = () => {
       filtered = filtered.filter(video => video.level === levelFilter);
     }
 
+    // Filtre par matière
+    if (subjectFilter) {
+      filtered = filtered.filter(video => (video.subject || "maths") === subjectFilter);
+    }
+
     // Filtre par badge
     if (badgeFilter) {
       filtered = filtered.filter(video => video.badge === badgeFilter);
@@ -278,7 +284,7 @@ const VideoList = () => {
 
     setFilteredVideos(filtered);
     setPage(0); // Reset à la première page quand on filtre
-  }, [allVideos, searchTerm, levelFilter, badgeFilter]);
+  }, [allVideos, searchTerm, levelFilter, subjectFilter, badgeFilter]);
 
   useEffect(() => {
     applyFilters();
@@ -294,6 +300,7 @@ const VideoList = () => {
   const handleResetFilters = () => {
     setSearchTerm("");
     setLevelFilter("");
+    setSubjectFilter("");
     setBadgeFilter("");
     setPage(0);
   };
@@ -401,6 +408,21 @@ const VideoList = () => {
               <MenuItem value="premiere">Première</MenuItem>
               <MenuItem value="terminale">Terminale</MenuItem>
               <MenuItem value="universite">Université</MenuItem>
+            </Select>
+          </FormControl>
+
+          <FormControl size="small" sx={{ minWidth: 120 }}>
+            <InputLabel>Matière</InputLabel>
+            <Select
+              value={subjectFilter}
+              onChange={(e) => setSubjectFilter(e.target.value)}
+              label="Matière"
+            >
+              <MenuItem value="">Toutes</MenuItem>
+              <MenuItem value="maths">Mathématiques</MenuItem>
+              <MenuItem value="physique">Physique</MenuItem>
+              <MenuItem value="chimie">Chimie</MenuItem>
+              <MenuItem value="svt">SVT</MenuItem>
             </Select>
           </FormControl>
 

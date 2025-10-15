@@ -1733,6 +1733,13 @@ const handleStopSpeak = () => {
     };
   }, []);
 
+  // ✅ Réinitialiser les filtres quand on change de matière
+  useEffect(() => {
+    setSelectedLevel("ALL");
+    setQ("");
+    setTabIndex(0);
+  }, [selectedSubject]);
+
 
 // Effet "révélation" phrase par phrase sur le dernier message IA
 useEffect(() => {
@@ -1865,9 +1872,13 @@ useEffect(() => {
     }
   };
 
-  // Filtres simples (nom/titre) avec debounce
+  // Filtres simples (nom/titre) avec debounce + filtrage par matière
  const filterFn = useCallback(
   (x) => {
+    // ✅ Filtre par matière (subject)
+    const itemSubject = x?.subject || "maths";
+    const okSubject = itemSubject === selectedSubject;
+
     // filtre texte
     const s = (qDebounced || "").toLowerCase().trim();
     const okText = !s
@@ -1881,9 +1892,9 @@ useEffect(() => {
       ? true
       : lv === selectedLevel.toLowerCase();
 
-    return okText && okLevel;
+    return okSubject && okText && okLevel;
   },
-  [qDebounced, selectedLevel]
+  [qDebounced, selectedLevel, selectedSubject]
 );
 
   const filteredLivres = useMemo(() => livres.filter(filterFn), [livres, filterFn]);
@@ -1922,7 +1933,7 @@ useEffect(() => {
 
   // Compter les vidéos en incluant les parties complémentaires
 const totalVideosCount = useMemo(() => {
-  // si tu veux compter selon le level sélectionné, on filtre ici
+  // filtre par matière sélectionnée ET par niveau
   const matchesLevel = (item) => {
     if (selectedLevel === "ALL") return true;
     const lv = String(item?.level || item?.classe || "").toLowerCase().trim();
@@ -1931,6 +1942,10 @@ const totalVideosCount = useMemo(() => {
 
   let total = 0;
   for (const v of videos || []) {
+    // ✅ Filtrer par matière sélectionnée
+    const videoSubject = v?.subject || "maths";
+    if (videoSubject !== selectedSubject) continue;
+    
     if (!matchesLevel(v)) continue;              // respecte le filtre de niveau
     total += 1;                                   // la vidéo principale
     total += Array.isArray(v?.videosSupplementaires) 
@@ -1938,7 +1953,14 @@ const totalVideosCount = useMemo(() => {
       : 0;                                       // les parties
   }
   return total;
-}, [videos, selectedLevel]);
+}, [videos, selectedLevel, selectedSubject]);
+
+// ✅ Compteurs filtrés par matière pour les onglets
+const countBySubject = useMemo(() => {
+  const countLivres = (livres || []).filter(b => (b?.subject || "maths") === selectedSubject).length;
+  const countExams = (exams || []).filter(e => (e?.subject || "maths") === selectedSubject).length;
+  return { livres: countLivres, exams: countExams, videos: totalVideosCount };
+}, [livres, exams, selectedSubject, totalVideosCount]);
 
 
   return (
@@ -2376,8 +2398,8 @@ const totalVideosCount = useMemo(() => {
             justifyContent="space-between"
           >
            
-           {/* Onglets de contenu (Livres/Examens/Vidéos) - visible uniquement pour Maths */}
-           {selectedSubject === "maths" && (
+           {/* Onglets de contenu (Livres/Examens/Vidéos) - visible si du contenu existe pour la matière */}
+           {(selectedSubject === "maths" || countBySubject.livres > 0 || countBySubject.exams > 0 || countBySubject.videos > 0) && (
            <Tabs
   value={tabIndex}
   onChange={(_e, v) => setTabIndex(v)}
@@ -2411,16 +2433,16 @@ const totalVideosCount = useMemo(() => {
     "& .MuiTab-root": { fontWeight: 700, textTransform: "none", whiteSpace: "nowrap" },
   }}
 >
-  <Tab label={<TabLabel label="Livres" count={livres.length} />} id="tab-0" aria-controls="panel-0" />
-  <Tab label={<TabLabel label="Sujets corrigés" count={exams.length} />} id="tab-1" aria-controls="panel-1" />
- <Tab label={<TabLabel label="Vidéos" count={totalVideosCount} />} id="tab-2" aria-controls="panel-2" />
+  <Tab label={<TabLabel label="Livres" count={countBySubject.livres} />} id="tab-0" aria-controls="panel-0" />
+  <Tab label={<TabLabel label="Sujets corrigés" count={countBySubject.exams} />} id="tab-1" aria-controls="panel-1" />
+ <Tab label={<TabLabel label="Vidéos" count={countBySubject.videos} />} id="tab-2" aria-controls="panel-2" />
 
 </Tabs>
            )}
 
              
-            {/* Barre de recherche - visible uniquement pour Maths */}
-            {selectedSubject === "maths" && (
+            {/* Barre de recherche - visible si du contenu existe pour la matière */}
+            {(selectedSubject === "maths" || countBySubject.livres > 0 || countBySubject.exams > 0 || countBySubject.videos > 0) && (
             <TextField
               placeholder="Rechercher (titre, matière, classe)…"
               value={q}
@@ -2439,8 +2461,8 @@ const totalVideosCount = useMemo(() => {
           </Stack>
         </Paper>
 
-        {/* ✅ Message "Bientôt disponible" pour Physique, Chimie, SVT */}
-        {selectedSubject !== "maths" && (
+        {/* ✅ Message "Bientôt disponible" SEULEMENT si aucun contenu pour cette matière */}
+        {selectedSubject !== "maths" && countBySubject.livres === 0 && countBySubject.exams === 0 && countBySubject.videos === 0 && (
           <Box sx={{ py: 8, textAlign: "center" }}>
             <Box
               sx={{
@@ -2461,7 +2483,7 @@ const totalVideosCount = useMemo(() => {
                 Bientôt disponible ! 🚀
               </Typography>
               <Typography variant="body1" sx={{ mt: 1, opacity: 0.9 }}>
-                Vidéos, livres et examens corrigés disponibles dans les 4 prochains mois.
+                Vidéos, livres et examens corrigés disponibles prochainement.
               </Typography>
               <Chip
                 label="En préparation"
@@ -2476,8 +2498,8 @@ const totalVideosCount = useMemo(() => {
           </Box>
         )}
 
-        {/* Contenu (Livres/Examens/Vidéos) - visible uniquement pour Maths */}
-        {selectedSubject === "maths" && (
+        {/* Contenu (Livres/Examens/Vidéos) - affichage pour toutes les matières SI du contenu existe */}
+        {(selectedSubject === "maths" || countBySubject.livres > 0 || countBySubject.exams > 0 || countBySubject.videos > 0) && (
         <>
 
      {/* Panel Livres */}

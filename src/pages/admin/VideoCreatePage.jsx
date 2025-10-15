@@ -23,6 +23,7 @@ const VideoCreatePage = () => {
     title: "",
     description: "",
     level: "",
+    subject: "maths", // 🔬 Matière par défaut
     badge: "gratuit",
     videoUrl: "",
     videosSupplementaires: [{ title: "", videoUrl: "", thumbnail: "" }],
@@ -70,6 +71,7 @@ const VideoCreatePage = () => {
       formData.append("title", form.title);
       formData.append("description", form.description);
       formData.append("level", form.level);
+      formData.append("subject", form.subject);
       formData.append("badge", form.badge);
       formData.append("videoUrl", form.videoUrl);
       if (thumbnail) formData.append("thumbnail", thumbnail);
@@ -84,6 +86,7 @@ const VideoCreatePage = () => {
         title: "",
         description: "",
         level: "",
+        subject: "maths",
         badge: "gratuit",
         videoUrl: "",
         videosSupplementaires: [{ title: "", videoUrl: "", thumbnail: "" }],
@@ -135,6 +138,16 @@ const VideoCreatePage = () => {
                     </MenuItem>
                   )
                 )}
+              </Select>
+            </FormControl>
+
+            <FormControl fullWidth margin="normal" required>
+              <InputLabel>Matière</InputLabel>
+              <Select name="subject" value={form.subject} onChange={handleChange} label="Matière">
+                <MenuItem value="maths">Mathématiques</MenuItem>
+                <MenuItem value="physique">Physique</MenuItem>
+                <MenuItem value="chimie">Chimie</MenuItem>
+                <MenuItem value="svt">SVT</MenuItem>
               </Select>
             </FormControl>
 
