@@ -505,8 +505,11 @@ export default function DistributeursModal({ open, onClose }) {
                   size="small"
                   value={radiusKm}
                   onChange={(e) => setRadiusKm(Number(e.target.value))}
-                  sx={{ minWidth: 100 }}
+                  sx={{ minWidth: 120 }}
                 >
+                  <MenuItem value={0.1}>≤ 100 m</MenuItem>
+                  <MenuItem value={0.2}>≤ 200 m</MenuItem>
+                  <MenuItem value={0.3}>≤ 300 m</MenuItem>
                   <MenuItem value={0.5}>≤ 500 m</MenuItem>
                   <MenuItem value={1}>≤ 1 km</MenuItem>
                   <MenuItem value={2}>≤ 2 km</MenuItem>
