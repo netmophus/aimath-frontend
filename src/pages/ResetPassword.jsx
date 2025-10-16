@@ -18,6 +18,7 @@ const ResetPassword = () => {
   );
   const [otp, setOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [message, setMessage] = useState("");
   const navigate = useNavigate();
 
@@ -25,11 +26,17 @@ const ResetPassword = () => {
     e.preventDefault();
     setMessage("");
 
+    if (newPassword !== confirmPassword) {
+      setMessage("❌ Les mots de passe ne correspondent pas.");
+      return;
+    }
+
     try {
       await API.post("/auth/reset-password", {
         phone: `+227${phone.replace(/\D/g, "")}`,
         otp,
         newPassword,
+        confirmPassword,
       });
       setMessage("✅ Mot de passe modifié.");
       setTimeout(() => navigate("/login"), 1500);
@@ -73,6 +80,15 @@ const ResetPassword = () => {
               fullWidth
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
+              required
+              margin="normal"
+            />
+            <TextField
+              label="Confirmer le mot de passe"
+              type="password"
+              fullWidth
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
               required
               margin="normal"
             />
