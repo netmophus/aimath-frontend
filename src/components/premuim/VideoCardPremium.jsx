@@ -105,7 +105,7 @@ const ExpandableText = ({ text = "", clampLines = 2, minCharsToToggle = 100 }) =
 const VideoCardPremium = ({ video = {}, isPremiumUser }) => {
   const navigate = useNavigate();
 
-  // ---------- états ----------
+  // ---------- états --------------
   const [showMain, setShowMain] = useState(false);
   const [openParts, setOpenParts] = useState({});
   const [copied, setCopied] = useState(false);

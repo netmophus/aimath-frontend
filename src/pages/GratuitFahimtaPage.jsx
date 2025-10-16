@@ -60,7 +60,7 @@ const extractLevels = (arr) => {
 
 
 
-/* ---------- utils ---------- */
+/* ---------- utils ------------- */
 // const timeTypingMs = 15;
  // délai entre deux phrases (en ms)
  const sentenceDelayMs = 550;

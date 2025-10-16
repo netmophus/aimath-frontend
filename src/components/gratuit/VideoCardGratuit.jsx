@@ -17,14 +17,14 @@ import {
   Badge,
   Paper,
 } from "@mui/material";
-import VisibilityIcon from "@mui/icons-material/Visibility";
+// import VisibilityIcon from "@mui/icons-material/Visibility";
 import PlayArrowRoundedIcon from "@mui/icons-material/PlayArrowRounded";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import LockRoundedIcon from "@mui/icons-material/LockRounded";
 import ImageNotSupportedRoundedIcon from "@mui/icons-material/ImageNotSupportedRounded";
-import OpenInNewRoundedIcon from "@mui/icons-material/OpenInNewRounded";
-import ShareRoundedIcon from "@mui/icons-material/ShareRounded";
-import PlaylistAddRoundedIcon from "@mui/icons-material/PlaylistAddRounded";
+// import OpenInNewRoundedIcon from "@mui/icons-material/OpenInNewRounded";
+// import ShareRoundedIcon from "@mui/icons-material/ShareRounded";
+// import PlaylistAddRoundedIcon from "@mui/icons-material/PlaylistAddRounded";
 import { useNavigate } from "react-router-dom";
 import API from "../../api";
 

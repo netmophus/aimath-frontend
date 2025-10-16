@@ -83,6 +83,7 @@ export default function DistributeursModal({ open, onClose }) {
   }, [open]);
 
   // Demande de géolocalisation quand le modal s'ouvre
+  //merci
   useEffect(() => {
     if (!open) return;
     if (!navigator.geolocation) {
