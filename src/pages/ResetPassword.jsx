@@ -6,7 +6,9 @@ import {
   Button,
   Paper,
   InputAdornment,
+  IconButton,
 } from "@mui/material";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 import API from "../api";
 import { useLocation, useNavigate } from "react-router-dom";
 import PageLayout from "../components/PageLayout";
@@ -20,6 +22,8 @@ const ResetPassword = () => {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [message, setMessage] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const navigate = useNavigate();
 
   const handleReset = async (e) => {
@@ -76,21 +80,45 @@ const ResetPassword = () => {
             />
             <TextField
               label="Nouveau mot de passe"
-              type="password"
+              type={showPassword ? "text" : "password"}
               fullWidth
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               required
               margin="normal"
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      onClick={() => setShowPassword(!showPassword)}
+                      edge="end"
+                    >
+                      {showPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
             />
             <TextField
               label="Confirmer le mot de passe"
-              type="password"
+              type={showConfirmPassword ? "text" : "password"}
               fullWidth
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
               margin="normal"
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      edge="end"
+                    >
+                      {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
             />
             <Button type="submit" variant="contained" fullWidth sx={{ mt: 2 }}>
               Réinitialiser
