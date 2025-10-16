@@ -23,7 +23,10 @@ import {
   useTheme,
   Card,
   CardContent,
-  CardActions,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import MapRoundedIcon from "@mui/icons-material/MapRounded";
@@ -58,6 +61,7 @@ export default function DistributeursModal({ open, onClose }) {
   const [geoDenied, setGeoDenied] = useState(false);
   const [distributeurs, setDistributeurs] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [radiusKm, setRadiusKm] = useState(10000); // Rayon de filtrage en km (par défaut: pas de limite)
 
   // Chargement des distributeurs depuis l'API
   useEffect(() => {
@@ -68,8 +72,13 @@ export default function DistributeursModal({ open, onClose }) {
       try {
         const response = await API.get("/distributors");
         console.log("Réponse API:", response.data); // Debug
-        // Assurer que c'est bien un tableau
-        const data = Array.isArray(response.data) ? response.data : [];
+        // L'API retourne { data: [...], pagination: {...} }
+        const data = Array.isArray(response.data?.data) 
+          ? response.data.data 
+          : Array.isArray(response.data) 
+          ? response.data 
+          : [];
+        console.log(`✅ ${data.length} distributeurs chargés`); // Debug
         setDistributeurs(data);
       } catch (error) {
         console.error("Erreur lors du chargement des distributeurs:", error);
@@ -108,9 +117,21 @@ export default function DistributeursModal({ open, onClose }) {
     }
     
     let base = distributeurs.map((d) => {
-      const dist = userPos ? haversineKm(userPos, d) : null;
-      return { ...d, dist, mapUrl: mapsUrl(d.latitude, d.longitude) };
+      // Extraire lat/lng depuis location.coordinates [lng, lat] ou depuis latitude/longitude
+      const lat = d.latitude || (d.location?.coordinates?.[1]);
+      const lng = d.longitude || (d.location?.coordinates?.[0]);
+      
+      // Créer un objet avec lat/lng pour le calcul de distance
+      const pos = lat && lng ? { lat, lng } : null;
+      const dist = userPos && pos ? haversineKm(userPos, pos) : null;
+      
+      return { ...d, lat, lng, dist, mapUrl: mapsUrl(lat, lng) };
     });
+
+    // Filtrage par distance (rayon)
+    if (userPos && radiusKm < 10000) {
+      base = base.filter((d) => d.dist == null || d.dist <= radiusKm);
+    }
 
     // Filtrage par texte
     if (q.trim()) {
@@ -132,16 +153,17 @@ export default function DistributeursModal({ open, onClose }) {
       return a.city.localeCompare(b.city);
     });
 
+    console.log(`📍 ${base.length} distributeurs après filtrage (rayon: ${radiusKm < 10000 ? radiusKm + ' km' : 'tout le pays'})`); // Debug
     return base;
-  }, [q, userPos, distributeurs]);
+  }, [q, userPos, distributeurs, radiusKm]);
 
   const paged = useMemo(() => {
     const start = page * rowsPerPage;
     return rows.slice(start, start + rowsPerPage);
   }, [rows, page, rowsPerPage]);
 
-  // Reset de la pagination quand on filtre
-  useEffect(() => setPage(0), [q]);
+  // Reset de la pagination quand on filtre ou change le rayon
+  useEffect(() => setPage(0), [q, radiusKm]);
 
   return (
     <Dialog 
@@ -151,15 +173,15 @@ export default function DistributeursModal({ open, onClose }) {
       fullWidth
       fullScreen={isMobile}
     >
-      <DialogTitle sx={{ fontWeight: 800, pb: isMobile ? 1 : 2 }}>
-        Distributeurs officiels de cartes Fahimta
+      <DialogTitle sx={{ fontWeight: 800, pb: isMobile ? 1 : 2, fontSize: isMobile ? '1.1rem' : '1.5rem' }}>
+        {isMobile ? "Distributeurs Fahimta" : "Distributeurs officiels de cartes Fahimta"}
       </DialogTitle>
 
       <DialogContent dividers sx={{ p: isMobile ? 1 : 2 }}>
-        <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} sx={{ mb: 2 }}>
+        <Stack spacing={1.5} sx={{ mb: 2 }}>
           <TextField
             size="small"
-            placeholder="Rechercher (ville, nom, adresse, téléphone)…"
+            placeholder={isMobile ? "Rechercher…" : "Rechercher (ville, nom, adresse, téléphone)…"}
             value={q}
             onChange={(e) => setQ(e.target.value)}
             fullWidth
@@ -172,20 +194,45 @@ export default function DistributeursModal({ open, onClose }) {
             }}
           />
 
-          <Box display="flex" alignItems="center" gap={1}>
-            {userPos ? (
-              <Chip
-                icon={<NearMeRoundedIcon />}
-                color="success"
-                label="Autour de moi"
-                size="small"
-              />
-            ) : geoDenied ? (
-              <Chip label="Géolocalisation refusée" color="warning" size="small" />
-            ) : (
-              <Chip label="Localisation..." color="info" size="small" />
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} alignItems="center">
+            <Box display="flex" justifyContent={isMobile ? "center" : "flex-start"} alignItems="center" gap={1}>
+              {userPos ? (
+                <Chip
+                  icon={<NearMeRoundedIcon />}
+                  color="success"
+                  label="Autour de moi"
+                  size="small"
+                />
+              ) : geoDenied ? (
+                <Chip label="Géolocalisation refusée" color="warning" size="small" />
+              ) : (
+                <Chip label="Localisation..." color="info" size="small" />
+              )}
+            </Box>
+
+            {userPos && (
+              <FormControl size="small" sx={{ minWidth: isMobile ? "100%" : 200 }}>
+                <InputLabel>Rayon</InputLabel>
+                <Select
+                  value={radiusKm}
+                  label="Rayon"
+                  onChange={(e) => setRadiusKm(e.target.value)}
+                >
+                  <MenuItem value={0.1}>100 m</MenuItem>
+                  <MenuItem value={0.2}>200 m</MenuItem>
+                  <MenuItem value={0.3}>300 m</MenuItem>
+                  <MenuItem value={0.5}>500 m</MenuItem>
+                  <MenuItem value={1}>1 km</MenuItem>
+                  <MenuItem value={2}>2 km</MenuItem>
+                  <MenuItem value={5}>5 km</MenuItem>
+                  <MenuItem value={10}>10 km</MenuItem>
+                  <MenuItem value={20}>20 km</MenuItem>
+                  <MenuItem value={50}>50 km</MenuItem>
+                  <MenuItem value={10000}>Tout le pays</MenuItem>
+                </Select>
+              </FormControl>
             )}
-          </Box>
+          </Stack>
         </Stack>
 
         {loading ? (
@@ -196,49 +243,54 @@ export default function DistributeursModal({ open, onClose }) {
           </Box>
         ) : isMobile ? (
           // Version mobile avec des cartes
-          <Stack spacing={2}>
+          <Stack spacing={1.5}>
             {paged.map((d) => (
-              <Card key={d._id || d.id} elevation={2}>
-                <CardContent sx={{ pb: 1 }}>
-                  <Typography variant="h6" fontWeight="bold" gutterBottom>
-                    {d.name}
-                  </Typography>
-                  
-                  <Stack spacing={1}>
-                    <Box display="flex" alignItems="center" gap={1}>
-                      <LocationOnIcon fontSize="small" color="primary" />
-                      <Typography variant="body2">
-                        {d.city} - {d.address}
-                      </Typography>
-                    </Box>
-                    
-                    <Box display="flex" alignItems="center" gap={1}>
-                      <PhoneIcon fontSize="small" color="primary" />
-                      <Typography variant="body2">{d.phone}</Typography>
-                    </Box>
-                    
+              <Card key={d._id || d.id} elevation={1} sx={{ borderRadius: 2 }}>
+                <CardContent sx={{ p: 1.5, pb: 1, '&:last-child': { pb: 1.5 } }}>
+                  <Box display="flex" justifyContent="space-between" alignItems="start" sx={{ mb: 1 }}>
+                    <Typography variant="subtitle1" fontWeight="bold" sx={{ flex: 1 }}>
+                      {d.name}
+                    </Typography>
                     {d.dist != null && (
                       <Chip 
                         icon={<NearMeRoundedIcon />}
                         label={`${d.dist.toFixed(1)} km`} 
                         color="success" 
-                        size="small" 
+                        size="small"
+                        sx={{ ml: 1 }}
                       />
                     )}
+                  </Box>
+                  
+                  <Stack spacing={0.5} sx={{ mb: 1 }}>
+                    <Box display="flex" alignItems="start" gap={0.5}>
+                      <LocationOnIcon fontSize="small" color="action" sx={{ mt: 0.2 }} />
+                      <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.85rem' }}>
+                        {d.city} - {d.address}
+                      </Typography>
+                    </Box>
+                    
+                    <Box display="flex" alignItems="center" gap={0.5}>
+                      <PhoneIcon fontSize="small" color="action" />
+                      <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.85rem' }}>
+                        {d.phone}
+                      </Typography>
+                    </Box>
                   </Stack>
-                </CardContent>
-                
-                <CardActions sx={{ pt: 0, pb: 1 }}>
+                  
                   <Button
                     size="small"
                     startIcon={<MapRoundedIcon />}
                     href={d.mapUrl}
                     target="_blank"
                     rel="noopener"
+                    fullWidth
+                    variant="outlined"
+                    sx={{ mt: 0.5 }}
                   >
                     Voir sur la carte
                   </Button>
-                </CardActions>
+                </CardContent>
               </Card>
             ))}
             
@@ -266,19 +318,9 @@ export default function DistributeursModal({ open, onClose }) {
                 {paged.map((d) => (
                   <TableRow key={d._id || d.id}>
                     <TableCell>
-                      <Stack>
-                        <Typography variant="body2" fontWeight="bold">
-                          {d.name}
-                        </Typography>
-                        {userPos && d.dist != null && (
-                          <Chip 
-                            icon={<NearMeRoundedIcon />}
-                            label={`${d.dist.toFixed(1)} km`} 
-                            color="success" 
-                            size="small" 
-                          />
-                        )}
-                      </Stack>
+                      <Typography variant="body2" fontWeight="bold">
+                        {d.name}
+                      </Typography>
                     </TableCell>
                     <TableCell>{d.city || "—"}</TableCell>
                     <TableCell>{d.address || "—"}</TableCell>
@@ -313,20 +355,33 @@ export default function DistributeursModal({ open, onClose }) {
           </Box>
         )}
 
-        <TablePagination
-          component="div"
-          count={rows.length}
-          page={page}
-          onPageChange={(_, p) => setPage(p)}
-          rowsPerPage={rowsPerPage}
-          onRowsPerPageChange={(e) => {
-            setRpp(parseInt(e.target.value, 10));
-            setPage(0);
-          }}
-          labelRowsPerPage="Lignes par page"
-          rowsPerPageOptions={[5, 10, 25]}
-          sx={{ mt: 2 }}
-        />
+        {rows.length > 0 && (
+          <TablePagination
+            component="div"
+            count={rows.length}
+            page={page}
+            onPageChange={(_, p) => setPage(p)}
+            rowsPerPage={rowsPerPage}
+            onRowsPerPageChange={(e) => {
+              setRpp(parseInt(e.target.value, 10));
+              setPage(0);
+            }}
+            labelRowsPerPage={isMobile ? "" : "Lignes par page"}
+            labelDisplayedRows={({ from, to, count }) => 
+              isMobile ? `${from}-${to}/${count}` : `${from}-${to} sur ${count}`
+            }
+            rowsPerPageOptions={[5, 10, 25]}
+            sx={{ 
+              mt: 2,
+              '.MuiTablePagination-selectLabel': {
+                display: isMobile ? 'none' : 'block'
+              },
+              '.MuiTablePagination-select': {
+                mr: isMobile ? 0 : 1
+              }
+            }}
+          />
+        )}
       </DialogContent>
 
       <DialogActions sx={{ p: 2 }}>
