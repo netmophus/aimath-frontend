@@ -40,21 +40,47 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Stratégie: Network First, puis Cache
+// Stratégie: Network First, puis Cache (seulement pour GET)
 self.addEventListener('fetch', (event) => {
+  const { request } = event;
+  const url = new URL(request.url);
+
+  // ❌ Ignore tout ce qui n'est pas http/https (chrome-extension, etc.)
+  if (!url.protocol.startsWith('http')) {
+    return;
+  }
+
+  // ❌ Ignore les requêtes non-GET (POST, PUT, DELETE, etc.)
+  if (request.method !== 'GET') {
+    return;
+  }
+
+  // ❌ Ignore les requêtes vers l'API backend
+  if (url.pathname.includes('/api/')) {
+    return;
+  }
+
+  // ❌ Ignore les extensions de navigateur
+  if (url.origin.includes('chrome-extension') || url.origin.includes('moz-extension')) {
+    return;
+  }
+
+  // ✅ Cache uniquement les ressources du même domaine ou ressources statiques
   event.respondWith(
-    fetch(event.request)
+    fetch(request)
       .then((response) => {
         // Clone la réponse et la met en cache
-        const responseClone = response.clone();
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseClone);
-        });
+        if (response && response.status === 200) {
+          const responseClone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(request, responseClone);
+          });
+        }
         return response;
       })
       .catch(() => {
         // Si le réseau échoue, utilise le cache
-        return caches.match(event.request);
+        return caches.match(request);
       })
   );
 });

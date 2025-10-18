@@ -71,9 +71,9 @@ const InstallPrompt = () => {
         elevation={6}
         sx={{
           position: "fixed",
-          bottom: 20,
+          top: "50%",
           left: "50%",
-          transform: "translateX(-50%)",
+          transform: "translate(-50%, -50%)",
           maxWidth: 400,
           width: "90%",
           p: 2,
