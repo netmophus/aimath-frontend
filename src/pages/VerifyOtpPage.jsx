@@ -10,17 +10,30 @@ const VerifyOtpPage = () => {
   const navigate = useNavigate();
   const { login } = useContext(AuthContext);
 
-  const [phone, setPhone] = useState(location.state?.phone || "");
-  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+  // ✅ Récupérer le téléphone depuis location.state OU localStorage
+  const [phone, setPhone] = useState(() => {
+    const savedPhone = localStorage.getItem("pendingVerificationPhone");
+    return location.state?.phone || savedPhone || "";
+  });
+  const [otp, setOtp] = useState(["", "", "", ""]);
   const [message, setMessage] = useState("");
+  const [resending, setResending] = useState(false);
+  const [showPhoneInput, setShowPhoneInput] = useState(!phone);
   const inputRefs = useRef([]);
 
   useEffect(() => {
+    // ✅ Sauvegarder le téléphone dans localStorage quand il arrive via location.state
+    if (location.state?.phone) {
+      localStorage.setItem("pendingVerificationPhone", location.state.phone);
+    }
+  }, [location.state?.phone]);
+
+  useEffect(() => {
     // Focus le premier input au chargement
-    if (inputRefs.current[0]) {
+    if (inputRefs.current[0] && phone) {
       inputRefs.current[0].focus();
     }
-  }, []);
+  }, [phone]);
 
   const handleChange = (index, value) => {
     // N'accepter que les chiffres
@@ -31,7 +44,7 @@ const VerifyOtpPage = () => {
     setOtp(newOtp);
 
     // Passer au champ suivant si un chiffre a été saisi
-    if (value && index < 5) {
+    if (value && index < 3) {
       inputRefs.current[index + 1]?.focus();
     }
   };
@@ -45,26 +58,47 @@ const VerifyOtpPage = () => {
 
   const handlePaste = (e) => {
     e.preventDefault();
-    const pastedData = e.clipboardData.getData("text").slice(0, 6);
+    const pastedData = e.clipboardData.getData("text").slice(0, 4);
     if (!/^\d+$/.test(pastedData)) return;
 
     const newOtp = [...otp];
-    for (let i = 0; i < pastedData.length && i < 6; i++) {
+    for (let i = 0; i < pastedData.length && i < 4; i++) {
       newOtp[i] = pastedData[i];
     }
     setOtp(newOtp);
 
     // Focus le dernier champ rempli ou le suivant
-    const nextIndex = Math.min(pastedData.length, 5);
+    const nextIndex = Math.min(pastedData.length, 3);
     inputRefs.current[nextIndex]?.focus();
+  };
+
+  const handleResendOtp = async () => {
+    setResending(true);
+    setMessage("");
+
+    try {
+      await API.post("/auth/resend-otp", { phone });
+      setMessage("✅ Un nouveau code a été envoyé par SMS !");
+      setOtp(["", "", "", ""]); // Réinitialiser les champs
+      inputRefs.current[0]?.focus();
+    } catch (err) {
+      setMessage(err.response?.data?.message || "❌ Erreur lors de l'envoi du code.");
+    } finally {
+      setResending(false);
+    }
   };
 
   const handleVerify = async (e) => {
     e.preventDefault();
     setMessage("");
 
+    if (!phone) {
+      setMessage("Veuillez entrer votre numéro de téléphone.");
+      return;
+    }
+
     const otpCode = otp.join("");
-    if (otpCode.length !== 6) {
+    if (otpCode.length !== 4) {
       setMessage("Veuillez entrer le code OTP complet.");
       return;
     }
@@ -75,6 +109,10 @@ const VerifyOtpPage = () => {
       // Enregistre le token et connecte
       const token = res.data.token;
       localStorage.setItem("token", token);
+      
+      // ✅ Supprimer le téléphone du localStorage après vérification réussie
+      localStorage.removeItem("pendingVerificationPhone");
+      
       login(token);
 
       setMessage("✅ Vérification réussie !");
@@ -116,20 +154,47 @@ const VerifyOtpPage = () => {
         </Typography>
 
         <Typography variant="body1" color="text.secondary" textAlign="center" sx={{ mt: 1, mb: 3 }}>
-          Un code a été envoyé par SMS au <strong>{formatPhoneDisplay(phone)}</strong>. Veuillez le saisir ci-dessous pour activer votre compte.
+          {phone 
+            ? `Un code a été envoyé par SMS au ${formatPhoneDisplay(phone)}. Veuillez le saisir ci-dessous pour activer votre compte.`
+            : "Entrez votre numéro de téléphone et le code OTP reçu par SMS."}
         </Typography>
 
         <Box component="form" onSubmit={handleVerify}>
-          {/* Champ téléphone masqué */}
-          <TextField
-            label="Téléphone"
-            fullWidth
-            margin="normal"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            required
-            sx={{ display: "none" }}
-          />
+          {/* Champ téléphone - visible si pas de numéro */}
+          {showPhoneInput && (
+            <TextField
+              label="Numéro de téléphone"
+              fullWidth
+              margin="normal"
+              value={phone.replace("+227", "")}
+              onChange={(e) => {
+                const value = e.target.value.replace(/\D/g, "");
+                if (value.length <= 8) {
+                  const formattedPhone = value ? `+227${value}` : "";
+                  setPhone(formattedPhone);
+                  localStorage.setItem("pendingVerificationPhone", formattedPhone);
+                }
+              }}
+              placeholder="XXXXXXXX"
+              required
+              InputProps={{
+                startAdornment: (
+                  <Typography sx={{ mr: 1, color: "text.secondary" }}>+227</Typography>
+                ),
+              }}
+            />
+          )}
+          
+          {phone && !showPhoneInput && (
+            <Button
+              variant="text"
+              size="small"
+              onClick={() => setShowPhoneInput(true)}
+              sx={{ mb: 2 }}
+            >
+              Modifier le numéro
+            </Button>
+          )}
 
           {/* Inputs OTP séparés */}
           <Box
@@ -180,10 +245,20 @@ const VerifyOtpPage = () => {
             variant="contained"
             type="submit"
             fullWidth
-            disabled={otp.join("").length !== 6}
+            disabled={otp.join("").length !== 4}
             sx={{ mt: 2 }}
           >
             Vérifier
+          </Button>
+
+          <Button
+            variant="outlined"
+            fullWidth
+            disabled={resending}
+            onClick={handleResendOtp}
+            sx={{ mt: 2 }}
+          >
+            {resending ? "Envoi en cours..." : "Renvoyer le code"}
           </Button>
 
           {message && (
