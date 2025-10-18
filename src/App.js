@@ -4,6 +4,7 @@ import AppRoutes from "./routes/AppRoutes";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import './App.css'; // ✅ Ajout de App.css
 import InactivityHandler from "./components/InactivityHandler"; // adapte le chemin
+import InstallPrompt from "./components/InstallPrompt"; // ✅ PWA Install Prompt
 
 
 function App() {
@@ -13,6 +14,7 @@ function App() {
   <Router>
      <InactivityHandler />
     <AppRoutes />
+    <InstallPrompt />
   </Router>
 </GoogleOAuthProvider>
 

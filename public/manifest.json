@@ -9,25 +9,20 @@
   "categories": ["education", "productivity"],
   "icons": [
     {
-      "src": "%PUBLIC_URL%/favicon.ico",
-      "sizes": "16x16 24x24 32x32 48x48 64x64",
+      "src": "favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
       "type": "image/x-icon"
     },
     {
-      "src": "%PUBLIC_URL%/apple-touch-icon.png",
-      "sizes": "180x180",
-      "type": "image/png"
-    },
-    {
-      "src": "%PUBLIC_URL%/icon-192.png",
-      "sizes": "192x192",
+      "src": "logo192.png",
       "type": "image/png",
+      "sizes": "192x192",
       "purpose": "any maskable"
     },
     {
-      "src": "%PUBLIC_URL%/icon-512.png",
-      "sizes": "512x512",
+      "src": "logo512.png",
       "type": "image/png",
+      "sizes": "512x512",
       "purpose": "any maskable"
     }
   ]
