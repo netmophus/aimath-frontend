@@ -82,6 +82,7 @@ const ImageCropModal = ({ open, image, onClose, onCropComplete }) => {
   const [zoom, setZoom] = useState(1);
   const [rotation, setRotation] = useState(0);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
+  const [aspectRatio, setAspectRatio] = useState(undefined); // ✅ Format libre par défaut
 
   const onCropChange = (crop) => setCrop(crop);
   const onZoomChange = (zoom) => setZoom(zoom);
@@ -136,21 +137,73 @@ const ImageCropModal = ({ open, image, onClose, onCropComplete }) => {
           crop={crop}
           zoom={zoom}
           rotation={rotation}
-          aspect={3 / 4} // Format portrait (adapté aux exercices)
+          aspect={aspectRatio} // ✅ Format dynamique
           onCropChange={onCropChange}
           onZoomChange={onZoomChange}
           onCropComplete={onCropCompleteCallback}
+          showGrid={true} // ✅ Afficher la grille
+          restrictPosition={false} // ✅ Permettre de déplacer librement
           style={{
             containerStyle: {
               backgroundColor: "#000",
+            },
+            cropAreaStyle: {
+              border: "2px solid #fff",
             },
           }}
         />
       </DialogContent>
 
       <DialogActions sx={{ flexDirection: "column", gap: 2, p: 2 }}>
+        {/* ✅ Options de format */}
+        <Box sx={{ width: "100%" }}>
+          <Typography variant="subtitle2" fontWeight={600} gutterBottom>
+            📐 Format de recadrage
+          </Typography>
+          <Stack direction="row" spacing={1} flexWrap="wrap">
+            <Button
+              variant={aspectRatio === undefined ? "contained" : "outlined"}
+              size="small"
+              onClick={() => setAspectRatio(undefined)}
+            >
+              Libre
+            </Button>
+            <Button
+              variant={aspectRatio === 1 ? "contained" : "outlined"}
+              size="small"
+              onClick={() => setAspectRatio(1)}
+            >
+              Carré 1:1
+            </Button>
+            <Button
+              variant={aspectRatio === 3/4 ? "contained" : "outlined"}
+              size="small"
+              onClick={() => setAspectRatio(3/4)}
+            >
+              Portrait 3:4
+            </Button>
+            <Button
+              variant={aspectRatio === 4/3 ? "contained" : "outlined"}
+              size="small"
+              onClick={() => setAspectRatio(4/3)}
+            >
+              Paysage 4:3
+            </Button>
+            <Button
+              variant={aspectRatio === 16/9 ? "contained" : "outlined"}
+              size="small"
+              onClick={() => setAspectRatio(16/9)}
+            >
+              Large 16:9
+            </Button>
+          </Stack>
+        </Box>
+
         {/* Zoom */}
         <Box sx={{ width: "100%" }}>
+          <Typography variant="subtitle2" fontWeight={600} gutterBottom>
+            🔍 Zoom
+          </Typography>
           <Stack direction="row" spacing={2} alignItems="center">
             <ZoomOutIcon color="action" />
             <Slider
@@ -163,9 +216,6 @@ const ImageCropModal = ({ open, image, onClose, onCropComplete }) => {
             />
             <ZoomInIcon color="action" />
           </Stack>
-          <Typography variant="caption" color="text.secondary" align="center" sx={{ display: "block", mt: 0.5 }}>
-            Pincez pour zoomer ou utilisez le curseur
-          </Typography>
         </Box>
 
         {/* Boutons action */}

@@ -403,7 +403,8 @@
 import React, { useEffect, useState, useContext, useRef } from "react";
 import {
   Box, Paper, Typography, TextField, IconButton, Avatar, Stack, Chip, Button,
-  Drawer, List, ListItemButton, ListItemText, Divider, Snackbar, Tooltip
+  Drawer, List, ListItemButton, ListItemText, Divider, Snackbar, Tooltip,
+  CircularProgress
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import useMediaQuery from "@mui/material/useMediaQuery";
@@ -413,6 +414,7 @@ import MicIcon from "@mui/icons-material/Mic";
 import CameraAltRoundedIcon from "@mui/icons-material/CameraAltRounded";
 import SwapHorizRoundedIcon from "@mui/icons-material/SwapHorizRounded";
 import CircleIcon from "@mui/icons-material/Circle";
+import DeleteIcon from "@mui/icons-material/Delete";
 import MuiAlert from "@mui/material/Alert";
 
 import API from "../../api";
@@ -457,6 +459,10 @@ const StudentChatPage = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [mediaRecorder, setMediaRecorder] = useState(null);
   const [audioJustSent, setAudioJustSent] = useState(false);
+  const [recordedAudio, setRecordedAudio] = useState(null); // ✅ Blob audio enregistré
+  const [audioPreviewUrl, setAudioPreviewUrl] = useState(null); // ✅ URL pour preview
+  const [recordingTime, setRecordingTime] = useState(0); // ✅ Chronomètre
+  const recordingIntervalRef = useRef(null);
 
   // ✅ Socket.io temps réel
   const {
@@ -465,9 +471,11 @@ const StudentChatPage = () => {
     joinChat,
     leaveChat,
     sendMessage,
+    deleteMessage, // ✅ Pour notifier la suppression
     startTyping,
     stopTyping,
     onMessage,
+    onMessageDeleted, // ✅ Pour écouter les suppressions
     onTyping,
   } = useSocket(token);
 
@@ -478,10 +486,25 @@ const StudentChatPage = () => {
   const [snack, setSnack] = useState({ open: false, msg: "", sev: "info" });
   const showSnack = (msg, sev = "info") => setSnack({ open: true, msg, sev });
   const closeSnack = () => setSnack((s) => ({ ...s, open: false }));
+  
+  // ✅ Spinner de chargement pour l'envoi
+  const [isSending, setIsSending] = useState(false);
 
   // scroll
   const bottomRef = useRef(null);
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages, teacher]);
+
+  // ✅ Cleanup : arrêter le chronomètre et nettoyer l'URL audio au démontage
+  useEffect(() => {
+    return () => {
+      if (recordingIntervalRef.current) {
+        clearInterval(recordingIntervalRef.current);
+      }
+      if (audioPreviewUrl) {
+        URL.revokeObjectURL(audioPreviewUrl);
+      }
+    };
+  }, [audioPreviewUrl]);
 
   // --- helpers
   const pickTeacher = (list, preferredId) => {
@@ -575,6 +598,17 @@ const StudentChatPage = () => {
     return unsubscribe;
   }, [teacher?._id, onTyping]);
 
+  // ✅ Socket.io: Écouter les suppressions de messages
+  useEffect(() => {
+    if (!teacher?._id) return;
+
+    const unsubscribe = onMessageDeleted((data) => {
+      setMessages((prev) => prev.filter((m) => m._id !== data.messageId));
+    });
+
+    return unsubscribe;
+  }, [teacher?._id, onMessageDeleted]);
+
   // ✅ Socket.io: Envoyer indicateur "en train d'écrire"
   const typingTimeoutRef = useRef(null);
   useEffect(() => {
@@ -615,13 +649,19 @@ const StudentChatPage = () => {
   // --- send text/file
   const handleSend = async () => {
     if (!teacher) return showSnack("Aucun enseignant sélectionné.", "warning");
+    
+    // ✅ Ignorer silencieusement si un audio vient d'être envoyé
+    if (audioJustSent) return;
+    
     if (!newMsg.trim() && !file) {
-      if (audioJustSent) return;
       return showSnack("Message vide ou aucun fichier.", "warning");
     }
 
     // ✅ Arrêter l'indicateur "en train d'écrire"
     stopTyping(teacher._id);
+
+    // ✅ Activer le spinner de chargement
+    setIsSending(true);
 
     try {
       let created;
@@ -644,10 +684,19 @@ const StudentChatPage = () => {
         setMessages((p) => [...p, created]);
         // ✅ Envoyer via Socket.io pour livraison instantanée
         sendMessage(teacher._id, created);
+        
+        // ✅ Nettoyer l'aperçu après envoi réussi
+        if (file) {
+          setFile(null);
+          showSnack("✅ Message envoyé avec succès !", "success");
+        }
       }
     } catch (err) {
       console.error("Send failed", err);
       showSnack("Erreur lors de l'envoi.", "error");
+    } finally {
+      // ✅ Désactiver le spinner de chargement
+      setIsSending(false);
     }
   };
 
@@ -681,15 +730,26 @@ const StudentChatPage = () => {
     setCropModalOpen(true);
   };
 
-  // ✅ Après recadrage, définir le fichier
+  // ✅ Après recadrage, définir le fichier et l'afficher directement
   const handleCropComplete = (croppedFile) => {
     setFile(croppedFile);
     setImageToCrop(null);
+    setCropModalOpen(false);
+    
+    // ✅ Afficher un message de succès
+    showSnack("✅ Photo validée ! Cliquez sur Envoyer pour l'envoyer dans le chat.", "success");
   };
 
   // --- audio
   const handleSendAudio = async (blob) => {
     if (!teacher) return showSnack("Aucun enseignant sélectionné.", "warning");
+    
+    // ✅ Mettre le flag AVANT l'envoi pour éviter les erreurs de timing
+    setAudioJustSent(true);
+    
+    // ✅ Activer le spinner pendant l'envoi de l'audio
+    setIsSending(true);
+    
     const form = new FormData();
     form.append("to", teacher._id);
     form.append("file", blob, "audioMessage.webm");
@@ -698,19 +758,31 @@ const StudentChatPage = () => {
         headers: { "Content-Type": "multipart/form-data" },
       });
       setMessages((p) => [...p, res.data]);
-      setAudioJustSent(true);
-      setTimeout(() => setAudioJustSent(false), 1200);
+      
+      // ✅ Envoyer via Socket.io pour livraison instantanée
+      sendMessage(teacher._id, res.data);
+      
+      showSnack("✅ Audio envoyé avec succès !", "success");
+      
+      // Réinitialiser après un délai
+      setTimeout(() => setAudioJustSent(false), 1500);
     } catch (err) {
       console.error("Audio failed", err);
       showSnack("Erreur envoi vocal.", "error");
+      setAudioJustSent(false); // ✅ Réinitialiser en cas d'erreur
+    } finally {
+      // ✅ Désactiver le spinner
+      setIsSending(false);
     }
   };
 
   const handleRecord = async () => {
     if (!teacher) return showSnack("Aucun enseignant sélectionné.", "warning");
     if (isRecording) {
+      // ✅ Arrêter l'enregistrement (ne pas envoyer automatiquement)
       mediaRecorder?.stop();
       setIsRecording(false);
+      clearInterval(recordingIntervalRef.current);
       return;
     }
     try {
@@ -720,28 +792,112 @@ const StudentChatPage = () => {
       rec.ondataavailable = (e) => e.data?.size && chunks.push(e.data);
       rec.onstop = () => {
         const blob = new Blob(chunks, { type: "audio/webm" });
-        handleSendAudio(blob);
+        // ✅ Stocker pour preview au lieu d'envoyer directement
+        setRecordedAudio(blob);
+        setAudioPreviewUrl(URL.createObjectURL(blob));
         stream.getTracks().forEach((t) => t.stop());
       };
       rec.start();
       setMediaRecorder(rec);
       setIsRecording(true);
+      setRecordingTime(0);
+      // ✅ Démarrer le chronomètre
+      recordingIntervalRef.current = setInterval(() => {
+        setRecordingTime(prev => prev + 1);
+      }, 1000);
     } catch (err) {
       console.error("Mic denied", err);
       showSnack("Accès micro refusé ou indisponible.", "error");
     }
   };
 
+  // ✅ Envoyer l'audio enregistré
+  const handleConfirmSendAudio = () => {
+    if (recordedAudio) {
+      handleSendAudio(recordedAudio);
+      // Nettoyer
+      setRecordedAudio(null);
+      setAudioPreviewUrl(null);
+      setRecordingTime(0);
+    }
+  };
+
+  // ✅ Annuler l'enregistrement
+  const handleCancelAudio = () => {
+    if (audioPreviewUrl) {
+      URL.revokeObjectURL(audioPreviewUrl);
+    }
+    setRecordedAudio(null);
+    setAudioPreviewUrl(null);
+    setRecordingTime(0);
+  };
+
+  // ✅ Supprimer un message
+  const handleDeleteMessage = async (messageId) => {
+    if (!window.confirm("❌ Voulez-vous vraiment supprimer ce message ?\n\n⚠️ Cette action est irréversible.")) {
+      return;
+    }
+
+    try {
+      const res = await API.delete(`/student/chat/message/${messageId}`);
+      
+      if (res.data.success) {
+        // Supprimer localement
+        setMessages((prev) => prev.filter((m) => m._id !== messageId));
+        
+        // Notifier via Socket.io
+        deleteMessage(teacher._id, messageId);
+        
+        showSnack("✅ Message supprimé avec succès.", "success");
+      }
+    } catch (err) {
+      console.error("Erreur suppression message:", err);
+      showSnack(err.response?.data?.message || "Erreur lors de la suppression.", "error");
+    }
+  };
+
   const Bubble = ({ msg }) => {
+    const [isHovered, setIsHovered] = React.useState(false);
     const mine = msg.from._id === user?._id;
     const time = new Date(msg.createdAt || Date.now()).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
     return (
-      <Stack direction="row" justifyContent={mine ? "flex-end" : "flex-start"} sx={{ mb: 1.25 }}>
+      <Stack 
+        direction="row" 
+        justifyContent={mine ? "flex-end" : "flex-start"} 
+        sx={{ mb: 1.25, position: "relative" }}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
         {!mine && (
           <Avatar sx={{ width: 28, height: 28, mr: 1 }}>
             {(teacher?.fullName || "T")[0]}
           </Avatar>
         )}
+        
+        {/* ✅ Bouton supprimer (visible au survol pour mes messages) */}
+        {mine && isHovered && (
+          <Tooltip title="Supprimer ce message">
+            <IconButton
+              size="small"
+              onClick={() => handleDeleteMessage(msg._id)}
+              sx={{
+                position: "absolute",
+                top: -8,
+                right: -8,
+                bgcolor: "error.main",
+                color: "#fff",
+                width: 24,
+                height: 24,
+                "&:hover": { bgcolor: "error.dark" },
+                boxShadow: 2,
+                zIndex: 10,
+              }}
+            >
+              <DeleteIcon sx={{ fontSize: 14 }} />
+            </IconButton>
+          </Tooltip>
+        )}
+        
         <Box
           sx={{
             maxWidth: "78%",
@@ -863,13 +1019,154 @@ const StudentChatPage = () => {
             )}
             {messages.map((m, i) => <Bubble key={i} msg={m} />)}
 
+            {/* ✅ Aperçu de la photo validée avec possibilité de suppression */}
             {file && (
-              <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
-                <Chip label={file.name} onDelete={() => setFile(null)} />
-                {file.type?.startsWith("image/") && (
-                  <img src={URL.createObjectURL(file)} alt="aperçu" style={{ height: 56, borderRadius: 8 }} />
-                )}
-              </Stack>
+              <Box sx={{ mb: 2, p: 2, bgcolor: "#e8f5e8", borderRadius: 2, border: "2px solid #4caf50" }}>
+                <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2}>
+                  <Stack direction="row" alignItems="center" spacing={2}>
+                    <Box sx={{ 
+                      bgcolor: "#4caf50", 
+                      color: "#fff", 
+                      borderRadius: "50%", 
+                      width: 24, 
+                      height: 24, 
+                      display: "flex", 
+                      alignItems: "center", 
+                      justifyContent: "center",
+                      fontSize: "12px"
+                    }}>
+                      ✅
+                    </Box>
+                    <Box>
+                      <Typography variant="body2" fontWeight={600} color="success.dark">
+                        Photo validée et prête à envoyer
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {file.name} • {(file.size / 1024 / 1024).toFixed(1)} MB
+                      </Typography>
+                    </Box>
+                  </Stack>
+                  
+                  {/* ✅ Aperçu de l'image */}
+                  {file.type?.startsWith("image/") && (
+                    <Box sx={{ position: "relative" }}>
+                      <img 
+                        src={URL.createObjectURL(file)} 
+                        alt="Aperçu validé" 
+                        style={{ 
+                          height: 60, 
+                          width: 60,
+                          borderRadius: 8, 
+                          objectFit: "cover",
+                          border: "2px solid #4caf50"
+                        }} 
+                      />
+                    </Box>
+                  )}
+                  
+                  {/* ✅ Bouton supprimer principal */}
+                  <IconButton
+                    color="error"
+                    onClick={() => setFile(null)}
+                    title="Supprimer cette photo"
+                    size="small"
+                  >
+                    ❌
+                  </IconButton>
+                </Stack>
+                
+                {/* ✅ Message d'instruction */}
+                <Typography variant="caption" color="success.dark" sx={{ mt: 1, display: "block", fontStyle: "italic" }}>
+                  💡 Cliquez sur "Envoyer" pour envoyer cette photo dans le chat
+                </Typography>
+              </Box>
+            )}
+
+            {/* ✅ Enregistrement en cours (affichage immédiat) */}
+            {isRecording && (
+              <Box sx={{ mb: 1.5, p: 1.5, bgcolor: "#ffebee", borderRadius: 2, border: "2px solid #f44336" }}>
+                <Stack direction="row" alignItems="center" spacing={2}>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <Box
+                      sx={{
+                        width: 12,
+                        height: 12,
+                        bgcolor: "error.main",
+                        borderRadius: "50%",
+                        animation: "pulse 1.5s ease-in-out infinite",
+                        "@keyframes pulse": {
+                          "0%, 100%": { opacity: 1 },
+                          "50%": { opacity: 0.4 },
+                        },
+                      }}
+                    />
+                    <Typography variant="body2" fontWeight={600} color="error">
+                      Enregistrement en cours...
+                    </Typography>
+                  </Box>
+                  <Typography variant="h6" fontWeight={700} color="error">
+                    {Math.floor(recordingTime / 60)}:{String(recordingTime % 60).padStart(2, "0")}
+                  </Typography>
+                  <Button
+                    variant="contained"
+                    color="error"
+                    size="small"
+                    onClick={handleRecord}
+                    sx={{ ml: "auto" }}
+                  >
+                    ⏸️ Arrêter
+                  </Button>
+                </Stack>
+              </Box>
+            )}
+
+            {/* ✅ Aperçu audio après enregistrement */}
+            {recordedAudio && !isRecording && (
+              <Box sx={{ mb: 2, p: 2, bgcolor: "#fff3e0", borderRadius: 2, border: "2px solid #ff9800" }}>
+                <Stack spacing={1.5}>
+                  {/* Titre et chronomètre */}
+                  <Stack direction="row" alignItems="center" justifyContent="space-between">
+                    <Typography variant="body2" fontWeight={600} color="warning.dark">
+                      🎤 Message vocal enregistré
+                    </Typography>
+                    <Chip 
+                      label={`${Math.floor(recordingTime / 60)}:${String(recordingTime % 60).padStart(2, '0')}`} 
+                      color="warning" 
+                      size="small"
+                    />
+                  </Stack>
+                  
+                  {/* Player audio pour réécouter */}
+                  {audioPreviewUrl && (
+                    <audio controls src={audioPreviewUrl} style={{ width: "100%", height: 40 }} />
+                  )}
+                  
+                  {/* Boutons d'action */}
+                  <Stack direction="row" spacing={1}>
+                    <Button
+                      variant="contained"
+                      color="success"
+                      size="small"
+                      startIcon={isSending ? <CircularProgress size={16} color="inherit" /> : <SendIcon />}
+                      onClick={handleConfirmSendAudio}
+                      disabled={isSending}
+                      fullWidth
+                    >
+                      {isSending ? "Envoi..." : "✅ Envoyer"}
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      color="error"
+                      size="small"
+                      onClick={handleCancelAudio}
+                      disabled={isSending}
+                      fullWidth
+                    >
+                      ❌ Annuler
+                    </Button>
+                  </Stack>
+                </Stack>
+              </Box>
             )}
             <div ref={bottomRef} />
           </Box>
@@ -899,36 +1196,45 @@ const StudentChatPage = () => {
             <Stack direction="row" alignItems="center" spacing={1}>
               {/* ✅ Bouton Pièce jointe (PDF, vidéo, audio) */}
               <Tooltip title="Fichier (PDF, vidéo, audio)">
-                <IconButton onClick={() => fileInputRef.current?.click()}>
+                <IconButton onClick={() => fileInputRef.current?.click()} disabled={isSending}>
                   <AttachFileIcon />
                 </IconButton>
               </Tooltip>
 
               {/* ✅ Bouton Galerie (images existantes) */}
               <Tooltip title="Galerie d'images">
-                <IconButton onClick={() => galleryInputRef.current?.click()} color="info">
+                <IconButton onClick={() => galleryInputRef.current?.click()} color="info" disabled={isSending}>
                   🖼️
                 </IconButton>
               </Tooltip>
 
               {/* ✅ Bouton Caméra (OUVRE LA CAMÉRA) */}
               <Tooltip title="📸 Prendre une photo">
-                <IconButton onClick={openCamera} color="secondary">
+                <IconButton onClick={openCamera} color="secondary" disabled={isSending}>
                   <CameraAltRoundedIcon />
                 </IconButton>
               </Tooltip>
 
-              <IconButton color={isRecording ? "error" : "primary"} onClick={handleRecord} title="Message vocal">
-                <MicIcon />
-              </IconButton>
+              <Tooltip title={isRecording ? "⏸️ Arrêter l'enregistrement" : recordedAudio ? "En attente d'envoi..." : "🎤 Message vocal"}>
+                <span>
+                  <IconButton 
+                    color={isRecording ? "error" : "primary"} 
+                    onClick={handleRecord} 
+                    disabled={(recordedAudio && !isRecording) || isSending}
+                  >
+                    <MicIcon />
+                  </IconButton>
+                </span>
+              </Tooltip>
 
               <TextField
                 variant="outlined"
-                placeholder="Écrivez un message…"
+                placeholder={isSending ? "Envoi en cours..." : "Écrivez un message…"}
                 value={newMsg}
                 onChange={(e) => setNewMsg(e.target.value)}
                 fullWidth
                 size="small"
+                disabled={isSending} // ✅ Désactiver pendant l'envoi
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault();
@@ -937,8 +1243,26 @@ const StudentChatPage = () => {
                 }}
               />
 
-              <IconButton color="primary" onClick={handleSend} title="Envoyer">
-                <SendIcon />
+              <IconButton 
+                color="primary" 
+                onClick={handleSend} 
+                title="Envoyer"
+                disabled={isSending} // ✅ Désactiver pendant l'envoi
+                sx={{
+                  // ✅ Bouton plus visible quand il y a une photo prête
+                  ...(file && {
+                    bgcolor: "primary.main",
+                    color: "#fff",
+                    "&:hover": {
+                      bgcolor: "primary.dark",
+                    },
+                    boxShadow: 2,
+                    transform: "scale(1.1)",
+                    transition: "all 0.2s ease",
+                  })
+                }}
+              >
+                {isSending ? <CircularProgress size={24} color="inherit" /> : <SendIcon />}
               </IconButton>
             </Stack>
           </Box>

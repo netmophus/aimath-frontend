@@ -79,6 +79,10 @@ export const useSocket = (token) => {
     socketRef.current?.emit("message:send", { to, message });
   };
 
+  const deleteMessage = (to, messageId) => {
+    socketRef.current?.emit("message:delete", { to, messageId });
+  };
+
   const startTyping = (to) => {
     socketRef.current?.emit("typing:start", { to });
   };
@@ -94,6 +98,11 @@ export const useSocket = (token) => {
   const onMessage = (callback) => {
     socketRef.current?.on("message:received", callback);
     return () => socketRef.current?.off("message:received", callback);
+  };
+
+  const onMessageDeleted = (callback) => {
+    socketRef.current?.on("message:deleted", callback);
+    return () => socketRef.current?.off("message:deleted", callback);
   };
 
   const onTyping = (callback) => {
@@ -116,10 +125,12 @@ export const useSocket = (token) => {
     joinChat,
     leaveChat,
     sendMessage,
+    deleteMessage, // ✅ Nouvelle fonction
     startTyping,
     stopTyping,
     checkUserOnline,
     onMessage,
+    onMessageDeleted, // ✅ Nouvelle fonction
     onTyping,
   };
 };

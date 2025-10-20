@@ -39,8 +39,9 @@ const CameraModal = ({ open, onClose, onCapture }) => {
         const mediaStream = await navigator.mediaDevices.getUserMedia({
           video: {
             facingMode: facingMode,
-            width: { ideal: 1920 },
-            height: { ideal: 1080 },
+            width: { ideal: 1920, min: 1280 },
+            height: { ideal: 1080, min: 720 },
+            frameRate: { ideal: 30 },
           },
         });
 
@@ -105,7 +106,7 @@ const CameraModal = ({ open, onClose, onCapture }) => {
         }, 300);
       },
       "image/jpeg",
-      0.92
+      0.95 // ✅ Meilleure qualité
     );
   };
 
