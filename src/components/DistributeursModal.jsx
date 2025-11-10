@@ -178,6 +178,58 @@ export default function DistributeursModal({ open, onClose }) {
       </DialogTitle>
 
       <DialogContent dividers sx={{ p: isMobile ? 1 : 2 }}>
+        {/* Instructions pour utiliser la carte */}
+        <Card sx={{ mb: 3, background: "linear-gradient(135deg, rgba(255,215,0,0.1) 0%, rgba(255,165,0,0.05) 100%)", border: "2px solid rgba(255,215,0,0.3)" }}>
+          <CardContent sx={{ p: 2 }}>
+            <Typography variant="h6" fontWeight={700} sx={{ mb: 1.5, color: "#FFD700", display: "flex", alignItems: "center", gap: 1 }}>
+              🔑 Comment utiliser votre carte d'abonnement ?
+            </Typography>
+            <Stack spacing={1.5}>
+              <Box sx={{ display: "flex", gap: 1, alignItems: "flex-start" }}>
+                <Typography sx={{ fontWeight: 700, color: "#FFD700", minWidth: 24 }}>1.</Typography>
+                <Typography variant="body2" sx={{ color: "rgba(0,0,0,0.8)" }}>
+                  Donnez votre numéro de téléphone au distributeur (voir la liste ci-dessous)
+                </Typography>
+              </Box>
+              <Box sx={{ display: "flex", gap: 1, alignItems: "flex-start" }}>
+                <Typography sx={{ fontWeight: 700, color: "#FFD700", minWidth: 24 }}>2.</Typography>
+                <Typography variant="body2" sx={{ color: "rgba(0,0,0,0.8)" }}>
+                  Vous recevrez une <strong>notification SMS avec le numéro de la carte</strong>
+                </Typography>
+              </Box>
+              <Box sx={{ display: "flex", gap: 1, alignItems: "flex-start" }}>
+                <Typography sx={{ fontWeight: 700, color: "#FFD700", minWidth: 24 }}>3.</Typography>
+                <Typography variant="body2" sx={{ color: "rgba(0,0,0,0.8)" }}>
+                  Cliquez sur dans votre menu <strong>"Mes cartes"</strong> pour voir la carte
+                </Typography>
+              </Box>
+              <Box sx={{ display: "flex", gap: 1, alignItems: "flex-start" }}>
+                <Typography sx={{ fontWeight: 700, color: "#FFD700", minWidth: 24 }}>4.</Typography>
+                <Typography variant="body2" sx={{ color: "rgba(0,0,0,0.8)" }}>
+                  Le code est visible directement sur la carte (format : <strong>FAH-XXXXXXXX</strong>)
+                </Typography>
+              </Box>
+              <Box sx={{ display: "flex", gap: 1, alignItems: "flex-start" }}>
+                <Typography sx={{ fontWeight: 700, color: "#FFD700", minWidth: 24 }}>5.</Typography>
+                <Typography variant="body2" sx={{ color: "rgba(0,0,0,0.8)" }}>
+                  Copier le code et coller le dans le champs <strong>"J'ai une carte à gratter"</strong> dans le menu <strong>Prix</strong>
+                </Typography>
+              </Box>
+              <Box sx={{ display: "flex", gap: 1, alignItems: "flex-start" }}>
+                <Typography sx={{ fontWeight: 700, color: "#FFD700", minWidth: 24 }}>6.</Typography>
+                <Typography variant="body2" sx={{ color: "rgba(0,0,0,0.8)" }}>
+                  Votre abonnement sera activé <strong>instantanément</strong> après validation
+                </Typography>
+              </Box>
+              <Box sx={{ display: "flex", gap: 1, alignItems: "flex-start" }}>
+                <Typography sx={{ fontWeight: 700, color: "#FFD700", minWidth: 24 }}>7.</Typography>
+                <Typography variant="body2" sx={{ color: "rgba(0,0,0,0.8)" }}>
+                  Vous pouvez aussi appeler <strong>+22780648383</strong> pour toutes sollicitations
+                </Typography>
+              </Box>
+            </Stack>
+          </CardContent>
+        </Card>
         <Stack spacing={1.5} sx={{ mb: 2 }}>
           <TextField
             size="small"

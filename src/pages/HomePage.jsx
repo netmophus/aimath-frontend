@@ -61,7 +61,7 @@ const HomePage = () => {
 
 
   const onRegisterClick = () => {
-    if (!user) return navigate("/login");
+    if (!user) return navigate("/register");
     return navigate(premiumActive ? "/premium" : "/gratuit");
   };
 
@@ -236,9 +236,6 @@ const PremiumFeatureCard = ({ icon, title, description, isPremium = true }) => (
 
   return (
     <PageLayout>
-      {/* Bandeau */}
-   
-
 {/* Bandeau */}
 {/* HERO – priorité à la web-app */}
 <Box sx={{ position: "relative", mt: 7, overflow: "hidden" }}>
@@ -339,200 +336,227 @@ const PremiumFeatureCard = ({ icon, title, description, isPremium = true }) => (
   </Typography>
 </Stack>
 
-      <Typography sx={{ mt: 1.5, color: "rgba(255,255,255,0.9)" }}>
-        Plateforme <strong>100% responsive</strong> sur téléphone, tablette et
-        ordinateur. Un accélérateur de réussite en maths.
+      <Typography sx={{ mt: 1.5, color: "rgba(255,255,255,0.9)", fontSize: { xs: 15, md: 17 } }}>
+        Plateforme <strong>100% responsive</strong> sur téléphone, tablette et ordinateur.
       </Typography>
 
-      <Typography sx={{  fontSize: { xs: 16, sm: 18, md: 20 },  color: "rgba(255,255,255,0.9)" }}>
-        <strong> votre accélérateur de réussite en maths.</strong>
-     </Typography>
-
-      {/* 🎥 BOUTONS TRÈS VISIBLES - TUTORIELS & DISTRIBUTEURS */}
-      <Box
-        sx={{
-          mt: 2,
-          display: "flex",
-          flexDirection: { xs: "column", md: "row" },
-          gap: 2,
-        }}
-      >
-        {/* Bouton Tutoriels */}
+      {/* Message d'accroche pour l'inscription */}
+      {!user && (
         <Box
           sx={{
-            flex: 1,
-            p: { xs: 2, sm: 2.5 },
-            borderRadius: 2,
-            background: "linear-gradient(135deg, rgba(255,215,0,0.25) 0%, rgba(255,165,0,0.2) 100%)",
-            border: "3px solid rgba(255,215,0,0.6)",
-            boxShadow: "0 8px 32px rgba(255,215,0,0.4), 0 0 60px rgba(255,215,0,0.2)",
-            animation: "pulse 2s ease-in-out infinite",
-            "@keyframes pulse": {
-              "0%, 100%": {
-                boxShadow: "0 8px 32px rgba(255,215,0,0.4), 0 0 60px rgba(255,215,0,0.2)",
-              },
-              "50%": {
-                boxShadow: "0 8px 40px rgba(255,215,0,0.6), 0 0 80px rgba(255,215,0,0.4)",
-              },
-            },
+            mt: 2.5,
+            p: 2.5,
+            borderRadius: 3,
+            background: "linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.08) 100%)",
+            border: "2px solid rgba(255,255,255,0.3)",
+            backdropFilter: "blur(10px)",
+            boxShadow: "0 8px 32px rgba(0,0,0,0.2)",
           }}
         >
-          <Box sx={{ display: "flex", alignItems: "center", gap: { xs: 1.5, sm: 2 }, mb: 1 }}>
-            <PlayCircleOutlineIcon sx={{ fontSize: { xs: 28, sm: 32 }, color: "#FFD700" }} />
-            <Typography
-              sx={{
-                fontSize: { xs: 14, sm: 16 },
-                fontWeight: 900,
-                color: "#FFD700",
-                textShadow: "0 2px 8px rgba(0,0,0,0.3)",
-              }}
-            >
-              NOUVEAU : Tutoriels vidéo !
-            </Typography>
-          </Box>
-          <Button
-            onClick={() => setOpenTutorials(true)}
-            variant="contained"
-            size="large"
-            startIcon={<PlayCircleOutlineIcon sx={{ fontSize: 24 }} />}
+          <Typography
             sx={{
-              width: "100%",
-              px: 3,
-              py: { xs: 1.5, sm: 2 },
-              fontSize: { xs: 15, sm: 17 },
+              fontSize: { xs: 18, md: 22 },
               fontWeight: 900,
-              background: "linear-gradient(135deg, #FFD700 0%, #FFA500 100%)",
-              color: "#000",
-              borderRadius: 2,
-              boxShadow: "0 6px 24px rgba(255,215,0,0.5)",
-              "&:hover": {
-                background: "linear-gradient(135deg, #FFA500 0%, #FF8C00 100%)",
-                boxShadow: "0 8px 32px rgba(255,215,0,0.7)",
-                transform: "translateY(-2px)",
-              },
-              transition: "all 0.3s ease",
-            }}
-          >
-            🎥 Comment utiliser Fahimta
-          </Button>
-        </Box>
-
-        {/* Bouton Distributeurs */}
-        <Box
-          sx={{
-            flex: 1,
-            p: { xs: 2, sm: 2.5 },
-            borderRadius: 2,
-            background: "linear-gradient(135deg, rgba(59,130,246,0.25) 0%, rgba(37,99,235,0.2) 100%)",
-            border: "3px solid rgba(59,130,246,0.6)",
-            boxShadow: "0 8px 32px rgba(59,130,246,0.4)",
-          }}
-        >
-          <Box sx={{ display: "flex", alignItems: "center", gap: { xs: 1.5, sm: 2 }, mb: 1 }}>
-            <LanguageIcon sx={{ fontSize: { xs: 28, sm: 32 }, color: "#3b82f6" }} />
-            <Typography
-              sx={{
-                fontSize: { xs: 14, sm: 16 },
-                fontWeight: 900,
-                color: "#60a5fa",
-                textShadow: "0 2px 8px rgba(0,0,0,0.3)",
-              }}
-            >
-              Où acheter vos cartes ?
-            </Typography>
-          </Box>
-          <Button
-            onClick={() => setOpenDist(true)}
-            variant="contained"
-            size="large"
-            startIcon={<LanguageIcon sx={{ fontSize: 24 }} />}
-            sx={{
-              width: "100%",
-              px: 3,
-              py: { xs: 1.5, sm: 2 },
-              fontSize: { xs: 15, sm: 17 },
-              fontWeight: 900,
-              background: "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)",
               color: "#fff",
-              borderRadius: 2,
-              boxShadow: "0 6px 24px rgba(59,130,246,0.5)",
-              "&:hover": {
-                background: "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)",
-                boxShadow: "0 8px 32px rgba(59,130,246,0.7)",
-                transform: "translateY(-2px)",
-              },
-              transition: "all 0.3s ease",
+              mb: 1,
+              textAlign: "center",
             }}
           >
-            📍 Trouver un distributeur
-          </Button>
-        </Box>
-      </Box>
-
-      {/* boutons principaux */}
-      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.2, mt: 2.5 }}>
-        <Button
-          startIcon={<LanguageIcon />}
-          variant="contained"
-          color="primary"
-          size="large"
-          onClick={onRegisterClick} // login si pas connecté, sinon /gratuit ou /premium
-          sx={{
-            px: 3,
-            py: 1.4,
-            fontWeight: 900,
-            bgcolor: "rgba(255,255,255,0.15)",
-            border: "1px solid rgba(255,255,255,0.35)",
-            "&:hover": { bgcolor: "rgba(255,255,255,0.25)" },
-          }}
-        >
-          Utiliser la web-app
-        </Button>
-
-        <Button
-          startIcon={<PlayCircleOutlineIcon />}
-          variant="contained"
-          color="secondary"
-          size="large"
-          onClick={() => navigate("/gratuit")}
-          sx={{ px: 3, py: 1.4, fontWeight: 900 }}
-        >
-          Essayer gratuitement
-        </Button>
-
-        {!premiumActive && (
-          <>
+            🚀 Commencez maintenant, c'est gratuit !
+          </Typography>
+          <Typography
+            sx={{
+              fontSize: { xs: 14, md: 16 },
+              color: "rgba(255,255,255,0.9)",
+              textAlign: "center",
+              mb: 2.5,
+            }}
+          >
+            Créez votre compte en 30 secondes et accédez à toutes les fonctionnalités gratuites
+          </Typography>
+          
+          {/* Boutons d'inscription/connexion principaux */}
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: { xs: "column", sm: "row" },
+              gap: 2,
+              justifyContent: "center",
+            }}
+          >
             <Button
+              variant="contained"
+              size="large"
+              startIcon={<PersonAddAlt1Icon />}
+              onClick={() => navigate("/register")}
+              sx={{
+                flex: { xs: 1, sm: "0 1 auto" },
+                px: { xs: 3, md: 4 },
+                py: { xs: 1.5, md: 1.75 },
+                fontSize: { xs: 16, md: 18 },
+                fontWeight: 900,
+                background: "linear-gradient(135deg, #FFD700 0%, #FFA500 100%)",
+                color: "#000",
+                borderRadius: 3,
+                boxShadow: "0 8px 24px rgba(255,215,0,0.4)",
+                "&:hover": {
+                  background: "linear-gradient(135deg, #FFA500 0%, #FF8C00 100%)",
+                  boxShadow: "0 12px 32px rgba(255,215,0,0.6)",
+                  transform: "translateY(-2px)",
+                },
+                transition: "all 0.3s ease",
+              }}
+            >
+              ✨ Créer un compte gratuit
+            </Button>
+            <Button
+              variant="outlined"
+              size="large"
               startIcon={<LoginIcon />}
               onClick={() => navigate("/login")}
               sx={{
-                px: 2.5,
-                py: 1.2,
-                fontWeight: 800,
+                flex: { xs: 1, sm: "0 1 auto" },
+                px: { xs: 3, md: 4 },
+                py: { xs: 1.5, md: 1.75 },
+                fontSize: { xs: 16, md: 18 },
+                fontWeight: 900,
                 color: "#fff",
-                border: "1px solid rgba(255,255,255,0.5)",
-                "&:hover": { backgroundColor: "rgba(255,255,255,0.12)" },
+                border: "2px solid rgba(255,255,255,0.6)",
+                borderRadius: 3,
+                "&:hover": {
+                  backgroundColor: "rgba(255,255,255,0.15)",
+                  borderColor: "rgba(255,255,255,0.8)",
+                  transform: "translateY(-2px)",
+                },
+                transition: "all 0.3s ease",
               }}
             >
               Se connecter
             </Button>
-            <Button
-              startIcon={<PersonAddAlt1Icon />}
-              onClick={() => navigate("/register")}
-              sx={{
-                px: 2.5,
-                py: 1.2,
-                fontWeight: 800,
-                color: "#fff",
-                border: "1px solid rgba(255,255,255,0.5)",
-                "&:hover": { backgroundColor: "rgba(255,255,255,0.12)" },
-              }}
-            >
-              Créer un compte
-            </Button>
-          </>
-        )}
+          </Box>
+        </Box>
+      )}
+
+      {/* Boutons secondaires - Tutoriels et Distributeurs (disposition moderne) */}
+      <Box
+        sx={{
+          mt: 3,
+          display: "grid",
+          gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
+          gap: 2,
+        }}
+      >
+        {/* Bouton Tutoriels - Version moderne */}
+        <Button
+          onClick={() => setOpenTutorials(true)}
+          variant="contained"
+          size="large"
+          startIcon={<PlayCircleOutlineIcon />}
+          sx={{
+            px: 2.5,
+            py: 1.5,
+            fontSize: { xs: 14, md: 16 },
+            fontWeight: 700,
+            background: "linear-gradient(135deg, rgba(255,215,0,0.2) 0%, rgba(255,165,0,0.15) 100%)",
+            color: "#FFD700",
+            border: "2px solid rgba(255,215,0,0.4)",
+            borderRadius: 2,
+            boxShadow: "0 4px 16px rgba(255,215,0,0.2)",
+            "&:hover": {
+              background: "linear-gradient(135deg, rgba(255,215,0,0.3) 0%, rgba(255,165,0,0.25) 100%)",
+              borderColor: "rgba(255,215,0,0.6)",
+              boxShadow: "0 6px 20px rgba(255,215,0,0.3)",
+              transform: "translateY(-2px)",
+            },
+            transition: "all 0.3s ease",
+            textTransform: "none",
+          }}
+        >
+          🎥 Comment utiliser Fahimta
+        </Button>
+
+        {/* Bouton Distributeurs - Version moderne */}
+        <Button
+          onClick={() => setOpenDist(true)}
+          variant="contained"
+          size="large"
+          startIcon={<LanguageIcon />}
+          sx={{
+            px: 2.5,
+            py: 1.5,
+            fontSize: { xs: 14, md: 16 },
+            fontWeight: 700,
+            background: "linear-gradient(135deg, rgba(59,130,246,0.2) 0%, rgba(37,99,235,0.15) 100%)",
+            color: "#60a5fa",
+            border: "2px solid rgba(59,130,246,0.4)",
+            borderRadius: 2,
+            boxShadow: "0 4px 16px rgba(59,130,246,0.2)",
+            "&:hover": {
+              background: "linear-gradient(135deg, rgba(59,130,246,0.3) 0%, rgba(37,99,235,0.25) 100%)",
+              borderColor: "rgba(59,130,246,0.6)",
+              boxShadow: "0 6px 20px rgba(59,130,246,0.3)",
+              transform: "translateY(-2px)",
+            },
+            transition: "all 0.3s ease",
+            textTransform: "none",
+          }}
+        >
+          📍 Trouver un distributeur
+        </Button>
       </Box>
+
+      {/* Boutons d'action pour utilisateurs connectés */}
+      {user && (
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.5, mt: 3, justifyContent: "center" }}>
+          <Button
+            startIcon={<LanguageIcon />}
+            variant="contained"
+            size="large"
+            onClick={onRegisterClick}
+            sx={{
+              px: 3,
+              py: 1.5,
+              fontWeight: 900,
+              fontSize: { xs: 15, md: 17 },
+              background: "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)",
+              color: "#fff",
+              borderRadius: 2,
+              boxShadow: "0 6px 20px rgba(59,130,246,0.4)",
+              "&:hover": {
+                background: "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)",
+                boxShadow: "0 8px 24px rgba(59,130,246,0.5)",
+                transform: "translateY(-2px)",
+              },
+              transition: "all 0.3s ease",
+            }}
+          >
+            Accéder à la plateforme
+          </Button>
+          <Button
+            startIcon={<PlayCircleOutlineIcon />}
+            variant="outlined"
+            size="large"
+            onClick={() => navigate("/gratuit")}
+            sx={{
+              px: 3,
+              py: 1.5,
+              fontWeight: 800,
+              fontSize: { xs: 15, md: 17 },
+              color: "#fff",
+              border: "2px solid rgba(255,255,255,0.5)",
+              borderRadius: 2,
+              "&:hover": {
+                backgroundColor: "rgba(255,255,255,0.15)",
+                borderColor: "rgba(255,255,255,0.8)",
+                transform: "translateY(-2px)",
+              },
+              transition: "all 0.3s ease",
+            }}
+          >
+            Essayer gratuitement
+          </Button>
+        </Box>
+      )}
 
       {/* mini "preuves"/avantages */}
       <Box
@@ -613,7 +637,7 @@ const PremiumFeatureCard = ({ icon, title, description, isPremium = true }) => (
       </Typography>
 
       <Typography variant="body2" sx={{ opacity: 0.95, lineHeight: 1.6 }}>
-        Pour les élèves du collège, lycée et université : des révisions efficaces et des résultats concrets en mathématiques (physique, chimie et SVT à venir). Fahimta propose IA de maths, vidéos structurées, livres/rappels et sujets BEPC/BAC corrigés. Avec Soutien+, un enseignant accompagne l'élève en ligne jusqu'à la compréhension. Résultat : confiance retrouvée et notes qui progressent.
+        Pour les élèves du collège, lycée et université : des révisions efficaces et des résultats concrets en mathématiques (physique, chimie et SVT en cours d'intégration). Fahimta propose IA de maths, vidéos structurées, livres/rappels et sujets BEPC/BAC corrigés. Avec Soutien+, un enseignant accompagne l'élève en ligne jusqu'à la compréhension. Les étudiants universitaires bénéficient également de notre <strong>bibliothèque numérique universitaire</strong>, offrant une vaste collection de livres organisés par matière pour enrichir leurs études. Résultat : confiance retrouvée et notes qui progressent.
       </Typography>
 
       {/* Message marketing ajouté */}
@@ -637,13 +661,6 @@ const PremiumFeatureCard = ({ icon, title, description, isPremium = true }) => (
         </Typography>
       </Box>
 
-      {/* Roadmap courte */}
-      <Typography
-        variant="caption"
-        sx={{ mt: 0.25, opacity: 0.9, display: "block" }}
-      >
-        Bientôt&nbsp;: Physique, Chimie et SVT.
-      </Typography>
     </Stack>
   </CardContent>
 </Card>
@@ -660,7 +677,8 @@ const PremiumFeatureCard = ({ icon, title, description, isPremium = true }) => (
     ======================================== */}
 <Box
   sx={{
-    py: { xs: 7, md: 10 },
+    pt: { xs: 7, md: 10 },
+    pb: { xs: 2, md: 3 },
     background: "linear-gradient(180deg, #0a0e1a 0%, #1a1f35 50%, #0a0e1a 100%)",
     position: "relative",
     overflow: "hidden",
@@ -767,6 +785,7 @@ const PremiumFeatureCard = ({ icon, title, description, isPremium = true }) => (
         title="Accès complet"
         description="Profitez pleinement de l'IA, de tous les livres, vidéos et examens. Toutes les ressources à portée de main pour accélérer votre réussite en maths."
       />
+
     </Box>
 
     {/* Section comparative Gratuit vs Premium */}
@@ -905,85 +924,245 @@ const PremiumFeatureCard = ({ icon, title, description, isPremium = true }) => (
             </Stack>
           </Box>
         </Box>
+
+        {/* Bouton Premium centré - Entièrement responsive */}
+        <Box sx={{ textAlign: "center", mt: 4 }}>
+          <Button
+            variant="contained"
+            size="large"
+            onClick={() => navigate(user ? "/terminale/pricing" : "/login")}
+            startIcon={<RocketLaunchIcon />}
+            sx={{
+              px: { xs: 4, sm: 5, md: 6 },
+              py: { xs: 1.5, sm: 2, md: 2.5 },
+              fontSize: { xs: 14, sm: 16, md: 18 },
+              fontWeight: 900,
+              background: "linear-gradient(135deg, #FFD700 0%, #FFA500 100%)",
+              color: "#000",
+              borderRadius: 3,
+              boxShadow: "0 8px 32px rgba(255,215,0,0.4)",
+              "&:hover": {
+                background: "linear-gradient(135deg, #FFA500 0%, #FF8C00 100%)",
+                boxShadow: "0 12px 40px rgba(255,215,0,0.6)",
+                transform: "translateY(-2px)",
+              },
+              transition: "all 0.3s ease",
+              width: { xs: "100%", sm: "auto" },
+              minWidth: { xs: "auto", sm: "280px" },
+            }}
+          >
+            {user ? "Activer Premium maintenant" : "S'inscrire et passer Premium"}
+          </Button>
+
+          <Typography
+            sx={{
+              mt: 2,
+              color: "rgba(255,255,255,0.6)",
+              fontSize: { xs: 11, sm: 12, md: 13 },
+              display: "flex",
+              flexWrap: "wrap",
+              justifyContent: "center",
+              gap: { xs: 1, sm: 2 },
+            }}
+          >
+            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+              🔒 <span>Paiement sécurisé</span>
+            </Box>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+              ⚡ <span>Activation instantanée</span>
+            </Box>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+              💯 <span>Satisfaction garantie</span>
+            </Box>
+          </Typography>
+        </Box>
       </CardContent>
     </Card>
-
-    {/* Call to Action final */}
-    <Box
-      sx={{
-        textAlign: "center",
-        p: { xs: 3, md: 5 },
-        borderRadius: 3,
-        background: "linear-gradient(135deg, rgba(255,215,0,0.1) 0%, rgba(255,165,0,0.05) 100%)",
-        border: "2px solid rgba(255,215,0,0.3)",
-        boxShadow: "0 12px 40px rgba(255,215,0,0.15)",
-      }}
-    >
-      <Typography
-        variant="h4"
-        fontWeight={900}
-        sx={{
-          color: "#fff",
-          mb: 2,
-          fontSize: { xs: 22, md: 28 },
-        }}
-      >
-        Ne laissez plus les maths vous freiner !
-      </Typography>
-      
-      <Typography
-        sx={{
-          color: "rgba(255,255,255,0.85)",
-          mb: 3,
-          fontSize: { xs: 15, md: 17 },
-          maxWidth: 600,
-          mx: "auto",
-        }}
-      >
-        Rejoignez les milliers d'élèves qui ont transformé leurs résultats en maths grâce à Fahimta Premium
-      </Typography>
-
-      <Button
-        variant="contained"
-        size="large"
-        onClick={() => navigate(user ? "/premium" : "/login")}
-        startIcon={<RocketLaunchIcon />}
-        sx={{
-          px: 5,
-          py: 2,
-          fontSize: { xs: 16, md: 18 },
-          fontWeight: 900,
-          background: "linear-gradient(135deg, #FFD700 0%, #FFA500 100%)",
-          color: "#000",
-          borderRadius: 3,
-          boxShadow: "0 8px 32px rgba(255,215,0,0.4)",
-          "&:hover": {
-            background: "linear-gradient(135deg, #FFA500 0%, #FF8C00 100%)",
-            boxShadow: "0 12px 40px rgba(255,215,0,0.6)",
-            transform: "translateY(-2px)",
-          },
-          transition: "all 0.3s ease",
-        }}
-      >
-        {user ? "Activer Premium maintenant" : "S'inscrire et passer Premium"}
-      </Button>
-
-      <Typography
-        sx={{
-          mt: 2,
-          color: "rgba(255,255,255,0.6)",
-          fontSize: 13,
-        }}
-      >
-        🔒 Paiement sécurisé • ⚡ Activation instantanée • 💯 Satisfaction garantie
-      </Typography>
-    </Box>
   </Box>
 </Box>
 
+{/* ========================================
+    SECTION : BIBLIOTHÈQUE UNIVERSITAIRE (Visible pour tous)
+    ======================================== */}
+<Box
+  sx={{
+    pt: { xs: 0, md: 0 },
+    pb: { xs: 2, md: 3 },
+    background: "linear-gradient(180deg, #1a1f35 0%, #2d3748 50%, #1a1f35 100%)",
+    position: "relative",
+    overflow: "hidden",
+  }}
+>
+  {/* Effet de lumière bleue en arrière-plan */}
+  <Box
+    sx={{
+      position: "absolute",
+      top: "50%",
+      left: "50%",
+      transform: "translate(-50%, -50%)",
+      width: "600px",
+      height: "600px",
+      background: "radial-gradient(circle, rgba(59,130,246,0.1) 0%, transparent 70%)",
+      pointerEvents: "none",
+      zIndex: 0,
+    }}
+  />
 
+  <Box sx={{ maxWidth: 1200, mx: "auto", px: { xs: 2, sm: 3, md: 4 }, position: "relative", zIndex: 1 }}>
+    
+    {/* En-tête de la section */}
+    <Box sx={{ textAlign: "center", mb: 3 }}>
+      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 1, mb: 1 }}>
+        <MenuBookIcon sx={{ fontSize: 40, color: "#3b82f6" }} />
+        <Typography
+          variant="h3"
+          fontWeight={900}
+          sx={{
+            background: "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            fontSize: { xs: 28, sm: 36, md: 44 },
+            letterSpacing: 1,
+            textShadow: "0 4px 20px rgba(59,130,246,0.3)",
+          }}
+        >
+          Bibliothèque Universitaire
+        </Typography>
+      </Box>
+      <Typography
+        variant="h6"
+        sx={{
+          color: "rgba(255,255,255,0.8)",
+          fontSize: { xs: 16, md: 20 },
+          maxWidth: 800,
+          mx: "auto",
+          lineHeight: 1.6,
+          mb: 2,
+        }}
+      >
+        Accédez à une vaste collection de livres universitaires organisés par matière
+      </Typography>
+    </Box>
 
+    {/* Carte principale */}
+    <Card
+      elevation={0}
+      sx={{
+        borderRadius: 3,
+        overflow: "hidden",
+        background: "linear-gradient(135deg, rgba(59,130,246,0.15) 0%, rgba(37,99,235,0.1) 100%)",
+        border: "2px solid rgba(59,130,246,0.3)",
+        backdropFilter: "blur(12px)",
+        boxShadow: "0 20px 40px rgba(59,130,246,0.2)",
+      }}
+    >
+      <CardContent sx={{ p: { xs: 4, md: 6 } }}>
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+            gap: 4,
+            alignItems: "center",
+          }}
+        >
+          {/* Colonne gauche : Description */}
+          <Box>
+            <Typography
+              variant="h5"
+              fontWeight={700}
+              sx={{ 
+                color: "#fff", 
+                mb: 3,
+                fontSize: { xs: 20, md: 24 },
+              }}
+            >
+              📚 Découvrez notre bibliothèque numérique
+            </Typography>
+            
+            <Stack spacing={2} sx={{ mb: 3 }}>
+              <Box sx={{ display: "flex", gap: 1.5, alignItems: "flex-start" }}>
+                <CheckCircleIcon sx={{ fontSize: 20, color: "#60a5fa", mt: 0.2 }} />
+                <Typography sx={{ color: "rgba(255,255,255,0.9)", fontSize: 15 }}>
+                  <strong>Livres par matière</strong> : Médecine, Biologie, Mathématiques, Informatique, Économie, Finance...
+                </Typography>
+              </Box>
+              <Box sx={{ display: "flex", gap: 1.5, alignItems: "flex-start" }}>
+                <CheckCircleIcon sx={{ fontSize: 20, color: "#60a5fa", mt: 0.2 }} />
+                <Typography sx={{ color: "rgba(255,255,255,0.9)", fontSize: 15 }}>
+                  <strong>Couvertures et sommaires</strong> détaillés pour chaque livre
+                </Typography>
+              </Box>
+              <Box sx={{ display: "flex", gap: 1.5, alignItems: "flex-start" }}>
+                <CheckCircleIcon sx={{ fontSize: 20, color: "#60a5fa", mt: 0.2 }} />
+                <Typography sx={{ color: "rgba(255,255,255,0.9)", fontSize: 15 }}>
+                  <strong>Organisation claire</strong> par niveau universitaire
+                </Typography>
+              </Box>
+              <Box sx={{ display: "flex", gap: 1.5, alignItems: "flex-start" }}>
+                <CheckCircleIcon sx={{ fontSize: 20, color: "#60a5fa", mt: 0.2 }} />
+                <Typography sx={{ color: "rgba(255,255,255,0.9)", fontSize: 15 }}>
+                  <strong>Accès gratuit</strong> pour tous les étudiants connectés
+                </Typography>
+              </Box>
+            </Stack>
+          </Box>
 
+          {/* Colonne droite : Bouton d'accès */}
+          <Box sx={{ textAlign: "center" }}>
+            <Button
+              variant="contained"
+              size="large"
+              startIcon={<MenuBookIcon />}
+              onClick={() => user ? navigate("/bibliotheque") : navigate("/login")}
+              sx={{
+                px: 4,
+                py: 2,
+                fontSize: { xs: 16, md: 18 },
+                fontWeight: 900,
+                background: "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)",
+                color: "#fff",
+                borderRadius: 3,
+                boxShadow: "0 8px 32px rgba(59,130,246,0.4)",
+                "&:hover": {
+                  background: "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)",
+                  boxShadow: "0 12px 40px rgba(59,130,246,0.6)",
+                  transform: "translateY(-2px)",
+                },
+                transition: "all 0.3s ease",
+                width: { xs: "100%", sm: "auto" },
+                minWidth: { xs: "auto", sm: "280px" },
+              }}
+            >
+              📚 {user ? "Accéder à la Bibliothèque" : "Se connecter pour accéder"}
+            </Button>
+            
+            <Typography
+              sx={{
+                mt: 2,
+                color: "rgba(255,255,255,0.6)",
+                fontSize: { xs: 12, sm: 13 },
+                display: "flex",
+                flexWrap: "wrap",
+                justifyContent: "center",
+                gap: { xs: 1, sm: 2 },
+              }}
+            >
+              <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                🎓 <span>Université</span>
+              </Box>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                📖 <span>Livres numériques</span>
+              </Box>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
+                🔍 <span>Recherche facile</span>
+              </Box>
+            </Typography>
+          </Box>
+        </Box>
+      </CardContent>
+    </Card>
+  </Box>
+</Box>
 
 {/* ========================================
     SECTION : APPLICATION MOBILE ANDROID

@@ -60,7 +60,12 @@ import PartnerCodesPage from "../pages/admin/PartnerCodesPage";
 import AdminDistributorsPage from "../pages/admin/AdminDistributorsPage";
 import TutorialsManagePage from "../pages/admin/TutorialsManagePage";
 
-
+// Pages de la bibliothèque
+import LibraryBibliothequePage from "../pages/LibraryBibliothequePage";
+import LibrarySubjectDetailPage from "../pages/LibrarySubjectDetailPage";
+import LibraryManagePage from "../pages/admin/LibraryManagePage";
+import LibrarySubjectManagePage from "../pages/admin/LibrarySubjectManagePage";
+import LibraryBooksManagePage from "../pages/LibraryBooksManagePage";
 
 const AppRoutes = () => {
 
@@ -271,6 +276,55 @@ const AppRoutes = () => {
       </ProtectedRoute>
      }
   />
+
+        {/* 📚 Routes de la bibliothèque */}
+        <Route
+          path="/bibliotheque"
+          element={
+            <ProtectedRoute>
+              <LibraryBibliothequePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/bibliotheque/:subjectId"
+          element={
+            <ProtectedRoute>
+              <LibrarySubjectDetailPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* 📚 Gestion de la bibliothèque (Admin) */}
+        <Route
+          path="/admin/library"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <LibraryManagePage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* 📚 Gestion des matières (Admin) */}
+        <Route
+          path="/admin/library/manage-subjects"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <LibrarySubjectManagePage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* 📚 Gestion des livres (Admin) */}
+        <Route
+          path="/admin/library/books"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <LibraryBooksManagePage />
+            </ProtectedRoute>
+          }
+        />
+
 
     </Routes>
   );

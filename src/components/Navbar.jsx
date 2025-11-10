@@ -70,7 +70,6 @@ const Navbar = () => {
     }
     if (user.role === "teacher") {
       return [
-        { label: "Accueil", path: "/" },
         { label: "Tableau de bord", path: "/teacher/dashboard" },
         { label: "Déconnexion", action: handleLogout },
       ];
@@ -86,6 +85,7 @@ const Navbar = () => {
     if (premiumActive) {
       // ✅ Abonné (booléen true ou date encore valide)
       return [
+        { label: "📚 Bibliothèque", path: "/bibliotheque" },
         { label: "Premium Fahimta", path: "/premium" },
         { label: "Soutien+", path: "/student/support-request" },
         { label: "Messagerie+", path: "/premium/chat" },
@@ -95,7 +95,7 @@ const Navbar = () => {
 
     // 👤 Élève non abonné
     return [
-      { label: "Accueil", path: "/" },
+      { label: "📚 Bibliothèque", path: "/bibliotheque" },
       { label: "Gratuit", path: "/gratuit" },
       { label: "💳 Mes cartes", path: "/mes-achats-cartes" },
       { label: "Prix", path: "/pricing" },

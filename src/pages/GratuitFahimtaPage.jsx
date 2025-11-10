@@ -1,5 +1,5 @@
 // pages/GratuitFahimtaPage.jsx
-import React, { useEffect, useMemo, useState, useCallback } from "react";
+import React, { useEffect, useMemo, useState, useCallback, useContext } from "react";
 import {
   Box,
   Container,
@@ -21,12 +21,24 @@ import {
   Chip,
   Tooltip,
   LinearProgress,
- 
+  Card,
+  Snackbar,
+  Collapse,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import PageLayout from "../components/PageLayout";
 import API from "../api";
 import { useNavigate } from "react-router-dom";
+import { AuthContext } from "../context/AuthContext";
+import PaymentIcon from "@mui/icons-material/Payment";
+import CreditCardIcon from "@mui/icons-material/CreditCard";
+import KeyIcon from "@mui/icons-material/Key";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import StarIcon from "@mui/icons-material/Star";
+import LanguageIcon from "@mui/icons-material/Language";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import DistributeursModal from "../components/DistributeursModal";
 
 import SearchIcon from "@mui/icons-material/Search";
 import SendRoundedIcon from "@mui/icons-material/SendRounded";
@@ -85,10 +97,16 @@ const TabLabel = ({ label, count }) => (
   </Stack>
 );
 
+// ✅ Abonnement actif : isSubscribed === true OU subscriptionEnd > maintenant
+const hasActiveSub = (u) =>
+  !!u && (u.isSubscribed === true || (u?.subscriptionEnd && new Date(u.subscriptionEnd) > new Date()));
 
 const GratuitFahimtaPage = () => {
   const theme = useTheme();
   const downMd = useMediaQuery(theme.breakpoints.down("md"));
+  const navigate = useNavigate();
+  const { user, refreshUser } = useContext(AuthContext);
+  const premiumActive = useMemo(() => hasActiveSub(user), [user]);
   
   const [tabIndex, setTabIndex] = useState(0);
   
@@ -124,8 +142,14 @@ const GratuitFahimtaPage = () => {
   const [resetAt, setResetAt] = useState(null);
   const [checkingQuota, setCheckingQuota] = useState(false);
 
-  const navigate = useNavigate();
-
+  // États pour la référence NITA
+  const [showNita, setShowNita] = useState(false);
+  const [referenceAchat, setReferenceAchat] = useState(null);
+  const [nitaBusy, setNitaBusy] = useState(false);
+  const [toast, setToast] = useState({ open: false, msg: "", sev: "info" });
+  
+  // État pour le modal distributeurs
+  const [openDistributeurs, setOpenDistributeurs] = useState(false);
 
 // --- Speech to Text (dictée) + TTS — version anti-doublons mobile ----------
 const [sttSupported, setSttSupported] = useState(false);
@@ -669,10 +693,406 @@ const countBySubject = useMemo(() => {
   return { livres: countLivres, exams: countExams, videos: totalVideosCount };
 }, [livres, exams, selectedSubject, totalVideosCount]);
 
+  // ✅ useEffect pour rafraîchir l'utilisateur pendant le paiement NITA
+  useEffect(() => {
+    if (!showNita) return;
+    const id = setInterval(() => refreshUser?.(), 4000);
+    return () => clearInterval(id);
+  }, [showNita, refreshUser]);
+
+  useEffect(() => {
+    if (showNita && user?.isSubscribed) {
+      setToast({ open: true, sev: "success", msg: "✅ Paiement confirmé. Abonnement activé." });
+      setShowNita(false);
+      setReferenceAchat(null);
+    }
+  }, [showNita, user?.isSubscribed]);
+
+  // ✅ Fonctions pour la génération de référence NITA
+  const nitaCreateAchat = async ({ amount, label }) => {
+    const r = await API.post("/payments/nita/create", { amount, label });
+    const { reference, reqId } = r.data || {};
+    if (!reference) throw new Error("Référence NITA introuvable.");
+    return { reference, reqId };
+  };
+
+  const startNitaFlow = async () => {
+    if (!user) {
+      setToast({ open: true, sev: "warning", msg: "Veuillez vous connecter avant de payer." });
+      navigate("/login");
+      return;
+    }
+    if (premiumActive || showNita || nitaBusy) return;
+
+    try {
+      setNitaBusy(true);
+      const amount = 2000;
+      const label = "Abonnement Fahimta - Mensuel";
+      const { reference } = await nitaCreateAchat({ amount, label });
+      setReferenceAchat(reference);
+      setShowNita(true);
+      setToast({ open: true, sev: "info", msg: "Référence NITA générée." });
+    } catch (e) {
+      setToast({ open: true, sev: "error", msg: e?.response?.data?.message || e.message || "Erreur NITA." });
+    } finally {
+      setNitaBusy(false);
+    }
+  };
+
+  const handleCloseNita = () => {
+    setShowNita(false);
+    setReferenceAchat(null);
+    setNitaBusy(false);
+  };
+
+  const copyToClipboard = async (text) => {
+    try {
+      if (!text) return;
+      if (navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+      }
+      setToast({ open: true, sev: "success", msg: "Référence copiée." });
+    } catch {
+      setToast({
+        open: true,
+        sev: "error",
+        msg: "Impossible de copier. Appui long pour sélectionner la référence.",
+      });
+    }
+  };
 
   return (
     <PageLayout>
+      {/* Section d'alerte pour utilisateurs connectés sans abonnement */}
+      {user && !premiumActive && (
+        <Box
+          sx={{
+            mt: 7,
+            mb: 3,
+            mx: "auto",
+            px: { xs: 2, sm: 3, md: 4 },
+            maxWidth: 1200,
+          }}
+        >
+          <Alert
+            severity="info"
+            icon={<PaymentIcon />}
+            sx={{
+              borderRadius: 3,
+              background: "linear-gradient(135deg, rgba(255,215,0,0.15) 0%, rgba(255,165,0,0.1) 100%)",
+              border: "2px solid rgba(255,215,0,0.4)",
+              boxShadow: "0 8px 32px rgba(255,215,0,0.2)",
+              "& .MuiAlert-icon": {
+                color: "#FFD700",
+                fontSize: 32,
+              },
+            }}
+          >
+            <Box>
+              <Typography
+                variant="h6"
+                fontWeight={900}
+                sx={{
+                  mb: 2,
+                  color: "#FFD700",
+                  fontSize: { xs: 18, sm: 20, md: 22 },
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1,
+                }}
+              >
+                <StarIcon sx={{ fontSize: 24 }} />
+                Comment s'abonner à Premium ?
+              </Typography>
+              
+              <Typography
+                sx={{
+                  mb: 3,
+                  color: "rgba(0,0,0,0.85)",
+                  fontSize: { xs: 14, md: 16 },
+                  fontWeight: 600,
+                }}
+              >
+                Bonjour <strong>{user.name || user.email}</strong> ! Pour débloquer toutes les fonctionnalités Premium, 
+                vous avez <strong>2 options simples</strong> :
+              </Typography>
 
+              <Box
+                sx={{
+                  display: "grid",
+                  gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+                  gap: 3,
+                  mb: 3,
+                }}
+              >
+                {/* Option 1 : Paiement NITA */}
+                <Card
+                  sx={{
+                    p: 3,
+                    borderRadius: 3,
+                    background: "linear-gradient(135deg, rgba(59,130,246,0.1) 0%, rgba(37,99,235,0.05) 100%)",
+                    border: "2px solid rgba(59,130,246,0.3)",
+                    boxShadow: "0 4px 16px rgba(59,130,246,0.15)",
+                  }}
+                >
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 2 }}>
+                    <CreditCardIcon sx={{ fontSize: 32, color: "#3b82f6" }} />
+                    <Typography
+                      variant="h6"
+                      fontWeight={800}
+                      sx={{ color: "#3b82f6", fontSize: { xs: 16, md: 18 } }}
+                    >
+                      Option 1 : Paiement NITA
+                    </Typography>
+                  </Box>
+                  
+                  <Stack spacing={1.5} sx={{ mb: 2 }}>
+                    <Box sx={{ display: "flex", gap: 1, alignItems: "flex-start" }}>
+                      <CheckCircleIcon sx={{ fontSize: 20, color: "#3b82f6", mt: 0.2 }} />
+                      <Typography sx={{ fontSize: 13, color: "rgba(0,0,0,0.8)" }}>
+                        Cliquez sur le bouton ci-dessous pour générer votre référence de paiement
+                      </Typography>
+                    </Box>
+                    <Box sx={{ display: "flex", gap: 1, alignItems: "flex-start" }}>
+                      <CheckCircleIcon sx={{ fontSize: 20, color: "#3b82f6", mt: 0.2 }} />
+                      <Typography sx={{ fontSize: 13, color: "rgba(0,0,0,0.8)" }}>
+                        Allez au guichet NITA ou utilisez l'application MYNITA
+                      </Typography>
+                    </Box>
+                    <Box sx={{ display: "flex", gap: 1, alignItems: "flex-start" }}>
+                      <CheckCircleIcon sx={{ fontSize: 20, color: "#3b82f6", mt: 0.2 }} />
+                      <Typography sx={{ fontSize: 13, color: "rgba(0,0,0,0.8)" }}>
+                        Payez 2 000 FCFA avec votre référence
+                      </Typography>
+                    </Box>
+                    <Box sx={{ display: "flex", gap: 1, alignItems: "flex-start" }}>
+                      <CheckCircleIcon sx={{ fontSize: 20, color: "#3b82f6", mt: 0.2 }} />
+                      <Typography sx={{ fontSize: 13, color: "rgba(0,0,0,0.8)" }}>
+                        Votre abonnement sera activé automatiquement
+                      </Typography>
+                    </Box>
+                  </Stack>
+
+                  <Button
+                    variant="contained"
+                    startIcon={<CreditCardIcon />}
+                    endIcon={<ArrowForwardIcon />}
+                    onClick={startNitaFlow}
+                    disabled={nitaBusy || showNita || premiumActive}
+                    sx={{
+                      width: "100%",
+                      background: "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)",
+                      color: "#fff",
+                      fontWeight: 900,
+                      py: 1.5,
+                      borderRadius: 2,
+                      boxShadow: "0 4px 16px rgba(59,130,246,0.3)",
+                      "&:hover": {
+                        background: "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)",
+                        boxShadow: "0 6px 20px rgba(59,130,246,0.4)",
+                        transform: "translateY(-2px)",
+                      },
+                      "&:disabled": {
+                        background: "rgba(59,130,246,0.5)",
+                        color: "rgba(255,255,255,0.7)",
+                      },
+                      transition: "all 0.3s ease",
+                    }}
+                  >
+                    {nitaBusy ? "Génération en cours..." : premiumActive ? "Déjà abonné" : "Payer via NITA (2 000 FCFA)"}
+                  </Button>
+                </Card>
+
+                {/* Option 2 : Carte d'abonnement */}
+                <Card
+                  sx={{
+                    p: 3,
+                    borderRadius: 3,
+                    background: "linear-gradient(135deg, rgba(255,215,0,0.1) 0%, rgba(255,165,0,0.05) 100%)",
+                    border: "2px solid rgba(255,215,0,0.3)",
+                    boxShadow: "0 4px 16px rgba(255,215,0,0.15)",
+                  }}
+                >
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 2 }}>
+                    <KeyIcon sx={{ fontSize: 32, color: "#FFD700" }} />
+                    <Typography
+                      variant="h6"
+                      fontWeight={800}
+                      sx={{ color: "#FFD700", fontSize: { xs: 16, md: 18 } }}
+                    >
+                      Option 2 : Carte d'abonnement
+                    </Typography>
+                  </Box>
+                  
+                  <Stack spacing={1.5} sx={{ mb: 2 }}>
+                    <Box sx={{ display: "flex", gap: 1, alignItems: "flex-start" }}>
+                      <CheckCircleIcon sx={{ fontSize: 20, color: "#FFD700", mt: 0.2 }} />
+                      <Typography sx={{ fontSize: 13, color: "rgba(0,0,0,0.8)" }}>
+                        Donnez votre numéro de téléphone au distributeur
+                      </Typography>
+                    </Box>
+                    <Box sx={{ display: "flex", gap: 1, alignItems: "flex-start" }}>
+                      <CheckCircleIcon sx={{ fontSize: 20, color: "#FFD700", mt: 0.2 }} />
+                      <Typography sx={{ fontSize: 13, color: "rgba(0,0,0,0.8)" }}>
+                        Vous recevrez une <strong>notification SMS avec le numéro de la carte</strong>
+                      </Typography>
+                    </Box>
+                    <Box sx={{ display: "flex", gap: 1, alignItems: "flex-start" }}>
+                      <CheckCircleIcon sx={{ fontSize: 20, color: "#FFD700", mt: 0.2 }} />
+                      <Typography sx={{ fontSize: 13, color: "rgba(0,0,0,0.8)" }}>
+                        Cliquez sur dans votre menu <strong>"Mes cartes"</strong> pour voir la carte
+                      </Typography>
+                    </Box>
+                    <Box sx={{ display: "flex", gap: 1, alignItems: "flex-start" }}>
+                      <CheckCircleIcon sx={{ fontSize: 20, color: "#FFD700", mt: 0.2 }} />
+                      <Typography sx={{ fontSize: 13, color: "rgba(0,0,0,0.8)" }}>
+                        Le code est visible directement sur la carte (format : <strong>FAH-XXXXXXXX</strong>)
+                      </Typography>
+                    </Box>
+                    <Box sx={{ display: "flex", gap: 1, alignItems: "flex-start" }}>
+                      <CheckCircleIcon sx={{ fontSize: 20, color: "#FFD700", mt: 0.2 }} />
+                      <Typography sx={{ fontSize: 13, color: "rgba(0,0,0,0.8)" }}>
+                        Copier le code et coller le dans le champs <strong>"J'ai une carte à gratter"</strong> dans le menu <strong>Prix</strong>
+                      </Typography>
+                    </Box>
+                    <Box sx={{ display: "flex", gap: 1, alignItems: "flex-start" }}>
+                      <CheckCircleIcon sx={{ fontSize: 20, color: "#FFD700", mt: 0.2 }} />
+                      <Typography sx={{ fontSize: 13, color: "rgba(0,0,0,0.8)" }}>
+                        Votre abonnement sera activé instantanément
+                      </Typography>
+                    </Box>
+                    <Box sx={{ display: "flex", gap: 1, alignItems: "flex-start" }}>
+                      <CheckCircleIcon sx={{ fontSize: 20, color: "#FFD700", mt: 0.2 }} />
+                      <Typography sx={{ fontSize: 13, color: "rgba(0,0,0,0.8)" }}>
+                        Vous pouvez aussi appeler <strong>+22780648383</strong> pour toutes sollicitations
+                      </Typography>
+                    </Box>
+                  </Stack>
+
+                  <Button
+                    variant="contained"
+                    startIcon={<KeyIcon />}
+                    endIcon={<ArrowForwardIcon />}
+                    onClick={() => setOpenDistributeurs(true)}
+                    sx={{
+                      width: "100%",
+                      background: "linear-gradient(135deg, #FFD700 0%, #FFA500 100%)",
+                      color: "#000",
+                      fontWeight: 900,
+                      py: 1.5,
+                      borderRadius: 2,
+                      boxShadow: "0 4px 16px rgba(255,215,0,0.3)",
+                      "&:hover": {
+                        background: "linear-gradient(135deg, #FFA500 0%, #FF8C00 100%)",
+                        boxShadow: "0 6px 20px rgba(255,215,0,0.4)",
+                        transform: "translateY(-2px)",
+                      },
+                      transition: "all 0.3s ease",
+                    }}
+                  >
+                    Rechercher un distributeur Proche
+                  </Button>
+                </Card>
+              </Box>
+
+              <Box
+                sx={{
+                  mt: 2,
+                  p: 2,
+                  borderRadius: 2,
+                  background: "rgba(59,130,246,0.08)",
+                  border: "1px solid rgba(59,130,246,0.2)",
+                }}
+              >
+                <Typography
+                  sx={{
+                    fontSize: 13,
+                    color: "rgba(0,0,0,0.7)",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1,
+                    justifyContent: "center",
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <LanguageIcon sx={{ fontSize: 18, color: "#3b82f6" }} />
+                  <strong>Besoin d'aide ?</strong> Vous pouvez envoyez un whatsapp ou appeller au + 22780648383
+                </Typography>
+              </Box>
+            </Box>
+          </Alert>
+        </Box>
+      )}
+
+      {/* Bloc suivi NITA */}
+      {user && !premiumActive && (
+        <Collapse in={showNita}>
+          <Box
+            sx={{
+              mt: 3,
+              mb: 3,
+              mx: "auto",
+              px: { xs: 2, sm: 3, md: 4 },
+              maxWidth: 1200,
+            }}
+          >
+            <Paper sx={{ p: { xs: 2, md: 3 }, borderRadius: 3, background: "rgba(255,255,255,0.95)" }}>
+              <Typography variant="h6" fontWeight={900} gutterBottom>
+                Paiement NITA
+              </Typography>
+              <Typography sx={{ mb: 2, color: "rgba(0,0,0,0.7)" }}>
+                Donnez cette <strong>référence d'achat</strong> au guichet NITA ou saisissez-la dans MYNITA.
+              </Typography>
+
+              <Stack
+                direction={{ xs: "column", sm: "row" }}
+                spacing={1.5}
+                alignItems={{ xs: "stretch", sm: "center" }}
+                sx={{ mb: 2 }}
+              >
+                <TextField
+                  value={referenceAchat || ""}
+                  InputProps={{ readOnly: true }}
+                  fullWidth
+                  label="Référence"
+                  sx={{ flex: 1 }}
+                />
+                <Button
+                  type="button"
+                  variant="outlined"
+                  startIcon={<ContentCopyIcon />}
+                  onClick={() => copyToClipboard(referenceAchat)}
+                  sx={{ minWidth: { xs: "100%", sm: "120px" } }}
+                >
+                  Copier
+                </Button>
+              </Stack>
+
+              <Alert severity="info" sx={{ mb: 2 }}>
+                Si le paiement est confirmé, votre abonnement sera activé automatiquement, votre statut sera actualisé et vous recevrez un SMS de confirmation.
+              </Alert>
+
+              <Box sx={{ mb: 2 }}>
+                <LinearProgress />
+              </Box>
+
+              <Button type="button" variant="text" onClick={handleCloseNita} fullWidth>
+                Fermer
+              </Button>
+            </Paper>
+          </Box>
+        </Collapse>
+      )}
 
       {/* HERO */}
       <Box
@@ -682,6 +1102,7 @@ const countBySubject = useMemo(() => {
           py: { xs: 6, md: 8 },
           overflow: "hidden",
           background: "linear-gradient(135deg, #0B1220 0%, #0E1A35 60%, #102245 100%)",
+          mt: user && !premiumActive ? 0 : 7,
         }}
       >
         <Container maxWidth="lg">
@@ -1382,6 +1803,17 @@ const countBySubject = useMemo(() => {
         </>
         )}
       </Container>
+
+      {/* Snackbar pour les notifications - doit être à la fin */}
+      <Snackbar
+        open={toast.open}
+        onClose={() => setToast((t) => ({ ...t, open: false }))}
+        autoHideDuration={3500}
+        message={toast.msg}
+      />
+
+      {/* Modal distributeurs */}
+      <DistributeursModal open={openDistributeurs} onClose={() => setOpenDistributeurs(false)} />
     </PageLayout>
   );
 };
