@@ -170,16 +170,38 @@ const LibrarySubjectDetailPage = () => {
           <ArrowBackIcon />
         </IconButton>
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-          <SchoolIcon 
-            sx={{ 
-              fontSize: "2.5rem", 
-              color: "#ef4444",
-              filter: "drop-shadow(0 2px 4px rgba(239,68,68,0.3))"
-            }} 
-          />
-          <Typography variant="h4" fontWeight={700} sx={{ color: "#fff" }}>
-            {subject.name}
-          </Typography>
+       
+<SchoolIcon
+  sx={{
+    fontSize: { xs: "1.6rem", sm: "2.1rem", md: "2.6rem" }, // ↓ plus petit sur petit écran
+    color: "#ef4444",
+    filter: "drop-shadow(0 2px 4px rgba(239,68,68,0.3))",
+    flexShrink: 0,
+  }}
+/>
+
+
+       <Typography
+  variant="h4"
+  fontWeight={700}
+  sx={{
+    color: "#fff",
+    mt: { xs: 4, sm: 6, md: 8 },          // marge haute responsive
+    fontSize: { xs: "1.2rem", sm: "1.5rem", md: "1.8rem" }, // taille responsive
+    lineHeight: 1.2,
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    display: "-webkit-box",
+    WebkitLineClamp: { xs: 1, sm: 2 },    // une ligne sur mobile, deux sur ≥sm
+    WebkitBoxOrient: "vertical",
+    wordBreak: "break-word",
+    hyphens: "auto",
+  }}
+  title={subject.name} // tooltip complet au survol
+>
+  {subject.name}
+</Typography>
+
         </Box>
       </Box>
 
