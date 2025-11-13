@@ -323,44 +323,40 @@ const LibrarySubjectDetailPage = () => {
       </Box>
 
         {/* Liste des livres */}
-        <Grid container spacing={{ xs: 2, sm: 3 }} justifyContent="center">
+       <Grid container spacing={{ xs: 2, sm: 3 }}>
           {filteredBooks.map((book) => (
-            <Grid item xs={12} sm={6} md={6} lg={4} xl={3} key={book._id || book.id}>
-              <Card sx={{ 
-                background: "rgba(255,255,255,0.1)", 
-                backdropFilter: "blur(10px)",
-                border: `2px solid ${subject.color}20`,
-                "&:hover": {
-                  transform: "translateY(-4px)",
-                  boxShadow: `0 8px 25px ${subject.color}40`,
-                },
-                transition: "all 0.3s ease",
-                height: "100%",
-                display: "flex",
-                flexDirection: { xs: "column", md: "row" },
-                maxWidth: "100%",
-                minWidth: "100%"
-              }}>
+              <Grid item xs={12} key={book._id || book.id}>
+      <Card
+  sx={{
+    background: "rgba(255,255,255,0.1)",
+    backdropFilter: "blur(10px)",
+    border: `2px solid ${subject.color}20`,
+    "&:hover": { transform: "translateY(-4px)", boxShadow: `0 8px 25px ${subject.color}40` },
+    transition: "all 0.3s ease",
+    height: "100%",
+    display: "flex",
+    flexDirection: { xs: "column", md: "row" },
+    width: "100%"
+  }}
+>
+
               {/* Image de couverture */}
-              <Box
-                component="img"
-                src={book.coverImageUrl}
-                alt={book.title}
-                sx={{
-                  width: { xs: "100%", md: "300px" },
-                  height: { xs: "250px", md: "400px" },
-                  objectFit: "contain",
-                  cursor: "pointer",
-                  borderTopLeftRadius: { xs: 8, md: 8 },
-                  borderTopRightRadius: { xs: 8, md: 0 },
-                  borderBottomLeftRadius: { xs: 0, md: 8 },
-                  borderBottomRightRadius: { xs: 0, md: 0 },
-                  backgroundColor: "rgba(255,255,255,0.05)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  flexShrink: 0
-                }}
+          <Box
+  component="img"
+  src={book.coverImageUrl}
+  alt={book.title}
+  sx={{
+    width: { xs: "100%", md: 300 },   // pleine largeur en mobile, colonne ; 300px à gauche dès md
+    height: { xs: 260, md: 400 },
+    objectFit: "contain",
+    cursor: "pointer",
+    borderTopLeftRadius: 8,
+    borderTopRightRadius: { xs: 8, md: 0 },
+    borderBottomLeftRadius: { xs: 0, md: 8 },
+    borderBottomRightRadius: 0,
+    backgroundColor: "rgba(255,255,255,0.05)",
+    flexShrink: 0
+  }}
                 onClick={() => handleViewCover(book.coverImageUrl)}
                 onError={(e) => {
                   e.target.src = "https://via.placeholder.com/300x400/1e293b/ffffff?text=Couverture+non+disponible";
