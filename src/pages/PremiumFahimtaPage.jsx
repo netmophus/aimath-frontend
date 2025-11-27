@@ -23,6 +23,8 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  Slider,
+  Collapse,
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import PageLayout from "../components/PageLayout";
@@ -65,6 +67,13 @@ import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import CropRoundedIcon from "@mui/icons-material/CropRounded";
 import ZoomInRoundedIcon from "@mui/icons-material/ZoomInRounded";
 import ZoomOutRoundedIcon from "@mui/icons-material/ZoomOutRounded";
+import FlipCameraIosRoundedIcon from "@mui/icons-material/FlipCameraIosRounded";
+import FlipCameraAndroidRoundedIcon from "@mui/icons-material/FlipCameraAndroidRounded";
+import TuneRoundedIcon from "@mui/icons-material/TuneRounded";
+import FilterAltRoundedIcon from "@mui/icons-material/FilterAltRounded";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import RotateLeftRoundedIcon from "@mui/icons-material/RotateLeftRounded";
 
 // --- export TXT helpers ---
 const saveTextFile = async (text = "", filename = "fahimta.txt") => {
@@ -270,11 +279,25 @@ const PremiumFahimtaPage = () => {
   const [photoRotation, setPhotoRotation] = useState(0);
   const [cropMode, setCropMode] = useState(false);
   const [cropArea, setCropArea] = useState({ x: 10, y: 10, width: 80, height: 80 }); // en pourcentage
+  const [brightness, setBrightness] = useState(100); // 0-200
+  const [contrast, setContrast] = useState(100); // 0-200
+  const [saturation, setSaturation] = useState(100); // 0-200
+  const [imageScale, setImageScale] = useState(100); // 50-200 pour zoom
+  const [sharpness, setSharpness] = useState(0); // -100 à 100
+  const [exposure, setExposure] = useState(0); // -100 à 100
+  const [hue, setHue] = useState(0); // -180 à 180
+  const [blur, setBlur] = useState(0); // 0-20
+  const [flipHorizontal, setFlipHorizontal] = useState(false);
+  const [flipVertical, setFlipVertical] = useState(false);
+  const [selectedFilter, setSelectedFilter] = useState("none"); // "none", "grayscale", "sepia", "vintage", "cool", "warm"
+  const [showAdvancedControls, setShowAdvancedControls] = useState(false);
   const videoRef = React.useRef(null);
   const canvasRef = React.useRef(null);
   const cropImageRef = React.useRef(null);
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [resizeHandle, setResizeHandle] = useState(null); // 'nw', 'ne', 'sw', 'se', 'n', 's', 'e', 'w', null
+  const [cropStartArea, setCropStartArea] = useState(null); // Pour stocker l'état initial lors du redimensionnement
 
   // quotas
   const [quotas, setQuotas] = useState(null);
@@ -649,6 +672,64 @@ useEffect(() => {
     setPhotoRotation(0);
     setCropMode(false);
     setCropArea({ x: 10, y: 10, width: 80, height: 80 });
+    setBrightness(100);
+    setContrast(100);
+    setSaturation(100);
+    setImageScale(100);
+    setSharpness(0);
+    setExposure(0);
+    setHue(0);
+    setBlur(0);
+    setFlipHorizontal(false);
+    setFlipVertical(false);
+    setSelectedFilter("none");
+    setShowAdvancedControls(false);
+    setResizeHandle(null);
+  };
+
+  // Rotation précise
+  const rotatePhotoPrecise = (degrees) => {
+    setPhotoRotation(prev => (prev + degrees) % 360);
+  };
+
+  // Appliquer un filtre prédéfini
+  const applyFilter = (filterName) => {
+    setSelectedFilter(filterName);
+    switch(filterName) {
+      case "grayscale":
+        setSaturation(0);
+        setContrast(110);
+        break;
+      case "sepia":
+        setSaturation(50);
+        setContrast(90);
+        setBrightness(95);
+        setHue(30);
+        break;
+      case "vintage":
+        setSaturation(60);
+        setContrast(85);
+        setBrightness(105);
+        setHue(-10);
+        break;
+      case "cool":
+        setHue(-20);
+        setSaturation(120);
+        setBrightness(105);
+        break;
+      case "warm":
+        setHue(20);
+        setSaturation(120);
+        setBrightness(105);
+        break;
+      case "none":
+      default:
+        setBrightness(100);
+        setContrast(100);
+        setSaturation(100);
+        setHue(0);
+        break;
+    }
   };
 
   const toggleCropMode = () => {
@@ -660,18 +741,79 @@ useEffect(() => {
   };
 
   // Gestion du drag pour déplacer la zone de crop
+  // Détecter quel poignet est cliqué (si c'est un poignet)
+  const getHandleAtPosition = (x, y, cropArea) => {
+    const handleSize = 12; // Taille du poignet en pixels
+    const tolerance = 15; // Zone de tolérance autour du poignet
+    
+    const rect = cropImageRef.current?.getBoundingClientRect();
+    if (!rect) return null;
+    
+    const imgWidth = rect.width;
+    const imgHeight = rect.height;
+    
+    // Positions des poignets en pixels
+    const handles = {
+      nw: { x: (cropArea.x / 100) * imgWidth, y: (cropArea.y / 100) * imgHeight },
+      ne: { x: ((cropArea.x + cropArea.width) / 100) * imgWidth, y: (cropArea.y / 100) * imgHeight },
+      sw: { x: (cropArea.x / 100) * imgWidth, y: ((cropArea.y + cropArea.height) / 100) * imgHeight },
+      se: { x: ((cropArea.x + cropArea.width) / 100) * imgWidth, y: ((cropArea.y + cropArea.height) / 100) * imgHeight },
+      n: { x: ((cropArea.x + cropArea.width / 2) / 100) * imgWidth, y: (cropArea.y / 100) * imgHeight },
+      s: { x: ((cropArea.x + cropArea.width / 2) / 100) * imgWidth, y: ((cropArea.y + cropArea.height) / 100) * imgHeight },
+      w: { x: (cropArea.x / 100) * imgWidth, y: ((cropArea.y + cropArea.height / 2) / 100) * imgHeight },
+      e: { x: ((cropArea.x + cropArea.width) / 100) * imgWidth, y: ((cropArea.y + cropArea.height / 2) / 100) * imgHeight },
+    };
+    
+    // Vérifier la distance à chaque poignet
+    for (const [handle, pos] of Object.entries(handles)) {
+      const dx = x - pos.x;
+      const dy = y - pos.y;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      if (distance < tolerance) {
+        return handle;
+      }
+    }
+    
+    return null;
+  };
+
   const handleCropMouseDown = (e) => {
     if (!cropMode) return;
     e.preventDefault();
-    setIsDragging(true);
+    e.stopPropagation();
     
     const rect = cropImageRef.current?.getBoundingClientRect();
     if (!rect) return;
     
-    const x = ((e.clientX - rect.left) / rect.width) * 100;
-    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
     
-    setDragStart({ x: x - cropArea.x, y: y - cropArea.y });
+    // Vérifier si on clique sur un poignet
+    const handle = getHandleAtPosition(x, y, cropArea);
+    
+    if (handle) {
+      // Mode redimensionnement
+      setResizeHandle(handle);
+      setIsDragging(true);
+      setCropStartArea({ ...cropArea });
+      setDragStart({ x, y });
+    } else {
+      // Mode déplacement
+      const xPercent = (x / rect.width) * 100;
+      const yPercent = (y / rect.height) * 100;
+      
+      // Vérifier si on clique dans la zone de crop
+      if (
+        xPercent >= cropArea.x &&
+        xPercent <= cropArea.x + cropArea.width &&
+        yPercent >= cropArea.y &&
+        yPercent <= cropArea.y + cropArea.height
+      ) {
+        setIsDragging(true);
+        setResizeHandle(null);
+        setDragStart({ x: xPercent - cropArea.x, y: yPercent - cropArea.y });
+      }
+    }
   };
 
   const handleCropMouseMove = (e) => {
@@ -684,34 +826,167 @@ useEffect(() => {
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = ((e.clientY - rect.top) / rect.height) * 100;
     
-    let newX = x - dragStart.x;
-    let newY = y - dragStart.y;
-    
-    // Limites
-    newX = Math.max(0, Math.min(100 - cropArea.width, newX));
-    newY = Math.max(0, Math.min(100 - cropArea.height, newY));
-    
-    setCropArea(prev => ({ ...prev, x: newX, y: newY }));
+    if (resizeHandle && cropStartArea) {
+      // Mode redimensionnement
+      const startX = (dragStart.x / rect.width) * 100;
+      const startY = (dragStart.y / rect.height) * 100;
+      
+      let newArea = { ...cropStartArea };
+      const minSize = 5; // Taille minimale en pourcentage
+      
+      switch (resizeHandle) {
+        case 'nw': // Coin nord-ouest
+          newArea.width = cropStartArea.width + (cropStartArea.x - x);
+          newArea.height = cropStartArea.height + (cropStartArea.y - y);
+          newArea.x = Math.max(0, Math.min(x, cropStartArea.x + cropStartArea.width - minSize));
+          newArea.y = Math.max(0, Math.min(y, cropStartArea.y + cropStartArea.height - minSize));
+          if (newArea.width < minSize) {
+            newArea.width = minSize;
+            newArea.x = cropStartArea.x + cropStartArea.width - minSize;
+          }
+          if (newArea.height < minSize) {
+            newArea.height = minSize;
+            newArea.y = cropStartArea.y + cropStartArea.height - minSize;
+          }
+          if (newArea.x + newArea.width > 100) {
+            newArea.width = 100 - newArea.x;
+          }
+          if (newArea.y + newArea.height > 100) {
+            newArea.height = 100 - newArea.y;
+          }
+          break;
+          
+        case 'ne': // Coin nord-est
+          newArea.width = x - cropStartArea.x;
+          newArea.height = cropStartArea.height + (cropStartArea.y - y);
+          newArea.y = Math.max(0, Math.min(y, cropStartArea.y + cropStartArea.height - minSize));
+          if (newArea.width < minSize) newArea.width = minSize;
+          if (newArea.height < minSize) {
+            newArea.height = minSize;
+            newArea.y = cropStartArea.y + cropStartArea.height - minSize;
+          }
+          if (newArea.x + newArea.width > 100) newArea.width = 100 - newArea.x;
+          if (newArea.y + newArea.height > 100) newArea.height = 100 - newArea.y;
+          break;
+          
+        case 'sw': // Coin sud-ouest
+          newArea.width = cropStartArea.width + (cropStartArea.x - x);
+          newArea.height = y - cropStartArea.y;
+          newArea.x = Math.max(0, Math.min(x, cropStartArea.x + cropStartArea.width - minSize));
+          if (newArea.width < minSize) {
+            newArea.width = minSize;
+            newArea.x = cropStartArea.x + cropStartArea.width - minSize;
+          }
+          if (newArea.height < minSize) newArea.height = minSize;
+          if (newArea.x + newArea.width > 100) {
+            newArea.width = 100 - newArea.x;
+          }
+          if (newArea.y + newArea.height > 100) newArea.height = 100 - newArea.y;
+          break;
+          
+        case 'se': // Coin sud-est
+          newArea.width = x - cropStartArea.x;
+          newArea.height = y - cropStartArea.y;
+          if (newArea.width < minSize) newArea.width = minSize;
+          if (newArea.height < minSize) newArea.height = minSize;
+          if (newArea.x + newArea.width > 100) newArea.width = 100 - newArea.x;
+          if (newArea.y + newArea.height > 100) newArea.height = 100 - newArea.y;
+          break;
+          
+        case 'n': // Bord nord
+          newArea.height = cropStartArea.height + (cropStartArea.y - y);
+          newArea.y = Math.max(0, Math.min(y, cropStartArea.y + cropStartArea.height - minSize));
+          if (newArea.height < minSize) {
+            newArea.height = minSize;
+            newArea.y = cropStartArea.y + cropStartArea.height - minSize;
+          }
+          if (newArea.y + newArea.height > 100) newArea.height = 100 - newArea.y;
+          break;
+          
+        case 's': // Bord sud
+          newArea.height = y - cropStartArea.y;
+          if (newArea.height < minSize) newArea.height = minSize;
+          if (newArea.y + newArea.height > 100) newArea.height = 100 - newArea.y;
+          break;
+          
+        case 'w': // Bord ouest
+          newArea.width = cropStartArea.width + (cropStartArea.x - x);
+          newArea.x = Math.max(0, Math.min(x, cropStartArea.x + cropStartArea.width - minSize));
+          if (newArea.width < minSize) {
+            newArea.width = minSize;
+            newArea.x = cropStartArea.x + cropStartArea.width - minSize;
+          }
+          if (newArea.x + newArea.width > 100) {
+            newArea.width = 100 - newArea.x;
+          }
+          break;
+          
+        case 'e': // Bord est
+          newArea.width = x - cropStartArea.x;
+          if (newArea.width < minSize) newArea.width = minSize;
+          if (newArea.x + newArea.width > 100) newArea.width = 100 - newArea.x;
+          break;
+      }
+      
+      setCropArea(newArea);
+    } else {
+      // Mode déplacement
+      let newX = x - dragStart.x;
+      let newY = y - dragStart.y;
+      
+      // Limites
+      newX = Math.max(0, Math.min(100 - cropArea.width, newX));
+      newY = Math.max(0, Math.min(100 - cropArea.height, newY));
+      
+      setCropArea(prev => ({ ...prev, x: newX, y: newY }));
+    }
   };
 
   const handleCropMouseUp = () => {
     setIsDragging(false);
+    setResizeHandle(null);
+    setCropStartArea(null);
   };
 
   // Support tactile pour mobile
   const handleCropTouchStart = (e) => {
     if (!cropMode || e.touches.length === 0) return;
     e.preventDefault();
-    setIsDragging(true);
+    e.stopPropagation();
     
     const rect = cropImageRef.current?.getBoundingClientRect();
     if (!rect) return;
     
     const touch = e.touches[0];
-    const x = ((touch.clientX - rect.left) / rect.width) * 100;
-    const y = ((touch.clientY - rect.top) / rect.height) * 100;
+    const x = touch.clientX - rect.left;
+    const y = touch.clientY - rect.top;
     
-    setDragStart({ x: x - cropArea.x, y: y - cropArea.y });
+    // Vérifier si on touche un poignet
+    const handle = getHandleAtPosition(x, y, cropArea);
+    
+    if (handle) {
+      // Mode redimensionnement
+      setResizeHandle(handle);
+      setIsDragging(true);
+      setCropStartArea({ ...cropArea });
+      setDragStart({ x, y });
+    } else {
+      // Mode déplacement
+      const xPercent = (x / rect.width) * 100;
+      const yPercent = (y / rect.height) * 100;
+      
+      // Vérifier si on touche dans la zone de crop
+      if (
+        xPercent >= cropArea.x &&
+        xPercent <= cropArea.x + cropArea.width &&
+        yPercent >= cropArea.y &&
+        yPercent <= cropArea.y + cropArea.height
+      ) {
+        setIsDragging(true);
+        setResizeHandle(null);
+        setDragStart({ x: xPercent - cropArea.x, y: yPercent - cropArea.y });
+      }
+    }
   };
 
   const handleCropTouchMove = (e) => {
@@ -725,17 +1000,138 @@ useEffect(() => {
     const x = ((touch.clientX - rect.left) / rect.width) * 100;
     const y = ((touch.clientY - rect.top) / rect.height) * 100;
     
-    let newX = x - dragStart.x;
-    let newY = y - dragStart.y;
-    
-    newX = Math.max(0, Math.min(100 - cropArea.width, newX));
-    newY = Math.max(0, Math.min(100 - cropArea.height, newY));
-    
-    setCropArea(prev => ({ ...prev, x: newX, y: newY }));
+    if (resizeHandle && cropStartArea) {
+      // Mode redimensionnement (même logique que pour la souris)
+      const startX = (dragStart.x / rect.width) * 100;
+      const startY = (dragStart.y / rect.height) * 100;
+      
+      let newArea = { ...cropStartArea };
+      const minSize = 5;
+      
+      switch (resizeHandle) {
+        case 'nw':
+          newArea.width = cropStartArea.width + (cropStartArea.x - x);
+          newArea.height = cropStartArea.height + (cropStartArea.y - y);
+          newArea.x = Math.max(0, Math.min(x, cropStartArea.x + cropStartArea.width - minSize));
+          newArea.y = Math.max(0, Math.min(y, cropStartArea.y + cropStartArea.height - minSize));
+          if (newArea.width < minSize) {
+            newArea.width = minSize;
+            newArea.x = cropStartArea.x + cropStartArea.width - minSize;
+          }
+          if (newArea.height < minSize) {
+            newArea.height = minSize;
+            newArea.y = cropStartArea.y + cropStartArea.height - minSize;
+          }
+          if (newArea.x + newArea.width > 100) {
+            newArea.width = 100 - newArea.x;
+          }
+          if (newArea.y + newArea.height > 100) {
+            newArea.height = 100 - newArea.y;
+          }
+          break;
+        case 'ne':
+          newArea.width = x - cropStartArea.x;
+          newArea.height = cropStartArea.height + (cropStartArea.y - y);
+          newArea.y = Math.max(0, Math.min(y, cropStartArea.y + cropStartArea.height - minSize));
+          if (newArea.width < minSize) newArea.width = minSize;
+          if (newArea.height < minSize) {
+            newArea.height = minSize;
+            newArea.y = cropStartArea.y + cropStartArea.height - minSize;
+          }
+          if (newArea.x + newArea.width > 100) newArea.width = 100 - newArea.x;
+          if (newArea.y + newArea.height > 100) newArea.height = 100 - newArea.y;
+          break;
+        case 'sw':
+          newArea.width = cropStartArea.width + (cropStartArea.x - x);
+          newArea.height = y - cropStartArea.y;
+          newArea.x = Math.max(0, Math.min(x, cropStartArea.x + cropStartArea.width - minSize));
+          if (newArea.width < minSize) {
+            newArea.width = minSize;
+            newArea.x = cropStartArea.x + cropStartArea.width - minSize;
+          }
+          if (newArea.height < minSize) newArea.height = minSize;
+          if (newArea.x + newArea.width > 100) {
+            newArea.width = 100 - newArea.x;
+          }
+          if (newArea.y + newArea.height > 100) newArea.height = 100 - newArea.y;
+          break;
+        case 'se':
+          newArea.width = x - cropStartArea.x;
+          newArea.height = y - cropStartArea.y;
+          if (newArea.width < minSize) newArea.width = minSize;
+          if (newArea.height < minSize) newArea.height = minSize;
+          if (newArea.x + newArea.width > 100) newArea.width = 100 - newArea.x;
+          if (newArea.y + newArea.height > 100) newArea.height = 100 - newArea.y;
+          break;
+        case 'n':
+          newArea.height = cropStartArea.height + (cropStartArea.y - y);
+          newArea.y = Math.max(0, Math.min(y, cropStartArea.y + cropStartArea.height - minSize));
+          if (newArea.height < minSize) {
+            newArea.height = minSize;
+            newArea.y = cropStartArea.y + cropStartArea.height - minSize;
+          }
+          if (newArea.y + newArea.height > 100) newArea.height = 100 - newArea.y;
+          break;
+        case 's':
+          newArea.height = y - cropStartArea.y;
+          if (newArea.height < minSize) newArea.height = minSize;
+          if (newArea.y + newArea.height > 100) newArea.height = 100 - newArea.y;
+          break;
+        case 'w':
+          newArea.width = cropStartArea.width + (cropStartArea.x - x);
+          newArea.x = Math.max(0, Math.min(x, cropStartArea.x + cropStartArea.width - minSize));
+          if (newArea.width < minSize) {
+            newArea.width = minSize;
+            newArea.x = cropStartArea.x + cropStartArea.width - minSize;
+          }
+          if (newArea.x + newArea.width > 100) {
+            newArea.width = 100 - newArea.x;
+          }
+          break;
+        case 'e':
+          newArea.width = x - cropStartArea.x;
+          if (newArea.width < minSize) newArea.width = minSize;
+          if (newArea.x + newArea.width > 100) newArea.width = 100 - newArea.x;
+          break;
+      }
+      
+      setCropArea(newArea);
+    } else {
+      // Mode déplacement
+      let newX = x - dragStart.x;
+      let newY = y - dragStart.y;
+      
+      newX = Math.max(0, Math.min(100 - cropArea.width, newX));
+      newY = Math.max(0, Math.min(100 - cropArea.height, newY));
+      
+      setCropArea(prev => ({ ...prev, x: newX, y: newY }));
+    }
   };
 
   const handleCropTouchEnd = () => {
     setIsDragging(false);
+    setResizeHandle(null);
+    setCropStartArea(null);
+  };
+
+  // Fonction pour obtenir le curseur approprié selon le poignet
+  const getResizeCursor = (handle) => {
+    switch (handle) {
+      case 'nw':
+      case 'se':
+        return 'nwse-resize';
+      case 'ne':
+      case 'sw':
+        return 'nesw-resize';
+      case 'n':
+      case 's':
+        return 'ns-resize';
+      case 'e':
+      case 'w':
+        return 'ew-resize';
+      default:
+        return 'move';
+    }
   };
 
   const handleCropResize = (direction) => {
@@ -744,16 +1140,20 @@ useEffect(() => {
       
       switch(direction) {
         case 'increase':
+          // Augmenter la taille du crop (réduire la zone visible)
           width = Math.min(95, width + 5);
           height = Math.min(95, height + 5);
-          x = Math.max(0, x - 2.5);
-          y = Math.max(0, y - 2.5);
+          // Ajuster la position pour centrer
+          x = Math.max(0, Math.min(100 - width, x - 2.5));
+          y = Math.max(0, Math.min(100 - height, y - 2.5));
           break;
         case 'decrease':
+          // Diminuer la taille du crop (agrandir la zone visible)
           width = Math.max(20, width - 5);
           height = Math.max(20, height - 5);
-          x = Math.min(100 - width, x + 2.5);
-          y = Math.min(100 - height, y + 2.5);
+          // Ajuster la position pour centrer
+          x = Math.max(0, Math.min(100 - width, x + 2.5));
+          y = Math.max(0, Math.min(100 - height, y + 2.5));
           break;
         default:
           break;
@@ -773,28 +1173,147 @@ useEffect(() => {
     img.onload = () => {
       const ctx = canvas.getContext("2d");
       
-      let finalWidth = img.width;
-      let finalHeight = img.height;
+      // Calculer les dimensions après rotation
+      let displayWidth = img.width;
+      let displayHeight = img.height;
       
-      // Étape 1: Rotation si nécessaire
       if (photoRotation === 90 || photoRotation === 270) {
-        finalWidth = img.height;
-        finalHeight = img.width;
+        displayWidth = img.height;
+        displayHeight = img.width;
       }
       
-      canvas.width = finalWidth;
-      canvas.height = finalHeight;
+      // Appliquer le scale (zoom)
+      const scaledWidth = (displayWidth * imageScale) / 100;
+      const scaledHeight = (displayHeight * imageScale) / 100;
       
+      // Dimensions du canvas de travail (image complète après rotation et scale)
+      canvas.width = scaledWidth;
+      canvas.height = scaledHeight;
+      
+      // Sauvegarder l'état du contexte pour les filtres
+      ctx.save();
+      
+      // Calculer la luminosité totale (brightness + exposure)
+      const totalBrightness = Math.max(0, Math.min(200, brightness + (exposure * 0.5)));
+      
+      // Appliquer les filtres de couleur (brightness, contrast, saturation, hue, blur, etc.)
+      let filterString = `brightness(${totalBrightness}%) contrast(${contrast}%) saturate(${saturation}%)`;
+      
+      if (hue !== 0) {
+        filterString += ` hue-rotate(${hue}deg)`;
+      }
+      
+      if (blur > 0) {
+        filterString += ` blur(${blur}px)`;
+      }
+      
+      // Note: sharpness n'est pas supporté directement par CSS filter, on l'appliquera via canvas après
+      ctx.filter = filterString;
+      
+      // Appliquer flip avant rotation
+      let scaleX = flipHorizontal ? -1 : 1;
+      let scaleY = flipVertical ? -1 : 1;
+      
+      // Dessiner l'image avec rotation, scale et flip
       ctx.translate(canvas.width / 2, canvas.height / 2);
       ctx.rotate((photoRotation * Math.PI) / 180);
-      ctx.drawImage(img, -img.width / 2, -img.height / 2);
+      ctx.scale(scaleX, scaleY);
+      ctx.drawImage(
+        img, 
+        -(img.width * imageScale / 100) / 2, 
+        -(img.height * imageScale / 100) / 2,
+        img.width * imageScale / 100,
+        img.height * imageScale / 100
+      );
       
-      // Étape 2: Crop si activé
+      // Appliquer sharpness via convolution (approximation simplifiée pour performance)
+      if (Math.abs(sharpness) > 5) {
+        try {
+          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          const data = imageData.data;
+          const width = canvas.width;
+          const height = canvas.height;
+          const tempData = new Uint8ClampedArray(data);
+          
+          // Kernel de sharpening/unsharpening
+          const factor = Math.abs(sharpness) / 100;
+          const sign = sharpness > 0 ? 1 : -1;
+          
+          // Pour les performances, on traite seulement un échantillon si l'image est grande
+          const step = width > 1000 ? 2 : 1;
+          
+          for (let y = 1; y < height - 1; y += step) {
+            for (let x = 1; x < width - 1; x += step) {
+              for (let c = 0; c < 3; c++) { // RGB seulement
+                const idx = (y * width + x) * 4 + c;
+                const center = tempData[idx];
+                
+                // Moyenne des voisins
+                let neighbors = 0;
+                let sum = 0;
+                for (let ky = -1; ky <= 1; ky++) {
+                  for (let kx = -1; kx <= 1; kx++) {
+                    if (kx === 0 && ky === 0) continue;
+                    const nIdx = ((y + ky) * width + (x + kx)) * 4 + c;
+                    sum += tempData[nIdx];
+                    neighbors++;
+                  }
+                }
+                const avg = sum / neighbors;
+                
+                // Appliquer le sharpening/unsharpening
+                const diff = center - avg;
+                data[idx] = Math.max(0, Math.min(255, center + diff * factor * sign));
+              }
+            }
+          }
+          
+          // Si on a utilisé un step > 1, interpoler les pixels manquants
+          if (step > 1) {
+            for (let y = 1; y < height - 1; y++) {
+              for (let x = 1; x < width - 1; x++) {
+                if (y % step === 0 && x % step === 0) continue;
+                for (let c = 0; c < 3; c++) {
+                  const idx = (y * width + x) * 4 + c;
+                  // Interpolation simple
+                  const y1 = Math.floor(y / step) * step;
+                  const y2 = Math.min(height - 1, y1 + step);
+                  const x1 = Math.floor(x / step) * step;
+                  const x2 = Math.min(width - 1, x1 + step);
+                  
+                  const v1 = data[(y1 * width + x1) * 4 + c];
+                  const v2 = data[(y1 * width + x2) * 4 + c];
+                  const v3 = data[(y2 * width + x1) * 4 + c];
+                  const v4 = data[(y2 * width + x2) * 4 + c];
+                  
+                  const fx = (x - x1) / step;
+                  const fy = (y - y1) / step;
+                  data[idx] = Math.round(
+                    v1 * (1 - fx) * (1 - fy) +
+                    v2 * fx * (1 - fy) +
+                    v3 * (1 - fx) * fy +
+                    v4 * fx * fy
+                  );
+                }
+              }
+            }
+          }
+          
+          ctx.putImageData(imageData, 0, 0);
+        } catch (err) {
+          console.warn("Erreur lors de l'application de la netteté:", err);
+        }
+      }
+      
+      ctx.restore();
+      
+      // Étape 2: Crop si activé (après rotation et scale)
       if (cropMode) {
-        const cropX = (cropArea.x / 100) * finalWidth;
-        const cropY = (cropArea.y / 100) * finalHeight;
-        const cropWidth = (cropArea.width / 100) * finalWidth;
-        const cropHeight = (cropArea.height / 100) * finalHeight;
+        // Calculer les coordonnées de crop sur l'image rotée et scalée
+        const cropX = (cropArea.x / 100) * scaledWidth;
+        const cropY = (cropArea.y / 100) * scaledHeight;
+        const cropWidth = (cropArea.width / 100) * scaledWidth;
+        const cropHeight = (cropArea.height / 100) * scaledHeight;
         
         // Extraire la zone croppée
         const imageData = ctx.getImageData(cropX, cropY, cropWidth, cropHeight);
@@ -815,6 +1334,10 @@ useEffect(() => {
           setPhotoRotation(0);
           setCropMode(false);
           setCropArea({ x: 10, y: 10, width: 80, height: 80 });
+          setBrightness(100);
+          setContrast(100);
+          setSaturation(100);
+          setImageScale(100);
           stopCamera();
         }
       }, "image/jpeg", 0.92);
@@ -891,7 +1414,26 @@ useEffect(() => {
   const onDropFile = (e) => {
     e.preventDefault();
     const file = e.dataTransfer?.files?.[0];
-    if (file) setOcrImage(file);
+    if (file && file.type.startsWith("image/")) {
+      // Ouvrir le modal de manipulation avec le fichier déposé
+      setCapturedPhoto(file);
+      setCameraOpen(true);
+      setPhotoRotation(0);
+      setCropMode(false);
+      setCropArea({ x: 10, y: 10, width: 80, height: 80 });
+      setBrightness(100);
+      setContrast(100);
+      setSaturation(100);
+      setImageScale(100);
+      setSharpness(0);
+      setExposure(0);
+      setHue(0);
+      setBlur(0);
+      setFlipHorizontal(false);
+      setFlipVertical(false);
+      setSelectedFilter("none");
+      setShowAdvancedControls(false);
+    }
   };
 
   const prevent = (e) => e.preventDefault();
@@ -1636,7 +2178,29 @@ const countBySubject = React.useMemo(() => {
                       type="file"
                       accept="image/*"
                       hidden
-                      onChange={(e) => setOcrImage(e.target.files?.[0] || null)}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          // Ouvrir la caméra en mode édition avec le fichier sélectionné
+                          setCapturedPhoto(file);
+                          setCameraOpen(true);
+                          setPhotoRotation(0);
+                          setCropMode(false);
+                          setCropArea({ x: 10, y: 10, width: 80, height: 80 });
+                          setBrightness(100);
+                          setContrast(100);
+                          setSaturation(100);
+                          setImageScale(100);
+                          setSharpness(0);
+                          setExposure(0);
+                          setHue(0);
+                          setBlur(0);
+                          setFlipHorizontal(false);
+                          setFlipVertical(false);
+                          setSelectedFilter("none");
+                          setShowAdvancedControls(false);
+                        }
+                      }}
                     />
                   </Button>
                 </Stack>
@@ -2324,7 +2888,7 @@ const countBySubject = React.useMemo(() => {
                   bgcolor: "#000",
                   borderRadius: 2,
                   overflow: "hidden",
-                  cursor: cropMode ? "move" : "default",
+                  cursor: cropMode ? (resizeHandle ? getResizeCursor(resizeHandle) : "move") : "default",
                   touchAction: cropMode ? "none" : "auto",
                 }}
               >
@@ -2335,8 +2899,9 @@ const countBySubject = React.useMemo(() => {
                     maxWidth: "100%",
                     height: "auto",
                     maxHeight: "60vh",
-                    transform: `rotate(${photoRotation}deg)`,
-                    transition: "transform 0.3s ease",
+                    transform: `rotate(${photoRotation}deg) scale(${imageScale / 100}) scaleX(${flipHorizontal ? -1 : 1}) scaleY(${flipVertical ? -1 : 1})`,
+                    filter: `brightness(${Math.max(0, Math.min(200, brightness + (exposure * 0.5)))}%) contrast(${contrast}%) saturate(${saturation}%) ${hue !== 0 ? `hue-rotate(${hue}deg)` : ''} ${blur > 0 ? `blur(${blur}px)` : ''}`,
+                    transition: "transform 0.3s ease, filter 0.3s ease",
                     display: "block",
                   }}
                 />
@@ -2364,65 +2929,677 @@ const countBySubject = React.useMemo(() => {
                         height: `${cropArea.height}%`,
                         border: "3px solid #fff",
                         boxShadow: "0 0 0 9999px rgba(0,0,0,0.5)",
-                        cursor: "move",
-                        pointerEvents: "none",
+                        cursor: resizeHandle ? getResizeCursor(resizeHandle) : "move",
+                        pointerEvents: "auto",
                       }}
                     >
-                      {/* Coins de la zone de crop */}
-                      <Box sx={{ position: "absolute", top: -6, left: -6, width: 12, height: 12, bgcolor: "#fff", borderRadius: "50%" }} />
-                      <Box sx={{ position: "absolute", top: -6, right: -6, width: 12, height: 12, bgcolor: "#fff", borderRadius: "50%" }} />
-                      <Box sx={{ position: "absolute", bottom: -6, left: -6, width: 12, height: 12, bgcolor: "#fff", borderRadius: "50%" }} />
-                      <Box sx={{ position: "absolute", bottom: -6, right: -6, width: 12, height: 12, bgcolor: "#fff", borderRadius: "50%" }} />
+                      {/* Poignets de redimensionnement - Coins */}
+                      <Box
+                        sx={{
+                          position: "absolute",
+                          top: -8,
+                          left: -8,
+                          width: 16,
+                          height: 16,
+                          bgcolor: "#fff",
+                          borderRadius: "50%",
+                          border: "2px solid #1976d2",
+                          cursor: "nwse-resize",
+                          zIndex: 10,
+                          "&:hover": { transform: "scale(1.2)", bgcolor: "#1976d2" },
+                          transition: "all 0.2s",
+                        }}
+                        onMouseDown={(e) => {
+                          e.stopPropagation();
+                          setResizeHandle('nw');
+                          setIsDragging(true);
+                          setCropStartArea({ ...cropArea });
+                          const rect = cropImageRef.current?.getBoundingClientRect();
+                          if (rect) {
+                            setDragStart({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+                          }
+                        }}
+                      />
+                      <Box
+                        sx={{
+                          position: "absolute",
+                          top: -8,
+                          right: -8,
+                          width: 16,
+                          height: 16,
+                          bgcolor: "#fff",
+                          borderRadius: "50%",
+                          border: "2px solid #1976d2",
+                          cursor: "nesw-resize",
+                          zIndex: 10,
+                          "&:hover": { transform: "scale(1.2)", bgcolor: "#1976d2" },
+                          transition: "all 0.2s",
+                        }}
+                        onMouseDown={(e) => {
+                          e.stopPropagation();
+                          setResizeHandle('ne');
+                          setIsDragging(true);
+                          setCropStartArea({ ...cropArea });
+                          const rect = cropImageRef.current?.getBoundingClientRect();
+                          if (rect) {
+                            setDragStart({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+                          }
+                        }}
+                      />
+                      <Box
+                        sx={{
+                          position: "absolute",
+                          bottom: -8,
+                          left: -8,
+                          width: 16,
+                          height: 16,
+                          bgcolor: "#fff",
+                          borderRadius: "50%",
+                          border: "2px solid #1976d2",
+                          cursor: "nesw-resize",
+                          zIndex: 10,
+                          "&:hover": { transform: "scale(1.2)", bgcolor: "#1976d2" },
+                          transition: "all 0.2s",
+                        }}
+                        onMouseDown={(e) => {
+                          e.stopPropagation();
+                          setResizeHandle('sw');
+                          setIsDragging(true);
+                          setCropStartArea({ ...cropArea });
+                          const rect = cropImageRef.current?.getBoundingClientRect();
+                          if (rect) {
+                            setDragStart({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+                          }
+                        }}
+                      />
+                      <Box
+                        sx={{
+                          position: "absolute",
+                          bottom: -8,
+                          right: -8,
+                          width: 16,
+                          height: 16,
+                          bgcolor: "#fff",
+                          borderRadius: "50%",
+                          border: "2px solid #1976d2",
+                          cursor: "nwse-resize",
+                          zIndex: 10,
+                          "&:hover": { transform: "scale(1.2)", bgcolor: "#1976d2" },
+                          transition: "all 0.2s",
+                        }}
+                        onMouseDown={(e) => {
+                          e.stopPropagation();
+                          setResizeHandle('se');
+                          setIsDragging(true);
+                          setCropStartArea({ ...cropArea });
+                          const rect = cropImageRef.current?.getBoundingClientRect();
+                          if (rect) {
+                            setDragStart({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+                          }
+                        }}
+                      />
+                      
+                      {/* Poignets de redimensionnement - Bords */}
+                      <Box
+                        sx={{
+                          position: "absolute",
+                          top: -6,
+                          left: "50%",
+                          transform: "translateX(-50%)",
+                          width: 40,
+                          height: 12,
+                          bgcolor: "#fff",
+                          border: "2px solid #1976d2",
+                          borderRadius: 1,
+                          cursor: "ns-resize",
+                          zIndex: 10,
+                          "&:hover": { bgcolor: "#1976d2" },
+                          transition: "all 0.2s",
+                        }}
+                        onMouseDown={(e) => {
+                          e.stopPropagation();
+                          setResizeHandle('n');
+                          setIsDragging(true);
+                          setCropStartArea({ ...cropArea });
+                          const rect = cropImageRef.current?.getBoundingClientRect();
+                          if (rect) {
+                            setDragStart({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+                          }
+                        }}
+                      />
+                      <Box
+                        sx={{
+                          position: "absolute",
+                          bottom: -6,
+                          left: "50%",
+                          transform: "translateX(-50%)",
+                          width: 40,
+                          height: 12,
+                          bgcolor: "#fff",
+                          border: "2px solid #1976d2",
+                          borderRadius: 1,
+                          cursor: "ns-resize",
+                          zIndex: 10,
+                          "&:hover": { bgcolor: "#1976d2" },
+                          transition: "all 0.2s",
+                        }}
+                        onMouseDown={(e) => {
+                          e.stopPropagation();
+                          setResizeHandle('s');
+                          setIsDragging(true);
+                          setCropStartArea({ ...cropArea });
+                          const rect = cropImageRef.current?.getBoundingClientRect();
+                          if (rect) {
+                            setDragStart({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+                          }
+                        }}
+                      />
+                      <Box
+                        sx={{
+                          position: "absolute",
+                          left: -6,
+                          top: "50%",
+                          transform: "translateY(-50%)",
+                          width: 12,
+                          height: 40,
+                          bgcolor: "#fff",
+                          border: "2px solid #1976d2",
+                          borderRadius: 1,
+                          cursor: "ew-resize",
+                          zIndex: 10,
+                          "&:hover": { bgcolor: "#1976d2" },
+                          transition: "all 0.2s",
+                        }}
+                        onMouseDown={(e) => {
+                          e.stopPropagation();
+                          setResizeHandle('w');
+                          setIsDragging(true);
+                          setCropStartArea({ ...cropArea });
+                          const rect = cropImageRef.current?.getBoundingClientRect();
+                          if (rect) {
+                            setDragStart({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+                          }
+                        }}
+                      />
+                      <Box
+                        sx={{
+                          position: "absolute",
+                          right: -6,
+                          top: "50%",
+                          transform: "translateY(-50%)",
+                          width: 12,
+                          height: 40,
+                          bgcolor: "#fff",
+                          border: "2px solid #1976d2",
+                          borderRadius: 1,
+                          cursor: "ew-resize",
+                          zIndex: 10,
+                          "&:hover": { bgcolor: "#1976d2" },
+                          transition: "all 0.2s",
+                        }}
+                        onMouseDown={(e) => {
+                          e.stopPropagation();
+                          setResizeHandle('e');
+                          setIsDragging(true);
+                          setCropStartArea({ ...cropArea });
+                          const rect = cropImageRef.current?.getBoundingClientRect();
+                          if (rect) {
+                            setDragStart({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+                          }
+                        }}
+                      />
                     </Box>
                   </>
                 )}
               </Box>
               
-              <Stack direction="row" spacing={1} justifyContent="center" sx={{ mt: 3, flexWrap: "wrap" }}>
-                <Button
-                  variant={cropMode ? "contained" : "outlined"}
-                  startIcon={<CropRoundedIcon />}
-                  onClick={toggleCropMode}
-                  color={cropMode ? "primary" : "inherit"}
-                >
-                  Recadrer
-                </Button>
-                
-                {cropMode && (
-                  <>
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      startIcon={<ZoomInRoundedIcon />}
-                      onClick={() => handleCropResize('decrease')}
-                    >
-                      Zoom +
-                    </Button>
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      startIcon={<ZoomOutRoundedIcon />}
-                      onClick={() => handleCropResize('increase')}
-                    >
-                      Zoom -
-                    </Button>
-                  </>
+              {/* Contrôles de manipulation */}
+              <Box sx={{ mt: 3 }}>
+                {/* Boutons principaux */}
+                <Stack direction="row" spacing={1} justifyContent="center" sx={{ mb: 2, flexWrap: "wrap" }}>
+                  <Button
+                    variant={cropMode ? "contained" : "outlined"}
+                    startIcon={<CropRoundedIcon />}
+                    onClick={toggleCropMode}
+                    color={cropMode ? "primary" : "inherit"}
+                    size="small"
+                  >
+                    Recadrer
+                  </Button>
+                  
+                  {cropMode && (
+                    <>
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        startIcon={<ZoomOutRoundedIcon />}
+                        onClick={() => handleCropResize('increase')}
+                        title="Agrandir la zone de recadrage"
+                      >
+                        Agrandir zone
+                      </Button>
+                      <Button
+                        variant="outlined"
+                        size="small"
+                        startIcon={<ZoomInRoundedIcon />}
+                        onClick={() => handleCropResize('decrease')}
+                        title="Réduire la zone de recadrage"
+                      >
+                        Réduire zone
+                      </Button>
+                    </>
+                  )}
+                  
+                  <Button
+                    variant="outlined"
+                    startIcon={<RotateRightRoundedIcon />}
+                    onClick={rotatePhoto}
+                    size="small"
+                    title="Rotation 90°"
+                  >
+                    Pivoter 90°
+                  </Button>
+                  
+                  <Button
+                    variant="outlined"
+                    startIcon={<RotateLeftRoundedIcon />}
+                    onClick={() => rotatePhotoPrecise(-45)}
+                    size="small"
+                    title="Rotation -45°"
+                  >
+                    -45°
+                  </Button>
+                  
+                  <Button
+                    variant="outlined"
+                    startIcon={<RotateRightRoundedIcon />}
+                    onClick={() => rotatePhotoPrecise(45)}
+                    size="small"
+                    title="Rotation +45°"
+                  >
+                    +45°
+                  </Button>
+                  
+                  <Button
+                    variant="outlined"
+                    startIcon={<FlipCameraIosRoundedIcon />}
+                    onClick={() => setFlipHorizontal(!flipHorizontal)}
+                    size="small"
+                    color={flipHorizontal ? "primary" : "inherit"}
+                    title="Retourner horizontalement"
+                  >
+                    H
+                  </Button>
+                  
+                  <Button
+                    variant="outlined"
+                    startIcon={<FlipCameraAndroidRoundedIcon />}
+                    onClick={() => setFlipVertical(!flipVertical)}
+                    size="small"
+                    color={flipVertical ? "primary" : "inherit"}
+                    title="Retourner verticalement"
+                  >
+                    V
+                  </Button>
+                  
+                  <Button
+                    variant="outlined"
+                    startIcon={<FilterAltRoundedIcon />}
+                    onClick={() => setShowAdvancedControls(!showAdvancedControls)}
+                    size="small"
+                    color={showAdvancedControls ? "primary" : "inherit"}
+                  >
+                    Filtres
+                  </Button>
+                  
+                  <Button
+                    variant="outlined"
+                    onClick={retakePhoto}
+                    size="small"
+                  >
+                    Reprendre
+                  </Button>
+                </Stack>
+
+                {/* Filtres prédéfinis */}
+                {showAdvancedControls && (
+                  <Box sx={{ mb: 2, mt: 2 }}>
+                    <Typography variant="caption" sx={{ color: "text.secondary", mb: 1, display: "block" }}>
+                      Filtres prédéfinis
+                    </Typography>
+                    <Stack direction="row" spacing={1} justifyContent="center" sx={{ flexWrap: "wrap" }}>
+                      {[
+                        { name: "none", label: "Aucun" },
+                        { name: "grayscale", label: "Noir & Blanc" },
+                        { name: "sepia", label: "Sépia" },
+                        { name: "vintage", label: "Vintage" },
+                        { name: "cool", label: "Froid" },
+                        { name: "warm", label: "Chaud" },
+                      ].map((filter) => (
+                        <Button
+                          key={filter.name}
+                          variant={selectedFilter === filter.name ? "contained" : "outlined"}
+                          onClick={() => applyFilter(filter.name)}
+                          size="small"
+                          sx={{ minWidth: 80 }}
+                        >
+                          {filter.label}
+                        </Button>
+                      ))}
+                    </Stack>
+                  </Box>
                 )}
-                
-                <Button
-                  variant="outlined"
-                  startIcon={<RotateRightRoundedIcon />}
-                  onClick={rotatePhoto}
-                >
-                  Pivoter
-                </Button>
-                <Button
-                  variant="outlined"
-                  onClick={retakePhoto}
-                >
-                  Reprendre
-                </Button>
-              </Stack>
+
+                {/* Contrôles de base (toujours visibles) */}
+                <Collapse in={!showAdvancedControls}>
+                  <Box sx={{ px: { xs: 1, sm: 3 }, py: 2, bgcolor: "rgba(0,0,0,0.02)", borderRadius: 2, mt: 2 }}>
+                    <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }}>
+                      <Typography variant="caption" sx={{ color: "text.secondary", fontWeight: 600 }}>
+                        Ajustements de base
+                      </Typography>
+                      <IconButton
+                        size="small"
+                        onClick={() => setShowAdvancedControls(true)}
+                        sx={{ p: 0.5 }}
+                      >
+                        <ExpandMoreIcon fontSize="small" />
+                      </IconButton>
+                    </Box>
+                    
+                    {/* Luminosité */}
+                    <Box sx={{ mb: 2 }}>
+                      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 0.5 }}>
+                        <Typography variant="caption" sx={{ fontSize: "0.75rem" }}>
+                          Luminosité
+                        </Typography>
+                        <Typography variant="caption" sx={{ fontSize: "0.75rem", fontWeight: 600 }}>
+                          {brightness}%
+                        </Typography>
+                      </Box>
+                      <Slider
+                        value={brightness}
+                        onChange={(e, newValue) => setBrightness(newValue)}
+                        min={0}
+                        max={200}
+                        step={1}
+                        size="small"
+                        sx={{ color: "#1976D2" }}
+                      />
+                    </Box>
+
+                    {/* Contraste */}
+                    <Box sx={{ mb: 2 }}>
+                      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 0.5 }}>
+                        <Typography variant="caption" sx={{ fontSize: "0.75rem" }}>
+                          Contraste
+                        </Typography>
+                        <Typography variant="caption" sx={{ fontSize: "0.75rem", fontWeight: 600 }}>
+                          {contrast}%
+                        </Typography>
+                      </Box>
+                      <Slider
+                        value={contrast}
+                        onChange={(e, newValue) => setContrast(newValue)}
+                        min={0}
+                        max={200}
+                        step={1}
+                        size="small"
+                        sx={{ color: "#1976D2" }}
+                      />
+                    </Box>
+
+                    {/* Saturation */}
+                    <Box sx={{ mb: 2 }}>
+                      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 0.5 }}>
+                        <Typography variant="caption" sx={{ fontSize: "0.75rem" }}>
+                          Saturation
+                        </Typography>
+                        <Typography variant="caption" sx={{ fontSize: "0.75rem", fontWeight: 600 }}>
+                          {saturation}%
+                        </Typography>
+                      </Box>
+                      <Slider
+                        value={saturation}
+                        onChange={(e, newValue) => setSaturation(newValue)}
+                        min={0}
+                        max={200}
+                        step={1}
+                        size="small"
+                        sx={{ color: "#1976D2" }}
+                      />
+                    </Box>
+
+                    {/* Zoom */}
+                    <Box sx={{ mb: 1 }}>
+                      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 0.5 }}>
+                        <Typography variant="caption" sx={{ fontSize: "0.75rem" }}>
+                          Zoom
+                        </Typography>
+                        <Typography variant="caption" sx={{ fontSize: "0.75rem", fontWeight: 600 }}>
+                          {imageScale}%
+                        </Typography>
+                      </Box>
+                      <Slider
+                        value={imageScale}
+                        onChange={(e, newValue) => setImageScale(newValue)}
+                        min={50}
+                        max={200}
+                        step={5}
+                        size="small"
+                        sx={{ color: "#1976D2" }}
+                      />
+                    </Box>
+                  </Box>
+                </Collapse>
+
+                {/* Contrôles avancés (sliders) */}
+                <Collapse in={showAdvancedControls}>
+                  <Box sx={{ px: { xs: 1, sm: 3 }, py: 2, bgcolor: "rgba(0,0,0,0.02)", borderRadius: 2 }}>
+                    <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1 }}>
+                      <Typography variant="caption" sx={{ color: "text.secondary", fontWeight: 600 }}>
+                        Ajustements avancés
+                      </Typography>
+                      <IconButton
+                        size="small"
+                        onClick={() => setShowAdvancedControls(false)}
+                        sx={{ p: 0.5 }}
+                      >
+                        <ExpandLessIcon fontSize="small" />
+                      </IconButton>
+                    </Box>
+                    
+                    {/* Luminosité */}
+                    <Box sx={{ mb: 2 }}>
+                      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 0.5 }}>
+                        <Typography variant="caption" sx={{ fontSize: "0.75rem" }}>
+                          Luminosité
+                        </Typography>
+                        <Typography variant="caption" sx={{ fontSize: "0.75rem", fontWeight: 600 }}>
+                          {brightness}%
+                        </Typography>
+                      </Box>
+                      <Slider
+                        value={brightness}
+                        onChange={(e, newValue) => setBrightness(newValue)}
+                        min={0}
+                        max={200}
+                        step={1}
+                        size="small"
+                        sx={{ color: "#1976D2" }}
+                      />
+                    </Box>
+
+                    {/* Contraste */}
+                    <Box sx={{ mb: 2 }}>
+                      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 0.5 }}>
+                        <Typography variant="caption" sx={{ fontSize: "0.75rem" }}>
+                          Contraste
+                        </Typography>
+                        <Typography variant="caption" sx={{ fontSize: "0.75rem", fontWeight: 600 }}>
+                          {contrast}%
+                        </Typography>
+                      </Box>
+                      <Slider
+                        value={contrast}
+                        onChange={(e, newValue) => setContrast(newValue)}
+                        min={0}
+                        max={200}
+                        step={1}
+                        size="small"
+                        sx={{ color: "#1976D2" }}
+                      />
+                    </Box>
+
+                    {/* Saturation */}
+                    <Box sx={{ mb: 2 }}>
+                      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 0.5 }}>
+                        <Typography variant="caption" sx={{ fontSize: "0.75rem" }}>
+                          Saturation
+                        </Typography>
+                        <Typography variant="caption" sx={{ fontSize: "0.75rem", fontWeight: 600 }}>
+                          {saturation}%
+                        </Typography>
+                      </Box>
+                      <Slider
+                        value={saturation}
+                        onChange={(e, newValue) => setSaturation(newValue)}
+                        min={0}
+                        max={200}
+                        step={1}
+                        size="small"
+                        sx={{ color: "#1976D2" }}
+                      />
+                    </Box>
+
+                    {/* Zoom */}
+                    <Box sx={{ mb: 2 }}>
+                      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 0.5 }}>
+                        <Typography variant="caption" sx={{ fontSize: "0.75rem" }}>
+                          Zoom
+                        </Typography>
+                        <Typography variant="caption" sx={{ fontSize: "0.75rem", fontWeight: 600 }}>
+                          {imageScale}%
+                        </Typography>
+                      </Box>
+                      <Slider
+                        value={imageScale}
+                        onChange={(e, newValue) => setImageScale(newValue)}
+                        min={50}
+                        max={200}
+                        step={5}
+                        size="small"
+                        sx={{ color: "#1976D2" }}
+                      />
+                    </Box>
+
+                    {/* Netteté */}
+                    <Box sx={{ mb: 2 }}>
+                      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 0.5 }}>
+                        <Typography variant="caption" sx={{ fontSize: "0.75rem" }}>
+                          Netteté
+                        </Typography>
+                        <Typography variant="caption" sx={{ fontSize: "0.75rem", fontWeight: 600 }}>
+                          {sharpness > 0 ? `+${sharpness}` : sharpness}
+                        </Typography>
+                      </Box>
+                      <Slider
+                        value={sharpness}
+                        onChange={(e, newValue) => setSharpness(newValue)}
+                        min={-100}
+                        max={100}
+                        step={5}
+                        size="small"
+                        sx={{ color: "#1976D2" }}
+                      />
+                    </Box>
+
+                    {/* Exposition */}
+                    <Box sx={{ mb: 2 }}>
+                      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 0.5 }}>
+                        <Typography variant="caption" sx={{ fontSize: "0.75rem" }}>
+                          Exposition
+                        </Typography>
+                        <Typography variant="caption" sx={{ fontSize: "0.75rem", fontWeight: 600 }}>
+                          {exposure > 0 ? `+${exposure}` : exposure}
+                        </Typography>
+                      </Box>
+                      <Slider
+                        value={exposure}
+                        onChange={(e, newValue) => setExposure(newValue)}
+                        min={-100}
+                        max={100}
+                        step={5}
+                        size="small"
+                        sx={{ color: "#1976D2" }}
+                      />
+                    </Box>
+
+                    {/* Teinte */}
+                    <Box sx={{ mb: 2 }}>
+                      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 0.5 }}>
+                        <Typography variant="caption" sx={{ fontSize: "0.75rem" }}>
+                          Teinte
+                        </Typography>
+                        <Typography variant="caption" sx={{ fontSize: "0.75rem", fontWeight: 600 }}>
+                          {hue > 0 ? `+${hue}°` : `${hue}°`}
+                        </Typography>
+                      </Box>
+                      <Slider
+                        value={hue}
+                        onChange={(e, newValue) => setHue(newValue)}
+                        min={-180}
+                        max={180}
+                        step={5}
+                        size="small"
+                        sx={{ color: "#1976D2" }}
+                      />
+                    </Box>
+
+                    {/* Flou */}
+                    <Box sx={{ mb: 1 }}>
+                      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 0.5 }}>
+                        <Typography variant="caption" sx={{ fontSize: "0.75rem" }}>
+                          Flou
+                        </Typography>
+                        <Typography variant="caption" sx={{ fontSize: "0.75rem", fontWeight: 600 }}>
+                          {blur}px
+                        </Typography>
+                      </Box>
+                      <Slider
+                        value={blur}
+                        onChange={(e, newValue) => setBlur(newValue)}
+                        min={0}
+                        max={20}
+                        step={0.5}
+                        size="small"
+                        sx={{ color: "#1976D2" }}
+                      />
+                    </Box>
+
+                    {/* Bouton reset des ajustements */}
+                    <Button
+                      variant="text"
+                      size="small"
+                      onClick={() => {
+                        setBrightness(100);
+                        setContrast(100);
+                        setSaturation(100);
+                        setImageScale(100);
+                        setSharpness(0);
+                        setExposure(0);
+                        setHue(0);
+                        setBlur(0);
+                        setFlipHorizontal(false);
+                        setFlipVertical(false);
+                        setSelectedFilter("none");
+                      }}
+                      sx={{ mt: 1, fontSize: "0.7rem" }}
+                    >
+                      Réinitialiser tous les ajustements
+                    </Button>
+                  </Box>
+                </Collapse>
+              </Box>
             </Box>
           )}
         </DialogContent>

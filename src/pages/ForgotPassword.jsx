@@ -1,34 +1,70 @@
 import React, { useState } from "react";
-import { Box, TextField, Typography, Button, Paper } from "@mui/material";
+import { Box, TextField, Typography, Button, Paper, InputAdornment, CircularProgress } from "@mui/material";
 import PageLayout from "../components/PageLayout";
 import API from "../api";
-import { useNavigate } from "react-router-dom"; // ➕ ajoute ça en haut
-import { InputAdornment } from "@mui/material"; // ➕ à ajouter en haut
+import { useNavigate } from "react-router-dom";
 
 
 
 const ForgotPassword = () => {
   const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
-const navigate = useNavigate(); // ➕ ajoute ça dans ton composant
+  const [resetMethod, setResetMethod] = useState("phone"); // "phone" ou "email"
+  const [emailError, setEmailError] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
-const handleSendCode = async (e) => {
-  e.preventDefault();
-  setMessage("");
+  // Validation d'email simple
+  const validateEmail = (email) => {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email);
+  };
 
-  try {
-    await API.post("/auth/send-reset-code", { phone });
-    setMessage("✅ Code envoyé par SMS !");
+  const handleSendCode = async (e) => {
+    e.preventDefault();
+    if (loading) return; // Éviter les doubles clics
+    setMessage("");
+    setEmailError(false);
+    setLoading(true);
 
-    // ✅ Redirection automatique après 2 secondes
-    setTimeout(() => {
-      navigate("/reset-password", { state: { phone } });
-    }, 2000);
+    // Vérifier qu'au moins un identifiant est fourni
+    if (resetMethod === "phone") {
+      if (!phone || phone.length !== 8) {
+        setMessage("Veuillez entrer un numéro de téléphone valide (8 chiffres).");
+        setLoading(false);
+        return;
+      }
+    } else {
+      if (!email || !validateEmail(email)) {
+        setEmailError(true);
+        setMessage("Veuillez entrer une adresse email valide.");
+        setLoading(false);
+        return;
+      }
+    }
 
-  } catch (err) {
-    setMessage(err.response?.data?.message || "❌ Erreur lors de l'envoi.");
-  }
-};
+    try {
+      const payload = resetMethod === "phone" ? { phone } : { email: email.toLowerCase().trim() };
+      await API.post("/auth/send-reset-code", payload);
+      
+      setMessage(resetMethod === "phone" 
+        ? "✅ Code envoyé par SMS !"
+        : "✅ Code envoyé par email !");
+
+      // ✅ Redirection automatique après 2 secondes
+      setTimeout(() => {
+        navigate("/reset-password", { 
+          state: resetMethod === "phone" ? { phone } : { email: email.toLowerCase().trim() } 
+        });
+      }, 2000);
+
+    } catch (err) {
+      setMessage(err.response?.data?.message || "❌ Erreur lors de l'envoi.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
 
 
@@ -40,31 +76,97 @@ const handleSendCode = async (e) => {
             🔑 Mot de passe oublié
           </Typography>
           <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-            Entrez votre numéro de téléphone pour recevoir un code par SMS.
+            Choisissez votre méthode de réinitialisation pour recevoir un code.
           </Typography>
 
+          {/* Sélecteur de méthode de réinitialisation */}
+          <Box sx={{ mb: 2, display: "flex", gap: 1 }}>
+            <Button
+              variant={resetMethod === "phone" ? "contained" : "outlined"}
+              onClick={() => {
+                setResetMethod("phone");
+                setEmail("");
+                setPhone("");
+                setEmailError(false);
+              }}
+              sx={{
+                flex: 1,
+                backgroundColor: resetMethod === "phone" ? "#1976D2" : "transparent",
+                color: resetMethod === "phone" ? "#fff" : "#1976D2",
+                borderColor: "#1976D2",
+              }}
+            >
+              📱 Téléphone
+            </Button>
+            <Button
+              variant={resetMethod === "email" ? "contained" : "outlined"}
+              onClick={() => {
+                setResetMethod("email");
+                setEmail("");
+                setPhone("");
+                setEmailError(false);
+              }}
+              sx={{
+                flex: 1,
+                backgroundColor: resetMethod === "email" ? "#1976D2" : "transparent",
+                color: resetMethod === "email" ? "#fff" : "#1976D2",
+                borderColor: "#1976D2",
+              }}
+            >
+              ✉️ Email
+            </Button>
+          </Box>
+
           <form onSubmit={handleSendCode}>
-          <TextField
-            label="Téléphone"
-            fullWidth
-            value={phone}
-            onChange={(e) => {
-              const value = e.target.value.replace(/\D/g, "");
-              if (value.length <= 8) setPhone(value);
-            }}
-            required
-            margin="normal"
-            InputProps={{
-              startAdornment: <InputAdornment position="start">+227</InputAdornment>,
-            }}
-          />
+            {resetMethod === "phone" ? (
+              <TextField
+                label="Téléphone"
+                fullWidth
+                value={phone}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, "");
+                  if (value.length <= 8) setPhone(value);
+                }}
+                required
+                margin="normal"
+                InputProps={{
+                  startAdornment: <InputAdornment position="start">+227</InputAdornment>,
+                }}
+              />
+            ) : (
+              <TextField
+                label="Email"
+                type="email"
+                fullWidth
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setEmailError(false);
+                }}
+                error={emailError}
+                helperText={emailError ? "Entrez une adresse email valide." : ""}
+                required
+                margin="normal"
+                InputProps={{
+                  startAdornment: <InputAdornment position="start">✉️</InputAdornment>,
+                }}
+              />
+            )}
             <Button
               type="submit"
               variant="contained"
               fullWidth
+              disabled={loading}
               sx={{ mt: 2 }}
             >
-              Envoyer le code
+              {loading ? (
+                <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 1 }}>
+                  <CircularProgress size={20} thickness={5} sx={{ color: "#fff" }} />
+                  Envoi en cours...
+                </Box>
+              ) : (
+                "Envoyer le code"
+              )}
             </Button>
 
             {message && (

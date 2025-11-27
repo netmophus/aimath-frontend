@@ -11,23 +11,30 @@ const VerifyPage = () => {
   const navigate = useNavigate();
   const { refreshUser } = useContext(AuthContext);
 
-  // ✅ Récupérer le téléphone depuis location.state OU localStorage
+  // ✅ Récupérer le téléphone ou email depuis location.state OU localStorage
   const [phone, setPhone] = useState(() => {
     const savedPhone = localStorage.getItem("pendingVerificationPhone");
     return location.state?.phone || savedPhone || "";
   });
+  const [email, setEmail] = useState(() => {
+    const savedEmail = localStorage.getItem("pendingVerificationEmail");
+    return location.state?.email || savedEmail || "";
+  });
   const [otp, setOtp] = useState(["", "", "", ""]);
   const [message, setMessage] = useState("");
   const [resending, setResending] = useState(false);
-  const [showPhoneInput, setShowPhoneInput] = useState(!phone);
+  const [showPhoneInput, setShowPhoneInput] = useState(!phone && !email);
   const inputRefs = useRef([]);
 
   useEffect(() => {
-    // ✅ Sauvegarder le téléphone dans localStorage quand il arrive via location.state
+    // ✅ Sauvegarder le téléphone ou email dans localStorage quand il arrive via location.state
     if (location.state?.phone) {
       localStorage.setItem("pendingVerificationPhone", location.state.phone);
     }
-  }, [location.state?.phone]);
+    if (location.state?.email) {
+      localStorage.setItem("pendingVerificationEmail", location.state.email);
+    }
+  }, [location.state?.phone, location.state?.email]);
 
   useEffect(() => {
     // Focus le premier input au chargement
@@ -76,8 +83,11 @@ const VerifyPage = () => {
     setMessage("");
 
     try {
-      await API.post("/auth/resend-otp", { phone });
-      setMessage("✅ Un nouveau code a été envoyé par SMS !");
+      const payload = phone ? { phone } : { email };
+      await API.post("/auth/resend-otp", payload);
+      setMessage(phone 
+        ? "✅ Un nouveau code a été envoyé par SMS !"
+        : "✅ Un nouveau code a été envoyé par email !");
       setOtp(["", "", "", ""]); // Réinitialiser les champs
       inputRefs.current[0]?.focus();
     } catch (err) {
@@ -88,8 +98,8 @@ const VerifyPage = () => {
   };
 
   const handleVerify = async () => {
-    if (!phone) {
-      setMessage("Veuillez entrer votre numéro de téléphone.");
+    if (!phone && !email) {
+      setMessage("Veuillez entrer votre numéro de téléphone ou votre email.");
       return;
     }
 
@@ -100,11 +110,13 @@ const VerifyPage = () => {
     }
 
     try {
-      const res = await API.post("/auth/verify-otp", { phone, otp: otpCode });
+      const payload = phone ? { phone, otp: otpCode } : { email, otp: otpCode };
+      const res = await API.post("/auth/verify-otp", payload);
       setMessage("✅ Vérification réussie !");
 
-      // ✅ Supprimer le téléphone du localStorage après vérification réussie
+      // ✅ Supprimer le téléphone/email du localStorage après vérification réussie
       localStorage.removeItem("pendingVerificationPhone");
+      localStorage.removeItem("pendingVerificationEmail");
 
       await refreshUser();
 
@@ -151,42 +163,66 @@ const VerifyPage = () => {
           >
             {phone 
               ? `Entrez le code OTP envoyé à votre téléphone : ${phone}`
-              : "Entrez votre numéro de téléphone et le code OTP reçu par SMS."}
+              : email
+              ? `Entrez le code OTP envoyé à votre email : ${email}`
+              : "Entrez votre numéro de téléphone ou email et le code OTP reçu."}
           </Typography>
 
-          {/* Champ téléphone - visible si pas de numéro */}
+          {/* Champ téléphone ou email - visible si pas de numéro/email */}
           {showPhoneInput && (
-            <TextField
-              label="Numéro de téléphone"
-              fullWidth
-              margin="normal"
-              value={phone.replace("+227", "")}
-              onChange={(e) => {
-                const value = e.target.value.replace(/\D/g, "");
-                if (value.length <= 8) {
-                  const formattedPhone = value ? `+227${value}` : "";
-                  setPhone(formattedPhone);
-                  localStorage.setItem("pendingVerificationPhone", formattedPhone);
-                }
-              }}
-              placeholder="XXXXXXXX"
-              required
-              InputProps={{
-                startAdornment: (
-                  <Typography sx={{ mr: 1, color: "text.secondary" }}>+227</Typography>
-                ),
-              }}
-            />
+            <>
+              <TextField
+                label="Numéro de téléphone (optionnel)"
+                fullWidth
+                margin="normal"
+                value={phone.replace("+227", "")}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, "");
+                  if (value.length <= 8) {
+                    const formattedPhone = value ? `+227${value}` : "";
+                    setPhone(formattedPhone);
+                    if (formattedPhone) {
+                      localStorage.setItem("pendingVerificationPhone", formattedPhone);
+                      setEmail("");
+                      localStorage.removeItem("pendingVerificationEmail");
+                    }
+                  }
+                }}
+                placeholder="XXXXXXXX"
+                InputProps={{
+                  startAdornment: (
+                    <Typography sx={{ mr: 1, color: "text.secondary" }}>+227</Typography>
+                  ),
+                }}
+              />
+              <Typography sx={{ textAlign: "center", my: 1 }}>OU</Typography>
+              <TextField
+                label="Email (optionnel)"
+                type="email"
+                fullWidth
+                margin="normal"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (e.target.value) {
+                    localStorage.setItem("pendingVerificationEmail", e.target.value);
+                    setPhone("");
+                    localStorage.removeItem("pendingVerificationPhone");
+                  }
+                }}
+                placeholder="votre@email.com"
+              />
+            </>
           )}
           
-          {phone && !showPhoneInput && (
+          {(phone || email) && !showPhoneInput && (
             <Button
               variant="text"
               size="small"
               onClick={() => setShowPhoneInput(true)}
               sx={{ mb: 2 }}
             >
-              Modifier le numéro
+              Modifier {phone ? "le numéro" : "l'email"}
             </Button>
           )}
 

@@ -17,12 +17,14 @@ import VisibilityOff from "@mui/icons-material/VisibilityOff";
 
 const LoginForm = () => {
   const [phone, setPhone] = useState("");
-  const [email] = useState(""); // (champ email non affiché ici, on garde la variable)
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [provider] = useState(null);
   const [providerId] = useState(null);
   const [message, setMessage] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [loginMethod, setLoginMethod] = useState("phone"); // "phone" ou "email"
+  const [emailError, setEmailError] = useState(false);
 
   const [loading, setLoading] = useState(false);
 
@@ -30,6 +32,12 @@ const LoginForm = () => {
   const { login } = useContext(AuthContext);
   const formattedPhone = phone ? `+227${phone}` : null;
   const GOOGLE_LOGIN_ENABLED = false;
+
+  // Validation d'email simple
+  const validateEmail = (email) => {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email);
+  };
 
   const safeNavigateByRole = (u) => {
     switch (u.role) {
@@ -98,23 +106,45 @@ const LoginForm = () => {
   if (loading) return;            // évite les doubles clics
   setMessage("");
   setLoading(true);
+  setEmailError(false);
 
-  const formattedPhone = phone ? `+227${phone}` : null;  // (sécurise la var ici)
-
-  if (!formattedPhone || !password) {
-    setMessage("Veuillez entrer un téléphone (+227) et un mot de passe valides.");
-    setLoading(false);
-    return;
+  // Vérifier qu'au moins un identifiant est fourni
+  if (loginMethod === "phone") {
+    const formattedPhone = phone ? `+227${phone}` : null;
+    if (!formattedPhone || !password) {
+      setMessage("Veuillez entrer un téléphone (+227) et un mot de passe valides.");
+      setLoading(false);
+      return;
+    }
+  } else {
+    if (!email || !validateEmail(email)) {
+      setEmailError(true);
+      setMessage("Veuillez entrer une adresse email valide.");
+      setLoading(false);
+      return;
+    }
+    if (!password) {
+      setMessage("Veuillez entrer un mot de passe.");
+      setLoading(false);
+      return;
+    }
   }
 
   try {
-    const { data: user } = await API.post("/auth/login", {
-      phone: formattedPhone,
-      email,
+    const payload = {
       password,
       provider,
       providerId,
-    });
+    };
+
+    // Ajouter phone ou email selon la méthode choisie
+    if (loginMethod === "phone") {
+      payload.phone = phone ? `+227${phone}` : null;
+    } else {
+      payload.email = email.toLowerCase().trim();
+    }
+
+    const { data: user } = await API.post("/auth/login", payload);
 
     // 1) Token + utilisateur de /login
     login(user.token, user);
@@ -181,18 +211,77 @@ const LoginForm = () => {
             🔐 Connexion à ton espace
           </Typography>
 
-          <Box component="form" onSubmit={handleLogin} sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
-            <TextField
-              label="Téléphone"
-              value={phone}
-              onChange={(e) => {
-                const value = e.target.value.replace(/\D/g, "");
-                if (value.length <= 8) setPhone(value);
+          {/* Sélecteur de méthode de connexion */}
+          <Box sx={{ mb: 2, display: "flex", gap: 1, justifyContent: "center" }}>
+            <Button
+              variant={loginMethod === "phone" ? "contained" : "outlined"}
+              onClick={() => {
+                setLoginMethod("phone");
+                setEmail("");
+                setPhone("");
+                setEmailError(false);
               }}
-              InputProps={{ startAdornment: (<InputAdornment position="start">🇳🇪 +227</InputAdornment>) }}
-              fullWidth
-              sx={{ flex: { xs: "1 1 100%", sm: "1 1 48%" } }}
-            />
+              sx={{
+                flex: 1,
+                backgroundColor: loginMethod === "phone" ? "#1976D2" : "transparent",
+                color: loginMethod === "phone" ? "#fff" : "#1976D2",
+                borderColor: "#1976D2",
+              }}
+            >
+              📱 Téléphone
+            </Button>
+            <Button
+              variant={loginMethod === "email" ? "contained" : "outlined"}
+              onClick={() => {
+                setLoginMethod("email");
+                setEmail("");
+                setPhone("");
+                setEmailError(false);
+              }}
+              sx={{
+                flex: 1,
+                backgroundColor: loginMethod === "email" ? "#1976D2" : "transparent",
+                color: loginMethod === "email" ? "#fff" : "#1976D2",
+                borderColor: "#1976D2",
+              }}
+            >
+              ✉️ Email
+            </Button>
+          </Box>
+
+          <Box component="form" onSubmit={handleLogin} sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}>
+            {loginMethod === "phone" ? (
+              <TextField
+                label="Téléphone"
+                value={phone}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, "");
+                  if (value.length <= 8) setPhone(value);
+                }}
+                InputProps={{ startAdornment: (<InputAdornment position="start">🇳🇪 +227</InputAdornment>) }}
+                fullWidth
+                sx={{ flex: { xs: "1 1 100%", sm: "1 1 48%" } }}
+              />
+            ) : (
+              <TextField
+                label="Email"
+                type="email"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setEmailError(false);
+                }}
+                error={emailError}
+                helperText={emailError ? "Entrez une adresse email valide." : ""}
+                fullWidth
+                sx={{ flex: { xs: "1 1 100%", sm: "1 1 48%" } }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">✉️</InputAdornment>
+                  ),
+                }}
+              />
+            )}
 
             <TextField
               label="Mot de passe"

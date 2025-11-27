@@ -5,8 +5,8 @@ const API = axios.create({
 baseURL: "https://fahimtabackend-647bfe306335.herokuapp.com/api",
 // baseURL: "http://192.168.80.65:5000/api",
 //baseURL: "http://localhost:5000/api",  // ✅ Changé en localhost pour éviter les problèmes d'IP
-// baseURL: "http://10.205.124.25:5000/api",
-//baseURL: "http://192.168.80.129:5000/api",
+//baseURL: "http://192.168.80.198:5000/api",
+//baseURL: "http://192.168.0.100:5000/api",
 //192.168.1.221 softlink
 //192.168.80.36
 

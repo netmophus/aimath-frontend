@@ -20,6 +20,7 @@ import IconButton from "@mui/material/IconButton";         // si pas déjà impo
 
 const RegisterForm = () => {
   const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [fullName, setFullName] = useState("");
@@ -27,23 +28,43 @@ const RegisterForm = () => {
   const [city, setCity] = useState("");
   const [message, setMessage] = useState("");
   const [phoneError, setPhoneError] = useState(false);
+  const [emailError, setEmailError] = useState(false);
   const [confirmError, setConfirmError] = useState(false);
+  const [registrationMethod, setRegistrationMethod] = useState("phone"); // "phone" ou "email"
   const navigate = useNavigate();
 
 
   const [showPwd, setShowPwd] = useState(false);
 const [showConfirmPwd, setShowConfirmPwd] = useState(false);
 
+  // Validation d'email simple
+  const validateEmail = (email) => {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email);
+  };
 
   const handleRegister = async (e) => {
     e.preventDefault();
     setMessage("");
     setConfirmError(false);
+    setPhoneError(false);
+    setEmailError(false);
 
-    if (phone.length !== 8) {
-      setPhoneError(true);
-      return;
+    // Vérifier qu'au moins un identifiant est fourni
+    if (registrationMethod === "phone") {
+      if (!phone || phone.length !== 8) {
+        setPhoneError(true);
+        setMessage("Veuillez entrer un numéro de téléphone valide (8 chiffres).");
+        return;
+      }
+    } else {
+      if (!email || !validateEmail(email)) {
+        setEmailError(true);
+        setMessage("Veuillez entrer une adresse email valide.");
+        return;
+      }
     }
+
     if (!password) {
       setMessage("Le mot de passe est requis.");
       return;
@@ -55,19 +76,31 @@ const [showConfirmPwd, setShowConfirmPwd] = useState(false);
     }
 
     try {
-   const { data } = await API.post("/auth/register", {
-  phone: `+227${phone}`,
-  password,
-  confirmPassword,   // ← utiliser EXACTEMENT ce nom de clé
-  fullName,
-  schoolName,
-  city,
-});
+      const payload = {
+        password,
+        confirmPassword,
+        fullName,
+        schoolName,
+        city,
+      };
 
+      // Ajouter phone ou email selon la méthode choisie
+      if (registrationMethod === "phone") {
+        payload.phone = `+227${phone}`;
+      } else {
+        payload.email = email.toLowerCase().trim();
+      }
+
+      const { data } = await API.post("/auth/register", payload);
 
       setMessage(data.message);
       setTimeout(() => {
-        navigate("/verify", { state: { phone: `+227${phone}` } });
+        if (registrationMethod === "phone") {
+          navigate("/verify", { state: { phone: `+227${phone}` } });
+        } else {
+          // Pour l'email, on peut aussi rediriger vers verify avec l'email
+          navigate("/verify", { state: { email: email.toLowerCase().trim() } });
+        }
       }, 1000);
     } catch (err) {
       setMessage(err.response?.data?.message || "❌ Erreur lors de l'inscription.");
@@ -140,32 +173,94 @@ const [showConfirmPwd, setShowConfirmPwd] = useState(false);
             Crée ton compte gratuitement
           </Typography>
 
+          {/* Sélecteur de méthode d'inscription */}
+          <Box sx={{ mb: 2, display: "flex", gap: 1, justifyContent: "center" }}>
+            <Button
+              variant={registrationMethod === "phone" ? "contained" : "outlined"}
+              onClick={() => {
+                setRegistrationMethod("phone");
+                setEmail("");
+                setPhone("");
+                setEmailError(false);
+                setPhoneError(false);
+              }}
+              sx={{
+                flex: 1,
+                backgroundColor: registrationMethod === "phone" ? "#1976D2" : "transparent",
+                color: registrationMethod === "phone" ? "#fff" : "#1976D2",
+                borderColor: "#1976D2",
+              }}
+            >
+              📱 Téléphone
+            </Button>
+            <Button
+              variant={registrationMethod === "email" ? "contained" : "outlined"}
+              onClick={() => {
+                setRegistrationMethod("email");
+                setEmail("");
+                setPhone("");
+                setEmailError(false);
+                setPhoneError(false);
+              }}
+              sx={{
+                flex: 1,
+                backgroundColor: registrationMethod === "email" ? "#1976D2" : "transparent",
+                color: registrationMethod === "email" ? "#fff" : "#1976D2",
+                borderColor: "#1976D2",
+              }}
+            >
+              ✉️ Email
+            </Button>
+          </Box>
+
           <Box
             component="form"
             onSubmit={handleRegister}
             sx={{ display: "flex", flexWrap: "wrap", gap: 2 }}
           >
-            <TextField
-              label="Téléphone"
-              value={phone}
-              onChange={(e) => {
-                const value = e.target.value.replace(/\D/g, "");
-                if (value.length <= 8) {
-                  setPhone(value);
-                  setPhoneError(false);
-                }
-              }}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">🇳🇪 +227</InputAdornment>
-                ),
-              }}
-              required
-              error={phoneError}
-              helperText={phoneError ? "Entrez les 8 chiffres du numéro." : ""}
-              fullWidth
-              sx={{ flex: { xs: "1 1 100%", sm: "1 1 48%" } }}
-            />
+            {registrationMethod === "phone" ? (
+              <TextField
+                label="Téléphone"
+                value={phone}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, "");
+                  if (value.length <= 8) {
+                    setPhone(value);
+                    setPhoneError(false);
+                  }
+                }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">🇳🇪 +227</InputAdornment>
+                  ),
+                }}
+                required
+                error={phoneError}
+                helperText={phoneError ? "Entrez les 8 chiffres du numéro." : ""}
+                fullWidth
+                sx={{ flex: { xs: "1 1 100%", sm: "1 1 48%" } }}
+              />
+            ) : (
+              <TextField
+                label="Email"
+                type="email"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setEmailError(false);
+                }}
+                required
+                error={emailError}
+                helperText={emailError ? "Entrez une adresse email valide." : ""}
+                fullWidth
+                sx={{ flex: { xs: "1 1 100%", sm: "1 1 48%" } }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">✉️</InputAdornment>
+                  ),
+                }}
+              />
+            )}
 
            
            <TextField
