@@ -362,7 +362,7 @@ const PremiumFeatureCard = ({ icon, title, description, isPremium = true }) => (
               textAlign: "center",
             }}
           >
-            🚀 Commencez maintenant, c'est gratuit !
+            Commencez maintenant, c'est gratuit !
           </Typography>
           <Typography
             sx={{
@@ -393,8 +393,8 @@ const PremiumFeatureCard = ({ icon, title, description, isPremium = true }) => (
                 flex: { xs: 1, sm: "0 1 auto" },
                 px: { xs: 3, md: 4 },
                 py: { xs: 1.5, md: 1.75 },
-                fontSize: { xs: 16, md: 18 },
-                fontWeight: 900,
+                fontSize: { xs: 12, md: 15 },
+                fontWeight: 600,
                 background: "linear-gradient(135deg, #FFD700 0%, #FFA500 100%)",
                 color: "#000",
                 borderRadius: 3,
@@ -407,7 +407,7 @@ const PremiumFeatureCard = ({ icon, title, description, isPremium = true }) => (
                 transition: "all 0.3s ease",
               }}
             >
-              ✨ Créer un compte gratuit
+               S'inscrire
             </Button>
             <Button
               variant="outlined"
@@ -418,8 +418,8 @@ const PremiumFeatureCard = ({ icon, title, description, isPremium = true }) => (
                 flex: { xs: 1, sm: "0 1 auto" },
                 px: { xs: 3, md: 4 },
                 py: { xs: 1.5, md: 1.75 },
-                fontSize: { xs: 16, md: 18 },
-                fontWeight: 900,
+                fontSize: { xs: 12, md: 15 },
+                fontWeight: 600,
                 color: "#fff",
                 border: "2px solid rgba(255,255,255,0.6)",
                 borderRadius: 3,
@@ -800,7 +800,9 @@ const PremiumFeatureCard = ({ icon, title, description, isPremium = true }) => (
         mb: 5,
       }}
     >
-      <CardContent sx={{ p: { xs: 3, md: 4 } }}>
+
+
+       {/* <CardContent sx={{ p: { xs: 3, md: 4 } }}>
         <Typography
           variant="h5"
           fontWeight={800}
@@ -821,7 +823,7 @@ const PremiumFeatureCard = ({ icon, title, description, isPremium = true }) => (
             gap: 2,
           }}
         >
-          {/* Colonne Gratuit */}
+       
           <Box>
             <Typography
               variant="subtitle1"
@@ -862,7 +864,7 @@ const PremiumFeatureCard = ({ icon, title, description, isPremium = true }) => (
             </Stack>
           </Box>
 
-          {/* Colonne Premium */}
+      
           <Box
             sx={{
               p: 3,
@@ -925,7 +927,7 @@ const PremiumFeatureCard = ({ icon, title, description, isPremium = true }) => (
           </Box>
         </Box>
 
-        {/* Bouton Premium centré - Entièrement responsive */}
+        
         <Box sx={{ textAlign: "center", mt: 4 }}>
           <Button
             variant="contained"
@@ -976,7 +978,9 @@ const PremiumFeatureCard = ({ icon, title, description, isPremium = true }) => (
             </Box>
           </Typography>
         </Box>
-      </CardContent>
+      </CardContent>  */}
+
+
     </Card>
   </Box>
 </Box>
@@ -1021,7 +1025,7 @@ const PremiumFeatureCard = ({ icon, title, description, isPremium = true }) => (
             background: "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)",
             WebkitBackgroundClip: "text",
             WebkitTextFillColor: "transparent",
-            fontSize: { xs: 28, sm: 36, md: 44 },
+            fontSize: { xs: 18, sm: 20, md: 22 },
             letterSpacing: 1,
             textShadow: "0 4px 20px rgba(59,130,246,0.3)",
           }}
@@ -1188,10 +1192,10 @@ const PremiumFeatureCard = ({ icon, title, description, isPremium = true }) => (
     }}
   />
 
-  <Box sx={{ maxWidth: 1100, mx: "auto", px: { xs: 2, sm: 3, md: 4 }, position: "relative", zIndex: 1 }}>
+  {/* <Box sx={{ maxWidth: 1100, mx: "auto", px: { xs: 2, sm: 3, md: 4 }, position: "relative", zIndex: 1 }}>
     
-    {/* En-tête de section */}
-    <Box sx={{ textAlign: "center", mb: 4 }}>
+
+     <Box sx={{ textAlign: "center", mb: 4 }}>
       <Stack direction="row" alignItems="center" justifyContent="center" spacing={1} sx={{ mb: 1 }}>
         <AndroidIcon sx={{ fontSize: 32, color: "#4CAF50" }} />
         <Typography
@@ -1215,9 +1219,9 @@ const PremiumFeatureCard = ({ icon, title, description, isPremium = true }) => (
       >
         Installez Fahimta sur votre téléphone Android pour apprendre partout, même hors connexion
       </Typography>
-    </Box>
+    </Box> 
 
-    {/* Carte principale */}
+    
     <Card
       elevation={0}
       sx={{
@@ -1237,9 +1241,9 @@ const PremiumFeatureCard = ({ icon, title, description, isPremium = true }) => (
             alignItems: "center",
           }}
         >
-          {/* Colonne gauche : Infos et CTA */}
+       
           <Box>
-            {/* Bouton de téléchargement principal */}
+       
             <Button
               component="a"
               href={APK_URL}
@@ -1268,7 +1272,7 @@ const PremiumFeatureCard = ({ icon, title, description, isPremium = true }) => (
               Télécharger l'APK Android
             </Button>
 
-            {/* Instructions d'installation */}
+       
             <Box
               sx={{
                 p: 2.5,
@@ -1355,7 +1359,6 @@ const PremiumFeatureCard = ({ icon, title, description, isPremium = true }) => (
               </Stack>
             </Box>
 
-            {/* Note d'information */}
             <Box
               sx={{
                 p: 1.75,
@@ -1370,7 +1373,7 @@ const PremiumFeatureCard = ({ icon, title, description, isPremium = true }) => (
               </Typography>
             </Box>
 
-            {/* Alternative web */}
+       
             <Typography
               sx={{
                 mt: 2,
@@ -1383,7 +1386,7 @@ const PremiumFeatureCard = ({ icon, title, description, isPremium = true }) => (
             </Typography>
           </Box>
 
-          {/* Colonne droite : QR Code */}
+         
           <Box
             sx={{
               display: "flex",
@@ -1437,7 +1440,7 @@ const PremiumFeatureCard = ({ icon, title, description, isPremium = true }) => (
         </Box>
       </CardContent>
     </Card>
-  </Box>
+  </Box> */}
 </Box>
 
 
