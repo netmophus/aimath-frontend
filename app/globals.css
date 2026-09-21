@@ -10,6 +10,17 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* Charte graphique FAHIMTA */
+  --color-fh-orange: #d14205;
+  --color-fh-orange-fonce: #a52d0e;
+  --color-fh-bleu: #1e2b6a;
+  --color-fh-bleu-vif: #1f2ca2;
+  --color-fh-bleu-charbon: #16204f;
+  --color-fh-sable: #f0d8bf;
+  --color-fh-creme: #fafaf8;
+  --color-fh-ardoise: #363032;
+  --color-fh-accent: #fce9de;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -22,5 +33,57 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+/* Styles minimaux pour le contenu rendu par RenduMarkdown (pas de plugin
+   @tailwindcss/typography installé) : lisibilité des titres/listes/citations,
+   et les blocs KaTeX en display ($$...$$) défilent horizontalement plutôt
+   que de casser la mise en page sur mobile. */
+.rendu-markdown h1,
+.rendu-markdown h2,
+.rendu-markdown h3 {
+  font-weight: 700;
+  color: var(--color-fh-bleu);
+  margin-top: 0.75em;
+  margin-bottom: 0.35em;
+}
+.rendu-markdown h1 { font-size: 1.25em; }
+.rendu-markdown h2 { font-size: 1.125em; }
+.rendu-markdown h3 { font-size: 1em; }
+.rendu-markdown p { margin-bottom: 0.6em; line-height: 1.7; }
+.rendu-markdown ul,
+.rendu-markdown ol {
+  margin: 0.4em 0 0.6em 1.25em;
+}
+.rendu-markdown ul { list-style: disc; }
+.rendu-markdown ol { list-style: decimal; }
+.rendu-markdown li { margin-bottom: 0.2em; }
+.rendu-markdown strong { color: var(--color-fh-bleu); }
+/* Encadré "Définition"/"Propriété" : liseré coloré + fond légèrement teinté
+   pour bien le distinguer du texte courant (le mot-clé en tête, ex.
+   "**Définition.**", reste en gras via la règle strong ci-dessus — il sert
+   déjà de petit label, pas besoin d'en fabriquer un autre). */
+.rendu-markdown blockquote {
+  margin: 0.75em 0;
+  border-left: 3px solid var(--color-fh-bleu-vif);
+  border-radius: 0 0.75em 0.75em 0;
+  background: color-mix(in srgb, var(--color-fh-bleu-vif) 6%, white);
+  padding: 0.7em 1em;
+  color: var(--color-fh-ardoise);
+  font-style: normal;
+}
+.rendu-markdown blockquote p:last-child {
+  margin-bottom: 0;
+}
+.rendu-markdown code {
+  background: var(--color-fh-sable);
+  border-radius: 0.25em;
+  padding: 0.1em 0.35em;
+  font-size: 0.9em;
+}
+.rendu-markdown .katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-block: 0.25em;
 }
