@@ -5,12 +5,6 @@ import { usePathname } from "next/navigation";
 
 import { IconeAccueil, IconeAide, IconeLivre, IconeProfil } from "./icones";
 
-interface BarreNavBasseProps {
-  /** Cible de l'onglet "Cours" — calculée par app/eleve/page.tsx : 1 seule
-   * matière → son programme directement ; sinon → ancre "Mes matières". */
-  hrefCours: string;
-}
-
 interface Onglet {
   label: string;
   href: string;
@@ -23,13 +17,25 @@ interface Onglet {
  * seule fois par EleveLayoutClient, pas par chaque page) — persiste donc du
  * dashboard aux pages programme/leçon/profil. Colonne centrée à ~440px max,
  * comme le reste de l'espace élève, pour rester lisible sur grand écran.
+ *
+ * "Accueil" sort volontairement de l'espace élève vers la landing publique
+ * ("/"). "Cours" pointe vers /eleve#mes-matieres : la seule page qui liste
+ * les matières/programmes de l'élève (app/eleve/page.tsx, section "Mes
+ * matières") — il n'existe pas de route /eleve/programmes dédiée (seulement
+ * /eleve/programmes/[id], une fiche par matière), donc pas de cible plus
+ * précise possible. Actif aussi sur ces fiches individuelles.
  */
-export default function BarreNavBasse({ hrefCours }: BarreNavBasseProps) {
+export default function BarreNavBasse() {
   const pathname = usePathname();
 
   const onglets: Onglet[] = [
-    { label: "Accueil", href: "/eleve", icone: IconeAccueil, actif: (p) => p === "/eleve" },
-    { label: "Cours", href: hrefCours, icone: IconeLivre, actif: (p) => p.startsWith("/eleve/programmes") },
+    { label: "Accueil", href: "/", icone: IconeAccueil, actif: (p) => p === "/" },
+    {
+      label: "Cours",
+      href: "/eleve#mes-matieres",
+      icone: IconeLivre,
+      actif: (p) => p === "/eleve" || p.startsWith("/eleve/programmes"),
+    },
     { label: "Aide", href: "/eleve/aide", icone: IconeAide, actif: (p) => p.startsWith("/eleve/aide") },
     { label: "Profil", href: "/eleve/profil", icone: IconeProfil, actif: (p) => p.startsWith("/eleve/profil") },
   ];
