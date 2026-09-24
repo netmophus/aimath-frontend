@@ -19,6 +19,7 @@ const PHOTOS: readonly PhotoEleve[] = [
   { fichier: "eleve3.jpg", alt: "Élève de Fahimta en train d'étudier" },
   { fichier: "eleve4.jpg", alt: "Élève de Fahimta en train d'étudier" },
   { fichier: "eleve5.jpg", alt: "Élève de Fahimta en train d'étudier" },
+  { fichier: "eleve6.jpg", alt: "Élève de Fahimta en train d'étudier" },
 ];
 
 const DOSSIER = "eleves";
@@ -38,7 +39,7 @@ const DOSSIER = "eleves";
  */
 export default function MosaiquePhotosEleves() {
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
       {PHOTOS.map((photo) => {
         const cheminPublic = `${DOSSIER}/${photo.fichier}`;
         const cheminDisque = path.join(process.cwd(), "public", cheminPublic);

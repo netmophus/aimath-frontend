@@ -19,10 +19,10 @@ interface Onglet {
 }
 
 /**
- * Barre de navigation basse, fixe, propre au dashboard (le reste de l'espace
- * élève — programme, lecture de leçon — ne l'affiche pas : cf. consigne
- * "le reste ne change pas"). Colonne centrée à ~440px max, comme le reste de
- * l'espace élève, pour rester lisible sur grand écran.
+ * Barre de navigation basse, fixe, commune à tout l'espace élève (rendue une
+ * seule fois par EleveLayoutClient, pas par chaque page) — persiste donc du
+ * dashboard aux pages programme/leçon/profil. Colonne centrée à ~440px max,
+ * comme le reste de l'espace élève, pour rester lisible sur grand écran.
  */
 export default function BarreNavBasse({ hrefCours }: BarreNavBasseProps) {
   const pathname = usePathname();

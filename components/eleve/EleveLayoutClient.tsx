@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
 import { type Role, type Statut } from "@/lib/api";
 import { useAuth, type AuthUser } from "@/lib/auth";
+import { getMonProgramme } from "@/lib/eleveApi";
 import BandeauHorsLigne from "./BandeauHorsLigne";
+import BarreNavBasse from "./BarreNavBasse";
 
 interface EleveLayoutClientProps {
   children: ReactNode;
@@ -99,6 +101,34 @@ export default function EleveLayoutClient({ children, logo }: EleveLayoutClientP
 
   const estEleve = isAuthenticated && user?.role === "eleve";
 
+  // Cible de l'onglet "Cours" de BarreNavBasse (voir ce composant) : 1 seule
+  // matière → son programme directement ; sinon → la grille "Mes matières"
+  // du dashboard, via une ancre absolue (/eleve#mes-matieres) pour rester
+  // correcte même appelée depuis une autre page élève que le dashboard —
+  // contrairement à une ancre relative ("#mes-matieres"), qui ne
+  // fonctionnerait que si on est déjà sur /eleve.
+  const [hrefCours, setHrefCours] = useState("/eleve#mes-matieres");
+
+  useEffect(() => {
+    if (!estEleve) return;
+    let actif = true;
+
+    getMonProgramme()
+      .then((programmes) => {
+        if (!actif) return;
+        if (programmes.length === 1) {
+          setHrefCours(`/eleve/programmes/${programmes[0].id}`);
+        }
+      })
+      .catch(() => {
+        // Best-effort : l'ancre de repli vers "Mes matières" reste valide.
+      });
+
+    return () => {
+      actif = false;
+    };
+  }, [estEleve]);
+
   useEffect(() => {
     if (isLoading) return;
     if (!isAuthenticated) {
@@ -185,7 +215,8 @@ export default function EleveLayoutClient({ children, logo }: EleveLayoutClientP
           </div>
         </header>
       )}
-      <main className={estDashboard ? "flex-1" : "flex-1 px-4 py-5 sm:px-6"}>{children}</main>
+      <main className={estDashboard ? "flex-1" : "flex-1 px-4 pt-5 pb-24 sm:px-6"}>{children}</main>
+      <BarreNavBasse hrefCours={hrefCours} />
     </div>
   );
 }

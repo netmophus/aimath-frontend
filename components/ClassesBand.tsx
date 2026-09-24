@@ -89,7 +89,7 @@ export default function ClassesBand() {
           précise. Posé sur toute la section, de bord à bord (pas seulement
           sur une carte interne) : c'est tout le bloc qui porte la couleur,
           pas un cadre à l'intérieur. */}
-      <div className="mx-auto max-w-6xl px-5 py-10 sm:px-10 sm:py-14">
+      <div className="mx-auto max-w-6xl py-10 sm:px-10 sm:py-14">
         <div className="mb-8 max-w-xl">
           <h2 className="text-2xl font-bold text-fh-bleu sm:text-3xl">
             Tout le programme du Niger

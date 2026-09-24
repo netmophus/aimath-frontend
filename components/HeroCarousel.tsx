@@ -99,11 +99,11 @@ export default function HeroCarousel({ mosaique }: HeroCarouselProps) {
         onKeyDown={handleKeyDown}
         className="mx-auto flex max-w-4xl flex-col items-center gap-3 px-4 pt-8 pb-5 text-center sm:px-6 sm:pt-12 sm:pb-7"
       >
-        <span className="mx-auto inline-flex w-fit overflow-hidden rounded-full text-sm font-medium sm:text-base">
-          <span className="whitespace-nowrap bg-fh-orange px-4 py-2 text-white sm:px-[18px] sm:py-2.5">
+        <span className="mx-auto flex w-fit max-w-full flex-col overflow-hidden rounded-full text-center text-xs font-medium sm:flex-row sm:text-base">
+          <span className="whitespace-nowrap bg-fh-orange px-3 py-1.5 text-white sm:px-[18px] sm:py-2.5">
             {HERO_BADGE.segment1}
           </span>
-          <span className="whitespace-nowrap bg-fh-accent px-4 py-2 text-fh-orange-fonce sm:px-[18px] sm:py-2.5">
+          <span className="whitespace-nowrap bg-fh-accent px-3 py-1.5 text-fh-orange-fonce sm:px-[18px] sm:py-2.5">
             {HERO_BADGE.segment2}
           </span>
         </span>

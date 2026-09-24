@@ -9,7 +9,6 @@ import { getMesLecons, getMonProgramme, type LeconListeEleve, type ProgrammeElev
 import SalutEleve from "@/components/eleve/SalutEleve";
 import CarteReprendre from "@/components/eleve/CarteReprendre";
 import CarteMatiere from "@/components/eleve/CarteMatiere";
-import BarreNavBasse from "@/components/eleve/BarreNavBasse";
 
 export default function EleveDashboardPage() {
   const { user } = useAuth();
@@ -65,14 +64,14 @@ export default function EleveDashboardPage() {
   const classe = user?.serie ? `${user.niveau} ${user.serie}` : user?.niveau ?? null;
 
   // Une seule matière → on peut désigner sa page programme sans ambiguïté
-  // (onglet "Cours" de la barre basse, bouton de repli de CarteReprendre).
-  // Plusieurs (ou aucune) → pas de cible unique : la grille "Mes matières"
-  // juste en dessous reste le seul chemin de navigation dans ce cas.
+  // (bouton de repli de CarteReprendre ; l'onglet "Cours" de la barre basse
+  // fait le même calcul de son côté, voir EleveLayoutClient). Plusieurs (ou
+  // aucune) → pas de cible unique : la grille "Mes matières" juste en
+  // dessous reste le seul chemin de navigation dans ce cas.
   const hrefUniqueMatiere = programmes.length === 1 ? `/eleve/programmes/${programmes[0].id}` : null;
-  const hrefMatieres = hrefUniqueMatiere ?? "#mes-matieres";
 
   return (
-    <div className="mx-auto w-full max-w-[1100px] px-4 pb-28 pt-[max(1rem,env(safe-area-inset-top))] sm:px-6 lg:px-8">
+    <div className="mx-auto w-full max-w-[1100px] px-4 pb-24 pt-[max(1rem,env(safe-area-inset-top))] sm:px-6 lg:px-8">
       <SalutEleve prenom={user?.prenom ?? ""} nom={user?.nom ?? ""} classe={classe} />
 
       <div className="mt-6 flex flex-col gap-8 lg:grid lg:grid-cols-[2fr_3fr] lg:items-start lg:gap-8">
@@ -111,8 +110,6 @@ export default function EleveDashboardPage() {
           </div>
         </section>
       </div>
-
-      <BarreNavBasse hrefCours={hrefMatieres} />
     </div>
   );
 }
