@@ -13,11 +13,13 @@ import {
   type Difficulte,
   type LeconDetail,
 } from "@/lib/leconApi";
+import { enregistrerPromptsNotion, getPromptsNotion, type PromptsNotion } from "@/lib/promptIaApi";
 import StatutBadge from "@/components/admin/StatutBadge";
 import Toast from "@/components/admin/Toast";
 import { LECON_STATUT_LABELS, LECON_STATUT_STYLES } from "@/components/admin/lecons/leconStatutStyles";
 import { nouvelleClef } from "@/components/admin/lecons/clefsLocales";
 import ChampMarkdown from "@/components/admin/lecons/ChampMarkdown";
+import ChampPromptPerso from "@/components/admin/lecons/ChampPromptPerso";
 import BoutonGenererSectionIA from "@/components/admin/lecons/BoutonGenererSectionIA";
 import EditeurExercices, { type ExerciceDraft } from "@/components/admin/lecons/EditeurExercices";
 import EditeurVideos, { type VideoDraft } from "@/components/admin/lecons/EditeurVideos";
@@ -37,6 +39,7 @@ interface EditeurState {
   coursRedige: string;
   demonstrations: string;
   aRetenir: string;
+  sujetExamen: string;
   exercices: ExerciceDraft[];
   videos: VideoDraft[];
   ressources: RessourceDraft[];
@@ -51,6 +54,7 @@ function depuisLecon(lecon: LeconDetail): EditeurState {
     coursRedige: lecon.cours_redige,
     demonstrations: lecon.demonstrations,
     aRetenir: lecon.a_retenir,
+    sujetExamen: lecon.sujet_examen,
     exercices: [...lecon.exercices]
       .sort((a, b) => a.ordre - b.ordre)
       .map((e) => ({ clef: nouvelleClef(), id: e.id, enonce: e.enonce, corrige: e.corrige, difficulte: e.difficulte })),
@@ -71,6 +75,7 @@ interface Comparable {
   cours_redige: string;
   demonstrations: string;
   a_retenir: string;
+  sujet_examen: string;
   exercices: { id?: number; enonce: string; corrige: string; difficulte: Difficulte }[];
   videos: { id?: number; titre: string; url: string; description: string }[];
   ressources: { id?: number; titre: string; url: string }[];
@@ -86,6 +91,7 @@ function versComparable(etat: EditeurState): Comparable {
     cours_redige: etat.coursRedige,
     demonstrations: etat.demonstrations,
     a_retenir: etat.aRetenir,
+    sujet_examen: etat.sujetExamen,
     exercices: etat.exercices.map(({ id, enonce, corrige, difficulte }) => ({ id, enonce, corrige, difficulte })),
     videos: etat.videos.map(({ id, titre, url, description }) => ({ id, titre, url, description })),
     ressources: etat.ressources.map(({ id, titre, url }) => ({ id, titre, url })),
@@ -116,6 +122,12 @@ export default function LeconEditeurPage() {
   const [actionStatutEnCours, setActionStatutEnCours] = useState(false);
   const [toast, setToast] = useState<{ message: string; tone: "succes" | "erreur" } | null>(null);
 
+  // Prompts IA personnalisés (un par section, "" = aucun) — réglage de
+  // génération rattaché à la NOTION, indépendant du contenu de la leçon
+  // (voir lib/promptIaApi.ts). Chargé en parallèle, sauvegardé séparément
+  // (ChampPromptPerso), jamais mêlé au payload de handleEnregistrer.
+  const [promptsPerso, setPromptsPerso] = useState<PromptsNotion | null>(null);
+
   useEffect(() => {
     let actif = true;
 
@@ -124,11 +136,13 @@ export default function LeconEditeurPage() {
       setErreur(null);
       try {
         const data = await getLecon(leconId);
+        const prompts = await getPromptsNotion(data.notion.id);
         if (actif) {
           setLecon(data);
           const initial = depuisLecon(data);
           setEtat(initial);
           setEtatEnregistre(initial);
+          setPromptsPerso(prompts);
         }
       } catch (error) {
         if (actif) {
@@ -144,6 +158,13 @@ export default function LeconEditeurPage() {
       actif = false;
     };
   }, [leconId]);
+
+  async function enregistrerPromptPerso(section: keyof PromptsNotion, valeur: string) {
+    if (!lecon || !promptsPerso) return;
+    const nouveaux = { ...promptsPerso, [section]: valeur };
+    const resultat = await enregistrerPromptsNotion(lecon.notion.id, nouveaux);
+    setPromptsPerso(resultat);
+  }
 
   const modifie = useMemo(() => {
     if (!etat || !etatEnregistre) return false;
@@ -204,6 +225,7 @@ export default function LeconEditeurPage() {
         cours_redige: etat.coursRedige,
         demonstrations: etat.demonstrations,
         a_retenir: etat.aRetenir,
+        sujet_examen: etat.sujetExamen,
         exercices: etat.exercices.map((e, index) => ({
           id: e.id,
           enonce: e.enonce,
@@ -286,7 +308,7 @@ export default function LeconEditeurPage() {
     );
   }
 
-  if (erreur || !lecon || !etat) {
+  if (erreur || !lecon || !etat || !promptsPerso) {
     return (
       <div className="flex flex-col gap-4">
         <button
@@ -378,9 +400,15 @@ export default function LeconEditeurPage() {
               section="histoire"
               notionId={lecon.notion.id}
               valeurActuelle={etat.histoire}
+              promptPersoActif={!!promptsPerso.histoire}
               onInsere={(v) => setChamp("histoire", v)}
             />
           }
+        />
+        <ChampPromptPerso
+          libelleSection="histoire de la notion"
+          valeur={promptsPerso.histoire}
+          onEnregistrer={(v) => enregistrerPromptPerso("histoire", v)}
         />
       </Section>
 
@@ -395,9 +423,15 @@ export default function LeconEditeurPage() {
               section="objectifs"
               notionId={lecon.notion.id}
               valeurActuelle={etat.objectifsPedagogiques}
+              promptPersoActif={!!promptsPerso.objectifs}
               onInsere={(v) => setChamp("objectifsPedagogiques", v)}
             />
           }
+        />
+        <ChampPromptPerso
+          libelleSection="objectifs pédagogiques"
+          valeur={promptsPerso.objectifs}
+          onEnregistrer={(v) => enregistrerPromptPerso("objectifs", v)}
         />
       </Section>
 
@@ -412,9 +446,15 @@ export default function LeconEditeurPage() {
               section="prerequis"
               notionId={lecon.notion.id}
               valeurActuelle={etat.prerequisTexte}
+              promptPersoActif={!!promptsPerso.prerequis}
               onInsere={(v) => setChamp("prerequisTexte", v)}
             />
           }
+        />
+        <ChampPromptPerso
+          libelleSection="prérequis"
+          valeur={promptsPerso.prerequis}
+          onEnregistrer={(v) => enregistrerPromptPerso("prerequis", v)}
         />
       </Section>
 
@@ -427,14 +467,27 @@ export default function LeconEditeurPage() {
           avecInsertionTerme
           avecInsertionCourbe
           avecInsertionVariations
+          avecInsertionHorloge
+          avecInsertionBinaire
+          avecInsertionCercleTrigo
+          avecInsertionRacines
+          avecInsertionMouvement
+          avecInsertionCirculaire
+          avecInsertionPlanIncline
           actionsSupplementaires={
             <BoutonGenererSectionIA
               section="cours"
               notionId={lecon.notion.id}
               valeurActuelle={etat.coursRedige}
+              promptPersoActif={!!promptsPerso.cours}
               onInsere={(v) => setChamp("coursRedige", v)}
             />
           }
+        />
+        <ChampPromptPerso
+          libelleSection="cours rédigé"
+          valeur={promptsPerso.cours}
+          onEnregistrer={(v) => enregistrerPromptPerso("cours", v)}
         />
       </Section>
 
@@ -447,14 +500,27 @@ export default function LeconEditeurPage() {
           avecInsertionTerme
           avecInsertionCourbe
           avecInsertionVariations
+          avecInsertionHorloge
+          avecInsertionBinaire
+          avecInsertionCercleTrigo
+          avecInsertionRacines
+          avecInsertionMouvement
+          avecInsertionCirculaire
+          avecInsertionPlanIncline
           actionsSupplementaires={
             <BoutonGenererSectionIA
               section="demonstrations"
               notionId={lecon.notion.id}
               valeurActuelle={etat.demonstrations}
+              promptPersoActif={!!promptsPerso.demonstrations}
               onInsere={(v) => setChamp("demonstrations", v)}
             />
           }
+        />
+        <ChampPromptPerso
+          libelleSection="démonstrations"
+          valeur={promptsPerso.demonstrations}
+          onEnregistrer={(v) => enregistrerPromptPerso("demonstrations", v)}
         />
       </Section>
 
@@ -469,9 +535,15 @@ export default function LeconEditeurPage() {
               section="a_retenir"
               notionId={lecon.notion.id}
               valeurActuelle={etat.aRetenir}
+              promptPersoActif={!!promptsPerso.a_retenir}
               onInsere={(v) => setChamp("aRetenir", v)}
             />
           }
+        />
+        <ChampPromptPerso
+          libelleSection="à retenir"
+          valeur={promptsPerso.a_retenir}
+          onEnregistrer={(v) => enregistrerPromptPerso("a_retenir", v)}
         />
       </Section>
 
@@ -485,9 +557,45 @@ export default function LeconEditeurPage() {
           onChange={(exercices) => setChamp("exercices", exercices)}
           notionId={lecon.notion.id}
         />
+        <ChampPromptPerso
+          libelleSection="exercices"
+          valeur={promptsPerso.exercices}
+          noteSupplementaire="Ce texte pilote uniquement le contenu pédagogique des exercices — la structure JSON de sortie reste imposée automatiquement."
+          onEnregistrer={(v) => enregistrerPromptPerso("exercices", v)}
+        />
       </Section>
 
-      <Section titre="9. Ressources">
+      <Section titre="9. Sujet type examen">
+        <ChampMarkdown
+          valeur={etat.sujetExamen}
+          onChange={(v) => setChamp("sujetExamen", v)}
+          placeholder="Énoncé noté (2 à 4 exercices, barème) puis, sous un titre ## Corrigé, la résolution détaillée…"
+          hauteur={280}
+          avecInsertionTerme
+          avecInsertionCourbe
+          avecInsertionVariations
+          avecInsertionHorloge
+          avecInsertionBinaire
+          avecInsertionCercleTrigo
+          avecInsertionRacines
+          actionsSupplementaires={
+            <BoutonGenererSectionIA
+              section="sujet_examen"
+              notionId={lecon.notion.id}
+              valeurActuelle={etat.sujetExamen}
+              promptPersoActif={!!promptsPerso.sujet_examen}
+              onInsere={(v) => setChamp("sujetExamen", v)}
+            />
+          }
+        />
+        <ChampPromptPerso
+          libelleSection="sujet type examen"
+          valeur={promptsPerso.sujet_examen}
+          onEnregistrer={(v) => enregistrerPromptPerso("sujet_examen", v)}
+        />
+      </Section>
+
+      <Section titre="10. Ressources">
         <EditeurRessources ressources={etat.ressources} onChange={(ressources) => setChamp("ressources", ressources)} />
       </Section>
 

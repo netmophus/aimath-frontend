@@ -7,9 +7,21 @@ import { creerLecon, type LeconDetail } from "@/lib/leconApi";
 import { getProgramme, listerProgrammes, type ProgrammeDetail, type ProgrammeListe } from "@/lib/programmeApi";
 import Modal from "@/components/admin/Modal";
 
+export interface NotionPreremplissage {
+  programmeId: number;
+  themeId: number;
+  chapitreId: number;
+  notionId: number;
+  notionTitre: string;
+}
+
 interface CreerLeconModalProps {
   onCreated: (lecon: LeconDetail) => void;
   onClose: () => void;
+  /** Depuis le bouton "+ Créer la leçon" d'une notion vide dans l'arbre
+   * (app/admin/lecons/page.tsx) : pré-sélectionne les 4 niveaux de la
+   * cascade — l'admin n'a plus qu'à confirmer le titre et valider. */
+  notionInitiale?: NotionPreremplissage;
 }
 
 /**
@@ -17,20 +29,20 @@ interface CreerLeconModalProps {
  * fait par une cascade programme → thème → chapitre → notion, chaque niveau
  * dépendant du précédent — au-delà de ce que le formulaire générique gère.
  */
-export default function CreerLeconModal({ onCreated, onClose }: CreerLeconModalProps) {
+export default function CreerLeconModal({ onCreated, onClose, notionInitiale }: CreerLeconModalProps) {
   const [programmes, setProgrammes] = useState<ProgrammeListe[]>([]);
   const [chargementProgrammes, setChargementProgrammes] = useState(true);
   const [erreurProgrammes, setErreurProgrammes] = useState<string | null>(null);
 
-  const [programmeId, setProgrammeId] = useState("");
+  const [programmeId, setProgrammeId] = useState(notionInitiale ? String(notionInitiale.programmeId) : "");
   const [programmeDetail, setProgrammeDetail] = useState<ProgrammeDetail | null>(null);
   const [chargementDetail, setChargementDetail] = useState(false);
   const [erreurDetail, setErreurDetail] = useState<string | null>(null);
 
-  const [themeId, setThemeId] = useState("");
-  const [chapitreId, setChapitreId] = useState("");
-  const [notionId, setNotionId] = useState("");
-  const [titre, setTitre] = useState("");
+  const [themeId, setThemeId] = useState(notionInitiale ? String(notionInitiale.themeId) : "");
+  const [chapitreId, setChapitreId] = useState(notionInitiale ? String(notionInitiale.chapitreId) : "");
+  const [notionId, setNotionId] = useState(notionInitiale ? String(notionInitiale.notionId) : "");
+  const [titre, setTitre] = useState(notionInitiale ? notionInitiale.notionTitre : "");
 
   const [erreur, setErreur] = useState<string | null>(null);
   const [envoiEnCours, setEnvoiEnCours] = useState(false);

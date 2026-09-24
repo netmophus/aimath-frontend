@@ -1,21 +1,22 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 
 import { ApiError } from "@/lib/api";
 import {
   depublierLecon,
-  listerLecons,
+  listerToutesLecons,
   publierLecon,
   supprimerLecon,
   type LeconDetail,
   type LeconListe,
   type LeconStatut,
 } from "@/lib/leconApi";
-import { listerProgrammes, type ProgrammeListe } from "@/lib/programmeApi";
-import CreerLeconModal from "@/components/admin/lecons/CreerLeconModal";
-import LeconRow from "@/components/admin/lecons/LeconRow";
+import { getProgramme, listerProgrammes, type ProgrammeListe } from "@/lib/programmeApi";
+import { construireArbre, filtrerArbre, filtreArbreActif, type MatiereArbre } from "@/lib/arbreLecons";
+import CreerLeconModal, { type NotionPreremplissage } from "@/components/admin/lecons/CreerLeconModal";
+import ArbreLecons from "@/components/admin/lecons/ArbreLecons";
 import DeleteConfirmModal from "@/components/admin/DeleteConfirmModal";
 import Toast from "@/components/admin/Toast";
 
@@ -26,49 +27,44 @@ const OPTIONS_STATUT: readonly { value: LeconStatut | ""; label: string }[] = [
   { value: "publie", label: "Publié" },
 ];
 
-interface ListePaginee {
-  count: number;
-  next: string | null;
-  previous: string | null;
-  results: LeconListe[];
-}
-
+/**
+ * Arbre Matière → Programme → Thème → Chapitre → Notion (voir
+ * lib/arbreLecons.ts), à la place de l'ancienne liste plate. Approche
+ * retenue et pourquoi :
+ *
+ *  - COMPOSITION CÔTÉ CLIENT plutôt qu'un nouvel endpoint backend : le
+ *    programme officiel tient dans une poignée de requêtes (1
+ *    listerProgrammes + 1 getProgramme par programme, qui renvoie déjà tout
+ *    l'arbre thèmes→chapitres→notions + listerToutesLecons, qui suit la
+ *    pagination) — jamais des dizaines d'allers-retours, et aucune surface
+ *    backend supplémentaire à sécuriser/maintenir pour ce qui reste, au
+ *    fond, un simple assemblage de données déjà exposées.
+ *  - FILTRES/RECHERCHE = RESTRICTION DE L'ARBRE (pas de bascule vers une
+ *    vue liste séparée) : tout l'arbre étant déjà chargé en mémoire, filtrer
+ *    revient à un simple filtrage client (lib/arbreLecons.ts, filtrerArbre)
+ *    — aucune re-requête réseau à chaque frappe/changement de filtre, et
+ *    l'arbre reste la SEULE vue à maintenir (pas de deuxième composant liste
+ *    à garder synchronisé). Un filtre actif déplie automatiquement les
+ *    branches correspondantes et surligne le texte trouvé.
+ */
 export default function LeconsPage() {
   const router = useRouter();
+
   const [programmes, setProgrammes] = useState<ProgrammeListe[]>([]);
+  const [arbreBrut, setArbreBrut] = useState<MatiereArbre[] | null>(null);
+  const [chargement, setChargement] = useState(true);
+  const [erreur, setErreur] = useState<string | null>(null);
+  const [refreshCle, setRefreshCle] = useState(0);
+
   const [statutFiltre, setStatutFiltre] = useState<LeconStatut | "">("");
   const [programmeFiltre, setProgrammeFiltre] = useState("");
   const [rechercheSaisie, setRechercheSaisie] = useState("");
   const [recherche, setRecherche] = useState("");
-  const [page, setPage] = useState(1);
 
-  const [data, setData] = useState<ListePaginee | null>(null);
-  const [chargement, setChargement] = useState(true);
-  const [erreur, setErreur] = useState<string | null>(null);
-  const [refreshCle, setRefreshCle] = useState(0);
   const [idEnCours, setIdEnCours] = useState<number | null>(null);
-
-  const [modaleCreation, setModaleCreation] = useState(false);
+  const [modaleCreation, setModaleCreation] = useState<false | true | NotionPreremplissage>(false);
   const [leconASupprimer, setLeconASupprimer] = useState<LeconListe | null>(null);
   const [toast, setToast] = useState<{ message: string; tone: "succes" | "erreur" } | null>(null);
-
-  useEffect(() => {
-    let actif = true;
-
-    async function charger() {
-      try {
-        const data = await listerProgrammes();
-        if (actif) setProgrammes(data.results);
-      } catch {
-        // Filtre secondaire : une panne ici ne doit pas bloquer la liste des leçons.
-      }
-    }
-
-    charger();
-    return () => {
-      actif = false;
-    };
-  }, []);
 
   useEffect(() => {
     let actif = true;
@@ -77,13 +73,16 @@ export default function LeconsPage() {
       setChargement(true);
       setErreur(null);
       try {
-        const resultat = await listerLecons({
-          statut: statutFiltre || undefined,
-          programme: programmeFiltre ? Number(programmeFiltre) : undefined,
-          search: recherche || undefined,
-          page,
-        });
-        if (actif) setData(resultat);
+        const progResp = await listerProgrammes();
+        if (!actif) return;
+        setProgrammes(progResp.results);
+
+        const [details, toutesLecons] = await Promise.all([
+          Promise.all(progResp.results.map((p) => getProgramme(p.id))),
+          listerToutesLecons(),
+        ]);
+        if (!actif) return;
+        setArbreBrut(construireArbre(details, toutesLecons));
       } catch (error) {
         if (actif) {
           setErreur(error instanceof ApiError ? error.message : "Impossible de charger les leçons.");
@@ -97,15 +96,20 @@ export default function LeconsPage() {
     return () => {
       actif = false;
     };
-  }, [statutFiltre, programmeFiltre, recherche, page, refreshCle]);
+  }, [refreshCle]);
 
-  function reinitialiserPage() {
-    setPage(1);
-  }
+  const filtres = useMemo(
+    () => ({ statut: statutFiltre, programmeId: programmeFiltre, recherche }),
+    [statutFiltre, programmeFiltre, recherche]
+  );
+  const filtreActif = filtreArbreActif(filtres);
+  const arbreFiltre = useMemo(
+    () => (arbreBrut ? filtrerArbre(arbreBrut, filtres) : []),
+    [arbreBrut, filtres]
+  );
 
   function handleSearchSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    reinitialiserPage();
     setRecherche(rechercheSaisie.trim());
   }
 
@@ -151,12 +155,20 @@ export default function LeconsPage() {
     setRefreshCle((c) => c + 1);
   }
 
+  const totaux = arbreBrut?.reduce(
+    (acc, m) => ({ lecons: acc.lecons + m.nbLecons, notions: acc.notions + m.nbNotions }),
+    { lecons: 0, notions: 0 }
+  );
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="text-lg font-bold text-fh-bleu">Leçons</h2>
-          <p className="text-sm text-fh-ardoise">Le contenu pédagogique rédigé pour chaque notion du programme.</p>
+          <p className="text-sm text-fh-ardoise">
+            Le contenu pédagogique rédigé pour chaque notion du programme.
+            {totaux && ` ${totaux.lecons}/${totaux.notions} notions ont une leçon.`}
+          </p>
         </div>
         <button
           type="button"
@@ -170,10 +182,7 @@ export default function LeconsPage() {
       <div className="flex flex-wrap gap-2">
         <select
           value={statutFiltre}
-          onChange={(event) => {
-            setStatutFiltre(event.target.value as LeconStatut | "");
-            reinitialiserPage();
-          }}
+          onChange={(event) => setStatutFiltre(event.target.value as LeconStatut | "")}
           className="rounded-lg border border-fh-bleu-vif/20 bg-white px-3 py-2 text-sm text-fh-bleu outline-none focus:border-fh-orange"
         >
           {OPTIONS_STATUT.map((option) => (
@@ -185,10 +194,7 @@ export default function LeconsPage() {
 
         <select
           value={programmeFiltre}
-          onChange={(event) => {
-            setProgrammeFiltre(event.target.value);
-            reinitialiserPage();
-          }}
+          onChange={(event) => setProgrammeFiltre(event.target.value)}
           className="rounded-lg border border-fh-bleu-vif/20 bg-white px-3 py-2 text-sm text-fh-bleu outline-none focus:border-fh-orange"
         >
           <option value="">Tous les programmes</option>
@@ -202,7 +208,7 @@ export default function LeconsPage() {
         <form onSubmit={handleSearchSubmit} className="flex min-w-[220px] flex-1 gap-2">
           <input
             type="search"
-            placeholder="Rechercher (titre)"
+            placeholder="Rechercher (titre de la leçon ou de la notion)"
             value={rechercheSaisie}
             onChange={(event) => setRechercheSaisie(event.target.value)}
             className="w-full min-w-[180px] rounded-lg border border-fh-bleu-vif/20 bg-white px-4 py-2 text-sm text-fh-bleu outline-none focus:border-fh-orange"
@@ -224,51 +230,33 @@ export default function LeconsPage() {
         </div>
       ) : erreur ? (
         <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{erreur}</p>
-      ) : !data || data.results.length === 0 ? (
+      ) : !arbreBrut || arbreBrut.length === 0 ? (
         <div className="flex flex-col items-center gap-2 rounded-2xl bg-white py-12 text-center ring-1 ring-fh-sable">
           <span className="text-3xl" aria-hidden="true">
             📖
           </span>
-          <p className="text-sm text-fh-ardoise">Aucune leçon. Créez-en une à partir d&apos;une notion du programme.</p>
+          <p className="text-sm text-fh-ardoise">Aucun programme en base. Créez-en un avant de rédiger des leçons.</p>
         </div>
       ) : (
-        <div className="flex flex-col gap-3">
-          {data.results.map((lecon) => (
-            <LeconRow
-              key={lecon.id}
-              lecon={lecon}
-              enCours={idEnCours === lecon.id}
-              onPublier={handlePublier}
-              onDepublier={handleDepublier}
-              onSupprimer={setLeconASupprimer}
-            />
-          ))}
-        </div>
+        <ArbreLecons
+          arbre={arbreFiltre}
+          filtreActif={filtreActif}
+          termeRecherche={recherche}
+          idEnCours={idEnCours}
+          onPublier={handlePublier}
+          onDepublier={handleDepublier}
+          onSupprimer={setLeconASupprimer}
+          onCreerPourNotion={setModaleCreation}
+        />
       )}
 
-      {data && (data.next || data.previous) && (
-        <div className="flex items-center justify-between">
-          <button
-            type="button"
-            disabled={!data.previous}
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            className="rounded-full border border-fh-bleu/20 px-4 py-2 text-sm font-medium text-fh-bleu disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            Précédent
-          </button>
-          <span className="text-sm text-fh-ardoise">{data.count} leçon(s)</span>
-          <button
-            type="button"
-            disabled={!data.next}
-            onClick={() => setPage((p) => p + 1)}
-            className="rounded-full border border-fh-bleu/20 px-4 py-2 text-sm font-medium text-fh-bleu disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            Suivant
-          </button>
-        </div>
+      {modaleCreation && (
+        <CreerLeconModal
+          notionInitiale={modaleCreation === true ? undefined : modaleCreation}
+          onCreated={handleCreated}
+          onClose={() => setModaleCreation(false)}
+        />
       )}
-
-      {modaleCreation && <CreerLeconModal onCreated={handleCreated} onClose={() => setModaleCreation(false)} />}
 
       {leconASupprimer && (
         <DeleteConfirmModal

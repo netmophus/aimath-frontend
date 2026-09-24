@@ -14,10 +14,12 @@ import SectionLecon from "@/components/eleve/SectionLecon";
 import OngletsLecon, { type CouleurOnglet, type Onglet } from "@/components/eleve/OngletsLecon";
 import CarteSection from "@/components/eleve/CarteSection";
 import CarteExercice from "@/components/eleve/CarteExercice";
+import SujetExamenLecture from "@/components/eleve/SujetExamenLecture";
+import LecteurVideo from "@/components/eleve/LecteurVideo";
 import ModaleTerme from "@/components/eleve/ModaleTerme";
 import BoutonTelecharger from "@/components/eleve/BoutonTelecharger";
 
-type OngletId = "pourquoi" | "cours" | "demonstrations" | "exercices";
+type OngletId = "pourquoi" | "cours" | "demonstrations" | "exercices" | "examen";
 
 /** Une couleur douce par TYPE d'onglet (son identité, pas sa position) —
  * l'actif repasse toujours en fh-orange plein, voir OngletsLecon.tsx. */
@@ -26,6 +28,7 @@ const COULEURS_ONGLET: Record<OngletId, CouleurOnglet> = {
   cours: { fond: "#FCE9DE", texte: "#A52D0E", bordure: "#F0D8BF" },
   demonstrations: { fond: "#FBEEE7", texte: "#A8481F", bordure: "#F3D9CB" },
   exercices: { fond: "#EAF5EF", texte: "#1F7A55", bordure: "#CDE9DB" },
+  examen: { fond: "#F3EAFB", texte: "#6B2FA0", bordure: "#E4D3F5" },
 };
 
 function estVide(texte: string): boolean {
@@ -178,6 +181,9 @@ export default function LeconEleveDetailPage() {
   if (lecon.exercices.length > 0) {
     onglets.push({ id: "exercices", label: "Exercices", couleur: COULEURS_ONGLET.exercices });
   }
+  if (!estVide(lecon.sujet_examen)) {
+    onglets.push({ id: "examen", label: "Examen", couleur: COULEURS_ONGLET.examen });
+  }
 
   return (
     <div className="mx-auto flex w-full max-w-[720px] flex-col gap-5">
@@ -278,19 +284,9 @@ export default function LeconEleveDetailPage() {
             <div className="flex flex-col gap-5">
               {lecon.videos.length > 0 && (
                 <SectionLecon titre="Vidéos">
-                  <ul className="flex flex-col gap-2">
+                  <ul className="flex flex-col gap-3">
                     {lecon.videos.map((video) => (
-                      <li key={`${video.ordre}-${video.titre}`} className="rounded-xl bg-white p-3 ring-1 ring-fh-sable">
-                        <a
-                          href={video.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-sm font-semibold text-fh-bleu hover:underline"
-                        >
-                          🎬 {video.titre}
-                        </a>
-                        {video.description && <p className="mt-1 text-xs text-fh-ardoise">{video.description}</p>}
-                      </li>
+                      <LecteurVideo key={`${video.ordre}-${video.titre}`} video={video} />
                     ))}
                   </ul>
                 </SectionLecon>
@@ -353,6 +349,8 @@ export default function LeconEleveDetailPage() {
           )}
         </div>
       )}
+
+      {ongletActif === "examen" && <SujetExamenLecture contenu={lecon.sujet_examen} onTermeClick={setSlugOuvert} />}
 
       <ModaleTerme
         slug={slugOuvert}

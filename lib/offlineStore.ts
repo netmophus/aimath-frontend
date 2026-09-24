@@ -73,6 +73,7 @@ function textesDeLaLecon(lecon: LeconEleve): string[] {
     lecon.cours_redige,
     lecon.demonstrations,
     lecon.a_retenir,
+    lecon.sujet_examen,
     ...lecon.exercices.flatMap((exercice) => [exercice.enonce, exercice.corrige]),
   ];
 }

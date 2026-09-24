@@ -41,7 +41,7 @@ export default function NavbarMenu() {
       <div className="hidden items-center gap-2 sm:flex sm:gap-3">
         <Link
           href="/login"
-          className="rounded-full border border-fh-bleu/20 px-4 py-2 text-sm font-medium text-fh-bleu transition-colors hover:border-fh-bleu/40 hover:bg-fh-sable/60"
+          className="rounded-full border border-white/25 px-4 py-2 text-sm font-medium text-white transition-colors hover:border-white/50 hover:bg-white/10"
         >
           Se connecter
         </Link>
@@ -60,7 +60,7 @@ export default function NavbarMenu() {
         aria-expanded={open}
         aria-controls="navbar-mobile-menu"
         aria-label={open ? "Fermer le menu" : "Ouvrir le menu"}
-        className="flex h-9 w-9 items-center justify-center rounded-full border border-fh-bleu/20 text-fh-bleu transition-colors hover:bg-fh-sable/60 sm:hidden"
+        className="flex h-9 w-9 items-center justify-center rounded-full border border-white/25 text-white transition-colors hover:bg-white/10 sm:hidden"
       >
         <svg
           viewBox="0 0 24 24"

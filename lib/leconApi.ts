@@ -60,6 +60,26 @@ export function listerLecons(params: ListerLeconsParams = {}): Promise<ReponsePa
   return apiRequest<ReponsePaginee<LeconListe>>(`/api/admin/lecons/${qs ? `?${qs}` : ""}`);
 }
 
+/**
+ * Toutes les leçons, en suivant la pagination jusqu'au bout — pour l'arbre
+ * Matière→Programme→Thème→Chapitre→Notion de app/admin/lecons/page.tsx, qui a
+ * besoin de connaître la leçon de CHAQUE notion, pas d'une seule page.
+ * Sans filtre `statut`/`programme` ici : ce sont l'arbre lui-même (côté
+ * client, voir lib/arbreLecons.ts) qui les applique, pour pouvoir restreindre
+ * les branches sans redemander les leçons à chaque changement de filtre.
+ */
+export async function listerToutesLecons(): Promise<LeconListe[]> {
+  const toutes: LeconListe[] = [];
+  let page = 1;
+  for (;;) {
+    const resultat = await listerLecons({ page });
+    toutes.push(...resultat.results);
+    if (!resultat.next) break;
+    page += 1;
+  }
+  return toutes;
+}
+
 // --- Détail complet (servira à l'éditeur, étape 2 ; utilisé dès l'étape 1
 //     par la page détail placeholder) ---
 
@@ -112,6 +132,7 @@ export interface LeconDetail {
   cours_redige: string;
   demonstrations: string;
   a_retenir: string;
+  sujet_examen: string;
   exercices: ExerciceItem[];
   videos: VideoItem[];
   ressources: RessourceItem[];
@@ -190,6 +211,7 @@ export interface ModifierLeconInput {
   cours_redige?: string;
   demonstrations?: string;
   a_retenir?: string;
+  sujet_examen?: string;
   statut?: LeconStatut;
   exercices?: ExerciceEcriture[];
   videos?: VideoEcriture[];

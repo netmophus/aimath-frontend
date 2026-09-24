@@ -9,8 +9,8 @@ import type { MetadataRoute } from "next";
  */
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "fahimtana — aide scolaire",
-    short_name: "fahimtana",
+    name: "Fahimta — aide scolaire",
+    short_name: "Fahimta",
     description: "Cours, exercices et leçons du programme du Niger.",
     start_url: "/eleve",
     display: "standalone",

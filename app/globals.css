@@ -21,6 +21,10 @@
   --color-fh-creme: #fafaf8;
   --color-fh-ardoise: #363032;
   --color-fh-accent: #fce9de;
+  /** Orange clair réservé aux accents sur fond bleu foncé (ex. panneau de
+   * marque des pages d'authentification) — plus lisible que fh-orange sur
+   * fh-bleu/fh-bleu-charbon, distinct de fh-accent (pensé pour fond clair). */
+  --color-fh-orange-clair: #f0955a;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -86,4 +90,24 @@ body {
   overflow-x: auto;
   overflow-y: hidden;
   padding-block: 0.25em;
+}
+
+/* Correctif d'un bug du katex.min.css installé (paquet "katex" ^0.18.7,
+   node_modules/katex/dist/katex.min.css) : la feuille de style ne cible que
+   `.katex-overlay { display: block }`, mais le moteur JS de cette version
+   génère en réalité la classe `overlay` (SANS le préfixe "katex-") pour le
+   conteneur SVG des accents combinés (\vec{...}, \hat{...}, \dot{...}...).
+   Résultat sans ce correctif : ce <span class="overlay"> reste un <span>
+   inline par défaut, donc ses `width`/`height` inline (fixés par KaTeX en
+   em) sont ignorés par le navigateur (un élément inline non remplacé ne
+   respecte pas width/height) → la flèche du \vec est présente dans le DOM
+   (SVG correct, bon fill) mais son conteneur s'effondre à 0×0 : invisible.
+   \overrightarrow{...}, lui, utilise un tout autre mécanisme de rendu
+   (classes .katex-stretchy/.halfarrow-*, correctement ciblées par la
+   feuille de style) — d'où l'écart observé entre les deux notations.
+   Règle globale (pas limitée à .rendu-markdown) : KaTeX est utilisé
+   partout via RenduMarkdown (cours, exercices, glossaire, aperçu admin),
+   toutes ces surfaces ont besoin du même correctif. */
+.katex .overlay {
+  display: block;
 }

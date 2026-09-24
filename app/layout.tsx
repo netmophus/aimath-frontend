@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import { AuthProvider } from "@/lib/auth";
 import PwaServiceWorker from "@/components/PwaServiceWorker";
 import "./globals.css";
@@ -7,14 +7,38 @@ import "./globals.css";
 // (RenduMarkdown) partout dans l'app, admin comme élève plus tard.
 import "katex/dist/katex.min.css";
 
-const geistSans = Geist({
+// Polices auto-hébergées (next/font/local) plutôt que next/font/google :
+// le build cassait sur la résolution interne de next/font/google sous
+// Turbopack ("Can't resolve @vercel/turbopack-next/internal/font/google/font"),
+// et l'app doit de toute façon fonctionner hors-ligne (PWA) sans dépendre de
+// fonts.gstatic.com au runtime ni au build. Fichiers .woff2 dans app/fonts/ —
+// EXACTEMENT les mêmes que next/font/google aurait servis pour Geist/Geist
+// Mono : extraits du paquet officiel Vercel "geist" (police variable,
+// poids 100-900 en un seul fichier), donc rendu strictement identique.
+// Mêmes noms de variable CSS qu'avant (--font-geist-sans/--font-geist-mono)
+// pour ne rien changer à app/globals.css.
+const geistSans = localFont({
+  src: "./fonts/Geist-Variable.woff2",
   variable: "--font-geist-sans",
-  subsets: ["latin"],
+  weight: "100 900",
 });
 
-const geistMono = Geist_Mono({
+const geistMono = localFont({
+  src: "./fonts/GeistMono-Variable.woff2",
   variable: "--font-geist-mono",
-  subsets: ["latin"],
+  weight: "100 900",
+  adjustFontFallback: false,
+  fallback: [
+    "ui-monospace",
+    "SFMono-Regular",
+    "Roboto Mono",
+    "Menlo",
+    "Monaco",
+    "Liberation Mono",
+    "DejaVu Sans Mono",
+    "Courier New",
+    "monospace",
+  ],
 });
 
 // theme-color/color-scheme vivent dans `viewport`, pas `metadata`, depuis
@@ -25,7 +49,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "fahimtana — aide scolaire",
+  title: "Fahimta — aide scolaire",
   description: "Cours, exercices et leçons du programme du Niger.",
   manifest: "/manifest.webmanifest",
   icons: {
@@ -34,7 +58,7 @@ export const metadata: Metadata = {
   },
   appleWebApp: {
     capable: true,
-    title: "fahimtana",
+    title: "Fahimta",
     statusBarStyle: "black-translucent",
   },
   other: {

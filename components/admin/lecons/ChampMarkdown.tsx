@@ -26,6 +26,27 @@ interface ChampMarkdownProps {
    * bloc ```variations pré-rempli (voir docs/syntaxe-variations.md). Même
    * mécanique que "+ Insérer une courbe" — un exemple concret à adapter. */
   avecInsertionVariations?: boolean;
+  /** Affiche "+ Insérer une horloge modulaire" : insère un squelette de bloc
+   * ```horloge pré-rempli (voir docs/syntaxe-horloge.md). */
+  avecInsertionHorloge?: boolean;
+  /** Affiche "+ Insérer un convertisseur binaire" : insère un squelette de
+   * bloc ```binaire pré-rempli (voir docs/syntaxe-binaire.md). */
+  avecInsertionBinaire?: boolean;
+  /** Affiche "+ Insérer un cercle trigonométrique" : insère un squelette de
+   * bloc ```cercletrigo pré-rempli (voir docs/syntaxe-cercletrigo.md). */
+  avecInsertionCercleTrigo?: boolean;
+  /** Affiche "+ Insérer des racines n-ièmes" : insère un squelette de bloc
+   * ```racines pré-rempli (voir docs/syntaxe-racines.md). */
+  avecInsertionRacines?: boolean;
+  /** Affiche "+ Insérer une simulation de mouvement" : insère un squelette de
+   * bloc ```mouvement pré-rempli (voir docs/syntaxe-mouvement.md). */
+  avecInsertionMouvement?: boolean;
+  /** Affiche "+ Insérer une simulation de mouvement circulaire" : insère un
+   * squelette de bloc ```circulaire pré-rempli (voir docs/syntaxe-circulaire.md). */
+  avecInsertionCirculaire?: boolean;
+  /** Affiche "+ Insérer un plan incliné" : insère un squelette de bloc
+   * ```plan-incline pré-rempli (voir docs/syntaxe-plan-incline.md). */
+  avecInsertionPlanIncline?: boolean;
   /** Point d'extension générique pour une action supplémentaire affichée dans
    * la même barre que "+ Insérer un terme" (ex. BoutonGenererSectionIA) —
    * ChampMarkdown reste agnostique de ce qu'il rend là. */
@@ -62,6 +83,80 @@ f: -inf, 3, -1, +inf
 
 `;
 
+/** Gabarit inséré par "+ Insérer une horloge modulaire" — voir docs/syntaxe-horloge.md. */
+const SQUELETTE_HORLOGE = `
+
+\`\`\`horloge
+modulo: 12
+\`\`\`
+
+`;
+
+/** Gabarit inséré par "+ Insérer un convertisseur binaire" — voir docs/syntaxe-binaire.md. */
+const SQUELETTE_BINAIRE = `
+
+\`\`\`binaire
+valeur: 13
+max: 255
+\`\`\`
+
+`;
+
+/** Gabarit inséré par "+ Insérer un cercle trigonométrique" — voir docs/syntaxe-cercletrigo.md. */
+const SQUELETTE_CERCLETRIGO = `
+
+\`\`\`cercletrigo
+angle: 60
+montrer_projections: true
+label: z
+\`\`\`
+
+`;
+
+/** Gabarit inséré par "+ Insérer des racines n-ièmes" — voir docs/syntaxe-racines.md. */
+const SQUELETTE_RACINES = `
+
+\`\`\`racines
+n: 5
+module: 1
+argument: 0
+\`\`\`
+
+`;
+
+/** Gabarit inséré par "+ Insérer une simulation de mouvement" — voir docs/syntaxe-mouvement.md. */
+const SQUELETTE_MOUVEMENT = `
+
+\`\`\`mouvement
+x0: 0
+v0: 2
+a: 1
+duree: 10
+\`\`\`
+
+`;
+
+/** Gabarit inséré par "+ Insérer une simulation de mouvement circulaire" — voir docs/syntaxe-circulaire.md. */
+const SQUELETTE_CIRCULAIRE = `
+
+\`\`\`circulaire
+rayon: 1
+omega: 2
+duree: 10
+\`\`\`
+
+`;
+
+/** Gabarit inséré par "+ Insérer un plan incliné" — voir docs/syntaxe-plan-incline.md. */
+const SQUELETTE_PLAN_INCLINE = `
+
+\`\`\`plan-incline
+angle: 30
+masse: 2
+\`\`\`
+
+`;
+
 /**
  * Éditeur Markdown+LaTeX côte à côte : saisie à gauche, aperçu KaTeX en
  * direct à droite (RenduMarkdown). Empilé sur mobile (édition au-dessus).
@@ -86,6 +181,13 @@ export default function ChampMarkdown({
   avecInsertionTerme = false,
   avecInsertionCourbe = false,
   avecInsertionVariations = false,
+  avecInsertionHorloge = false,
+  avecInsertionBinaire = false,
+  avecInsertionCercleTrigo = false,
+  avecInsertionRacines = false,
+  avecInsertionMouvement = false,
+  avecInsertionCirculaire = false,
+  avecInsertionPlanIncline = false,
   actionsSupplementaires,
 }: ChampMarkdownProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -114,7 +216,18 @@ export default function ChampMarkdown({
 
   return (
     <div className="flex flex-col gap-2">
-      {(label || avecInsertionTerme || avecInsertionCourbe || avecInsertionVariations || actionsSupplementaires) && (
+      {(label ||
+        avecInsertionTerme ||
+        avecInsertionCourbe ||
+        avecInsertionVariations ||
+        avecInsertionHorloge ||
+        avecInsertionBinaire ||
+        avecInsertionCercleTrigo ||
+        avecInsertionRacines ||
+        avecInsertionMouvement ||
+        avecInsertionCirculaire ||
+        avecInsertionPlanIncline ||
+        actionsSupplementaires) && (
         <div className="flex flex-wrap items-center justify-between gap-2">
           <span className="text-sm font-semibold text-fh-bleu">{label}</span>
           <div className="flex flex-wrap items-center gap-2">
@@ -137,6 +250,76 @@ export default function ChampMarkdown({
                 className="rounded-full border border-fh-bleu-vif/40 px-3 py-1 text-xs font-medium text-fh-bleu-vif transition-colors hover:bg-fh-bleu-vif/10"
               >
                 + Insérer un tableau de variations
+              </button>
+            )}
+            {avecInsertionHorloge && (
+              <button
+                type="button"
+                onClick={() => insererMarqueur(SQUELETTE_HORLOGE, "Bloc horloge modulaire inséré — adapte le modulo.")}
+                title="Insère une horloge modulaire à adapter"
+                className="rounded-full border border-fh-bleu-vif/40 px-3 py-1 text-xs font-medium text-fh-bleu-vif transition-colors hover:bg-fh-bleu-vif/10"
+              >
+                + Insérer une horloge modulaire
+              </button>
+            )}
+            {avecInsertionBinaire && (
+              <button
+                type="button"
+                onClick={() => insererMarqueur(SQUELETTE_BINAIRE, "Bloc convertisseur binaire inséré — adapte les valeurs.")}
+                title="Insère un convertisseur binaire à adapter"
+                className="rounded-full border border-fh-bleu-vif/40 px-3 py-1 text-xs font-medium text-fh-bleu-vif transition-colors hover:bg-fh-bleu-vif/10"
+              >
+                + Insérer un convertisseur binaire
+              </button>
+            )}
+            {avecInsertionCercleTrigo && (
+              <button
+                type="button"
+                onClick={() => insererMarqueur(SQUELETTE_CERCLETRIGO, "Bloc cercle trigonométrique inséré — adapte l'angle.")}
+                title="Insère un cercle trigonométrique à adapter"
+                className="rounded-full border border-fh-bleu-vif/40 px-3 py-1 text-xs font-medium text-fh-bleu-vif transition-colors hover:bg-fh-bleu-vif/10"
+              >
+                + Insérer un cercle trigonométrique
+              </button>
+            )}
+            {avecInsertionRacines && (
+              <button
+                type="button"
+                onClick={() => insererMarqueur(SQUELETTE_RACINES, "Bloc racines n-ièmes inséré — adapte les valeurs.")}
+                title="Insère une figure de racines n-ièmes à adapter"
+                className="rounded-full border border-fh-bleu-vif/40 px-3 py-1 text-xs font-medium text-fh-bleu-vif transition-colors hover:bg-fh-bleu-vif/10"
+              >
+                + Insérer des racines n-ièmes
+              </button>
+            )}
+            {avecInsertionMouvement && (
+              <button
+                type="button"
+                onClick={() => insererMarqueur(SQUELETTE_MOUVEMENT, "Bloc simulation de mouvement inséré — adapte les valeurs.")}
+                title="Insère une simulation de mouvement rectiligne à adapter"
+                className="rounded-full border border-fh-bleu-vif/40 px-3 py-1 text-xs font-medium text-fh-bleu-vif transition-colors hover:bg-fh-bleu-vif/10"
+              >
+                + Insérer une simulation de mouvement
+              </button>
+            )}
+            {avecInsertionCirculaire && (
+              <button
+                type="button"
+                onClick={() => insererMarqueur(SQUELETTE_CIRCULAIRE, "Bloc simulation de mouvement circulaire inséré — adapte les valeurs.")}
+                title="Insère une simulation de mouvement circulaire uniforme à adapter"
+                className="rounded-full border border-fh-bleu-vif/40 px-3 py-1 text-xs font-medium text-fh-bleu-vif transition-colors hover:bg-fh-bleu-vif/10"
+              >
+                + Insérer une simulation de mouvement circulaire
+              </button>
+            )}
+            {avecInsertionPlanIncline && (
+              <button
+                type="button"
+                onClick={() => insererMarqueur(SQUELETTE_PLAN_INCLINE, "Bloc plan incliné inséré — adapte les valeurs.")}
+                title="Insère un plan incliné à adapter"
+                className="rounded-full border border-fh-bleu-vif/40 px-3 py-1 text-xs font-medium text-fh-bleu-vif transition-colors hover:bg-fh-bleu-vif/10"
+              >
+                + Insérer un plan incliné
               </button>
             )}
             {avecInsertionTerme && (

@@ -1,54 +1,52 @@
 /**
- * Contenu des diapositives du hero d'accueil. Codé en dur pour
- * l'instant ; sera remplacé par un appel API plus tard si besoin.
+ * Contenu des diapositives du hero d'accueil (components/HeroCarousel.tsx).
+ * Codé en dur pour l'instant ; sera remplacé par un appel API plus tard si
+ * besoin.
+ *
+ * Le badge et les deux boutons sont IDENTIQUES sur toutes les diapositives
+ * (voir la maquette validée) : seuls le titre et le sous-texte changent —
+ * d'où leur absence de HeroSlide, HERO_BADGE étant une constante séparée.
  */
 
-/** Couleur du panneau logo pour cette diapositive (voir HeroCarousel). */
-export type HeroPanel = "bleu" | "orange" | "orange-fonce";
-
 export interface HeroSlide {
-  badge: string;
   title: string;
   subtitle: string;
-  primaryLabel: string;
-  primaryHref: string;
-  secondaryLabel: string;
-  secondaryHref: string;
-  panel: HeroPanel;
 }
+
+/**
+ * Badge bicolore en deux segments accolés (voir le rendu dans
+ * HeroCarousel.tsx) : "segment1" sur fond fh-orange plein, "segment2" sur
+ * fond fh-accent clair.
+ */
+export const HERO_BADGE = {
+  segment1: "Programme officiel",
+  segment2: "1ᵉ & 2ⁿᵈ cycles du Niger",
+} as const;
 
 export const HERO_SLIDES: readonly HeroSlide[] = [
   {
-    badge: "Programme officiel du Niger",
-    title: "Réussis ton année scolaire",
+    title: "Des élèves qui progressent avec Fahimta",
     subtitle:
-      "Cours rédigés, démonstrations et exercices corrigés, du collège au lycée, dans toutes les matières.",
-    primaryLabel: "Commencer gratuitement",
-    primaryHref: "/register",
-    secondaryLabel: "Voir une leçon",
-    secondaryHref: "/demo",
-    panel: "bleu",
+      "Cours rédigés, démonstrations, exercices corrigés et simulations — du collège au lycée, dans toutes les matières.",
   },
   {
-    badge: "Cours + IA",
-    title: "Un tuteur disponible 24h/24",
+    title: "Apprends même sans connexion",
     subtitle:
-      "Pose ta question à tout moment et obtiens une explication claire, ancrée dans ton programme.",
-    primaryLabel: "Essayer maintenant",
-    primaryHref: "/register",
-    secondaryLabel: "En savoir plus",
-    secondaryHref: "/demo",
-    panel: "orange",
+      "Télécharge tes leçons et révise hors-ligne, où que tu sois — l'application fonctionne sans internet une fois tes cours enregistrés.",
   },
   {
-    badge: "Aide humaine",
-    title: "Un enseignant t'accompagne",
+    title: "Comprends en manipulant",
     subtitle:
-      "Bloqué sur un exercice ? Demande du soutien et échange en direct avec un professeur.",
-    primaryLabel: "Créer mon compte",
-    primaryHref: "/register",
-    secondaryLabel: "Voir comment",
-    secondaryHref: "/demo",
-    panel: "orange-fonce",
+      "Des simulations interactives (mouvement, plan incliné, courbes…) pour voir la physique et les maths en action, pas seulement les lire.",
+  },
+  {
+    title: "Entraîne-toi sur de vrais sujets",
+    subtitle:
+      "Exercices gradués et sujets d'examen entièrement corrigés, conformes au programme officiel du Niger.",
+  },
+  {
+    title: "Du collège au lycée",
+    subtitle:
+      "Mathématiques, physique, chimie, SVT… le programme officiel des deux cycles, expliqué clairement.",
   },
 ];

@@ -18,7 +18,10 @@ interface ModaleApercuExercicesIAProps {
   /** Nombre d'exercices déjà présents dans l'éditeur : détermine si on
    * propose "Ajouter" seul, ou le choix Ajouter/Remplacer. */
   nombreExercicesExistants: number;
-  onRegenerer: () => Promise<ExerciceGenere[]>;
+  /** Le lot initial (voir `exercices`) a-t-il été coupé par la limite de
+   * tokens côté serveur ? Affiche un avertissement — n'empêche pas l'ajout. */
+  tronque?: boolean;
+  onRegenerer: () => Promise<{ exercices: ExerciceGenere[]; tronque?: boolean }>;
   onAjouter: (exercices: ExerciceGenere[]) => void;
   onRemplacer: (exercices: ExerciceGenere[]) => void;
   onClose: () => void;
@@ -49,12 +52,14 @@ export default function ModaleApercuExercicesIA({
   notionId,
   exercices,
   nombreExercicesExistants,
+  tronque,
   onRegenerer,
   onAjouter,
   onRemplacer,
   onClose,
 }: ModaleApercuExercicesIAProps) {
   const [exercicesAffiches, setExercicesAffiches] = useState(exercices);
+  const [tronqueAffiche, setTronqueAffiche] = useState(!!tronque);
   const [regenerationEnCours, setRegenerationEnCours] = useState(false);
   const [erreurGeneration, setErreurGeneration] = useState<string | null>(null);
 
@@ -67,7 +72,9 @@ export default function ModaleApercuExercicesIA({
     setErreurGeneration(null);
     setAvis(null);
     try {
-      setExercicesAffiches(await onRegenerer());
+      const { exercices: nouveauxExercices, tronque: nouveauTronque } = await onRegenerer();
+      setExercicesAffiches(nouveauxExercices);
+      setTronqueAffiche(!!nouveauTronque);
     } catch (error) {
       setErreurGeneration(error instanceof ApiError ? error.message : "La génération a échoué.");
     } finally {
@@ -105,6 +112,12 @@ export default function ModaleApercuExercicesIA({
     <Modal titre={`Aperçu IA — Exercices (${exercicesAffiches.length})`} onClose={onClose} taille="lg">
       <div className="flex flex-col gap-4">
         <p className="text-xs text-fh-ardoise/60">{MENTION_CONTENU_IA}</p>
+
+        {tronqueAffiche && (
+          <p className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-800">
+            ⚠️ Génération incomplète — le contenu a été coupé (limite atteinte). Régénère ou complète à la main avant d&apos;insérer.
+          </p>
+        )}
 
         <div className="flex justify-end">
           <button

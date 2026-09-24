@@ -13,6 +13,10 @@ interface BoutonGenererSectionIAProps {
   /** Contenu actuel du champ — sert à choisir "Générer"/"Régénérer" et à
    * décider si l'insertion devra demander confirmation (voir ModaleApercuIA). */
   valeurActuelle: string;
+  /** Un prompt personnalisé (voir ChampPromptPerso) est-il actif pour cette
+   * notion × section ? Purement indicatif — n'affecte pas la requête envoyée
+   * (le backend décide déjà seul du prompt à utiliser). */
+  promptPersoActif?: boolean;
   onInsere: (contenu: string) => void;
 }
 
@@ -27,17 +31,20 @@ export default function BoutonGenererSectionIA({
   section,
   notionId,
   valeurActuelle,
+  promptPersoActif,
   onInsere,
 }: BoutonGenererSectionIAProps) {
   const [enCours, setEnCours] = useState(false);
   const [contenuGenere, setContenuGenere] = useState<string | null>(null);
+  const [tronque, setTronque] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
 
   async function lancerGeneration() {
     setEnCours(true);
     try {
-      const { contenu } = await genererSection(notionId, section);
+      const { contenu, tronque: reponseTronquee } = await genererSection(notionId, section);
       setContenuGenere(contenu);
+      setTronque(!!reponseTronquee);
     } catch (error) {
       setErreur(error instanceof ApiError ? error.message : "La génération a échoué.");
     } finally {
@@ -51,7 +58,11 @@ export default function BoutonGenererSectionIA({
         type="button"
         disabled={enCours}
         onClick={lancerGeneration}
-        title="Génère un premier jet avec l'IA — peut prendre quelques secondes"
+        title={
+          promptPersoActif
+            ? "Génère un premier jet avec l'IA — utilise le prompt personnalisé de cette section"
+            : "Génère un premier jet avec l'IA — peut prendre quelques secondes"
+        }
         className="inline-flex items-center gap-1.5 rounded-full border border-fh-bleu-vif/40 px-3 py-1 text-xs font-medium text-fh-bleu-vif transition-colors hover:bg-fh-bleu-vif/10 disabled:cursor-not-allowed disabled:opacity-60"
       >
         {enCours ? (
@@ -73,7 +84,13 @@ export default function BoutonGenererSectionIA({
           notionId={notionId}
           contenu={contenuGenere}
           valeurActuelle={valeurActuelle}
-          onRegenerer={() => genererSection(notionId, section).then((reponse) => reponse.contenu)}
+          tronque={tronque}
+          onRegenerer={() =>
+            genererSection(notionId, section).then((reponse) => ({
+              contenu: reponse.contenu,
+              tronque: reponse.tronque,
+            }))
+          }
           onInsere={(contenu) => {
             onInsere(contenu);
             setContenuGenere(null);

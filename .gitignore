@@ -32,6 +32,8 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+# ... sauf le gabarit documentant les variables attendues (valeurs vides)
+!.env.example
 
 # vercel
 .vercel
@@ -39,3 +41,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# scripts de test ad hoc (Playwright, débogage) — jamais destinés au repo
+/test-*.js
+
+# logs génériques
+*.log

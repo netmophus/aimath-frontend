@@ -205,6 +205,48 @@ export interface MeResponse {
   date_inscription: string;
 }
 
+// --- Cascade Cycle → Niveau → Série (formulaire d'inscription, public) ---
+
+export interface ClasseNiveau {
+  id: number;
+  nom: string;
+  series: SerieInfo[];
+}
+
+export interface ClasseCycle {
+  id: number;
+  nom: string;
+  niveaux: ClasseNiveau[];
+}
+
+// --- Inscription élève (formulaire /register, public) ---
+
+export interface InscriptionInput {
+  prenom: string;
+  nom: string;
+  telephone: string;
+  email?: string;
+  password: string;
+  password2: string;
+  /** ID de Niveau (PK entière — voir getClasses()). */
+  niveau: number;
+  /** ID de Serie — omis si le niveau choisi n'a pas de série. */
+  serie?: number;
+}
+
+export interface InscriptionUtilisateur {
+  prenom: string;
+  nom: string;
+  telephone: string;
+  classe: string | null;
+  statut: Statut;
+}
+
+export interface InscriptionResponse {
+  message: string;
+  utilisateur: InscriptionUtilisateur;
+}
+
 // --- Endpoints ---
 
 export function login(telephone: string, password: string): Promise<LoginResponse> {
@@ -217,4 +259,19 @@ export function login(telephone: string, password: string): Promise<LoginRespons
 
 export function fetchMe(): Promise<MeResponse> {
   return apiRequest<MeResponse>("/api/auth/me/");
+}
+
+/** GET /api/auth/classes/ — hiérarchie Cycle→Niveau→Série, publique (aucune
+ * authentification requise : sert le formulaire d'inscription lui-même). */
+export function getClasses(): Promise<ClasseCycle[]> {
+  return rawRequest<ClasseCycle[]>("/api/auth/classes/", { auth: false });
+}
+
+/** POST /api/auth/register/ — inscription élève, compte en_attente. Public. */
+export function inscrireEleve(payload: InscriptionInput): Promise<InscriptionResponse> {
+  return rawRequest<InscriptionResponse>("/api/auth/register/", {
+    method: "POST",
+    body: payload,
+    auth: false,
+  });
 }

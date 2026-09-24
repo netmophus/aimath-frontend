@@ -20,7 +20,10 @@ interface ModaleApercuIAProps {
   /** Contenu ACTUEL du champ dans l'éditeur — sert uniquement à décider si
    * "Insérer" doit demander confirmation (champ non vide = remplacement). */
   valeurActuelle: string;
-  onRegenerer: () => Promise<string>;
+  /** Le contenu initial (voir `contenu`) a-t-il été coupé par la limite de
+   * tokens côté serveur ? Affiche un avertissement — n'empêche pas l'insertion. */
+  tronque?: boolean;
+  onRegenerer: () => Promise<{ contenu: string; tronque?: boolean }>;
   onInsere: (contenu: string) => void;
   onClose: () => void;
 }
@@ -42,11 +45,13 @@ export default function ModaleApercuIA({
   notionId,
   contenu,
   valeurActuelle,
+  tronque,
   onRegenerer,
   onInsere,
   onClose,
 }: ModaleApercuIAProps) {
   const [contenuAffiche, setContenuAffiche] = useState(contenu);
+  const [tronqueAffiche, setTronqueAffiche] = useState(!!tronque);
   const [onglet, setOnglet] = useState<Onglet>("apercu");
   const [regenerationEnCours, setRegenerationEnCours] = useState(false);
   const [erreurGeneration, setErreurGeneration] = useState<string | null>(null);
@@ -60,8 +65,9 @@ export default function ModaleApercuIA({
     setErreurGeneration(null);
     setAvis(null);
     try {
-      const nouveauContenu = await onRegenerer();
+      const { contenu: nouveauContenu, tronque: nouveauTronque } = await onRegenerer();
       setContenuAffiche(nouveauContenu);
+      setTronqueAffiche(!!nouveauTronque);
     } catch (error) {
       setErreurGeneration(error instanceof ApiError ? error.message : "La génération a échoué.");
     } finally {
@@ -103,6 +109,12 @@ export default function ModaleApercuIA({
     <Modal titre={`Aperçu IA — ${LIBELLES_SECTION_IA[section]}`} onClose={onClose} taille="lg">
       <div className="flex flex-col gap-4">
         <p className="text-xs text-fh-ardoise/60">{MENTION_CONTENU_IA}</p>
+
+        {tronqueAffiche && (
+          <p className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-800">
+            ⚠️ Génération incomplète — le contenu a été coupé (limite atteinte). Régénère ou complète à la main avant d&apos;insérer.
+          </p>
+        )}
 
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex gap-1 rounded-full bg-fh-creme p-1">

@@ -106,6 +106,7 @@ export interface LeconEleve {
   cours_redige: string;
   demonstrations: string;
   a_retenir: string;
+  sujet_examen: string;
   exercices: ExerciceEleve[];
   videos: VideoEleve[];
   ressources: RessourceEleve[];

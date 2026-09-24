@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import Logo from "@/components/Logo";
 
 export const metadata: Metadata = {
-  title: "Hors ligne — fahimtana",
+  title: "Hors ligne — Fahimta",
 };
 
 /**

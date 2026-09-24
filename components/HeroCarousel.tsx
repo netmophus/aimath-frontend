@@ -1,21 +1,20 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import Image from "next/image";
+import { useCallback, useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import Link from "next/link";
-import { HERO_SLIDES, type HeroPanel } from "@/lib/heroSlides";
+import { HERO_BADGE, HERO_SLIDES } from "@/lib/heroSlides";
 
-const AUTOPLAY_DELAY_MS = 4000;
+const AUTOPLAY_DELAY_MS = 5500;
 
-/**
- * Couleur du panneau logo par diapositive. Classes littérales (pas de
- * concaténation de chaîne) pour que Tailwind les détecte à la compilation.
- */
-const PANEL_BG: Record<HeroPanel, string> = {
-  bleu: "bg-fh-bleu",
-  orange: "bg-fh-orange",
-  "orange-fonce": "bg-fh-orange-fonce",
-};
+interface HeroCarouselProps {
+  /** Mosaïque de photos (components/MosaiquePhotosEleves.tsx) — un composant
+   * SERVEUR, reçu tout construit en prop plutôt qu'importé ici : ce fichier
+   * est "use client" (état du carrousel), et un composant qui lit le
+   * système de fichiers (node:fs) ne doit jamais être importé dans un
+   * fichier client (même convention que Logo.tsx/MarqueEleve.tsx, passés en
+   * prop `logo` aux layouts admin/élève). */
+  mosaique: ReactNode;
+}
 
 function prefersReducedMotion(): boolean {
   return (
@@ -25,12 +24,17 @@ function prefersReducedMotion(): boolean {
 }
 
 /**
- * Hero "split" : colonne texte (blanche) à gauche, panneau logo dont la
- * couleur change à chaque diapositive à droite. Défilement automatique,
- * flèches et pagination pilotent les deux colonnes en même temps.
+ * Hero de la page d'accueil : badge fixe, titre/sous-texte qui défilent (5
+ * diapositives, lib/heroSlides.ts), boutons fixes, navigation (flèches +
+ * points) et mosaïque de photos fixe sous le tout. Défilement automatique
+ * toutes les 5,5 s, en pause au survol ou dès qu'un contrôle du carrousel a
+ * le focus (onFocus/onBlur sur le conteneur — React les fait remonter
+ * depuis n'importe quel bouton/lien enfant, pas besoin de les répéter sur
+ * chacun). Navigation clavier : ← / → une fois le carrousel focus.
  */
-export default function HeroCarousel() {
+export default function HeroCarousel({ mosaique }: HeroCarouselProps) {
   const [index, setIndex] = useState(0);
+  const [enPause, setEnPause] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const clearTimer = useCallback(() => {
@@ -43,14 +47,14 @@ export default function HeroCarousel() {
   const startTimer = useCallback(() => {
     clearTimer();
 
-    if (prefersReducedMotion()) {
+    if (prefersReducedMotion() || enPause) {
       return;
     }
 
     timerRef.current = setInterval(() => {
       setIndex((current) => (current + 1) % HERO_SLIDES.length);
     }, AUTOPLAY_DELAY_MS);
-  }, [clearTimer]);
+  }, [clearTimer, enPause]);
 
   useEffect(() => {
     startTimer();
@@ -70,50 +74,85 @@ export default function HeroCarousel() {
     goTo((index + 1) % HERO_SLIDES.length);
   }
 
-  const activeSlide = HERO_SLIDES[index];
+  function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    if (event.key === "ArrowLeft") {
+      event.preventDefault();
+      goToPrevious();
+    } else if (event.key === "ArrowRight") {
+      event.preventDefault();
+      goToNext();
+    }
+  }
 
   return (
-    <section className="bg-white">
-      <div className="mx-auto flex max-w-6xl flex-col lg:flex-row lg:items-stretch">
-        {/* Colonne texte */}
-        <div className="flex flex-1 flex-col justify-center gap-4 px-4 py-8 sm:px-6 sm:py-10 lg:w-[58%] lg:flex-none lg:py-14 lg:pr-12">
-          <div className="relative min-h-[230px] sm:min-h-[190px] lg:min-h-[210px]">
-            {HERO_SLIDES.map((slide, slideIndex) => (
-              <div
-                key={slide.title}
-                aria-hidden={slideIndex !== index}
-                className={`absolute inset-0 flex flex-col justify-center gap-4 transition-opacity duration-700 ease-in-out motion-reduce:transition-none ${
-                  slideIndex === index
-                    ? "opacity-100"
-                    : "pointer-events-none opacity-0"
-                }`}
-              >
-                <span className="w-fit rounded-full bg-fh-accent px-3 py-1 text-xs font-semibold text-fh-orange-fonce sm:text-sm">
-                  {slide.badge}
-                </span>
-                <h1 className="max-w-xl text-3xl font-bold leading-tight tracking-tight text-fh-bleu sm:text-4xl lg:text-5xl">
-                  {slide.title}
-                </h1>
-                <p className="max-w-lg text-sm text-fh-ardoise sm:text-base">
-                  {slide.subtitle}
-                </p>
-                <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
-                  <Link
-                    href={slide.primaryHref}
-                    className="rounded-full bg-fh-orange px-6 py-3 text-center text-sm font-semibold text-white transition-colors hover:bg-fh-orange-fonce sm:text-base"
-                  >
-                    {slide.primaryLabel}
-                  </Link>
-                  <Link
-                    href={slide.secondaryHref}
-                    className="rounded-full border border-fh-bleu px-6 py-3 text-center text-sm font-semibold text-fh-bleu transition-colors hover:bg-fh-bleu/5 sm:text-base"
-                  >
-                    {slide.secondaryLabel}
-                  </Link>
-                </div>
-              </div>
-            ))}
-          </div>
+    <section
+      className="bg-fh-bleu/10"
+      onMouseEnter={() => setEnPause(true)}
+      onMouseLeave={() => setEnPause(false)}
+      onFocus={() => setEnPause(true)}
+      onBlur={() => setEnPause(false)}
+    >
+      <div
+        role="region"
+        aria-roledescription="carrousel"
+        aria-label="Présentation de Fahimta"
+        onKeyDown={handleKeyDown}
+        className="mx-auto flex max-w-4xl flex-col items-center gap-3 px-4 pt-8 pb-5 text-center sm:px-6 sm:pt-12 sm:pb-7"
+      >
+        <span className="mx-auto inline-flex w-fit overflow-hidden rounded-full text-sm font-medium sm:text-base">
+          <span className="whitespace-nowrap bg-fh-orange px-4 py-2 text-white sm:px-[18px] sm:py-2.5">
+            {HERO_BADGE.segment1}
+          </span>
+          <span className="whitespace-nowrap bg-fh-accent px-4 py-2 text-fh-orange-fonce sm:px-[18px] sm:py-2.5">
+            {HERO_BADGE.segment2}
+          </span>
+        </span>
+
+        <div className="relative min-h-[210px] w-full sm:min-h-[160px]">
+          {HERO_SLIDES.map((slide, slideIndex) => (
+            <div
+              key={slide.title}
+              aria-hidden={slideIndex !== index}
+              className={`absolute inset-0 flex flex-col items-center gap-3 transition-opacity duration-700 ease-in-out motion-reduce:transition-none ${
+                slideIndex === index
+                  ? "opacity-100"
+                  : "pointer-events-none opacity-0"
+              }`}
+            >
+              <h1 className="max-w-2xl text-[32px] font-bold leading-tight tracking-tight text-fh-bleu sm:text-[38px]">
+                {slide.title}
+              </h1>
+              <p className="max-w-xl text-base text-fh-ardoise">{slide.subtitle}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
+          <Link
+            href="/register"
+            className="rounded-full bg-fh-orange px-6 py-3 text-center text-sm font-semibold text-white transition-colors hover:bg-fh-orange-fonce sm:text-base"
+          >
+            Rejoins-les gratuitement
+          </Link>
+          <Link
+            href="/demo"
+            className="rounded-full border border-fh-bleu px-6 py-3 text-center text-sm font-semibold text-fh-bleu transition-colors hover:bg-fh-bleu/5 sm:text-base"
+          >
+            Voir une leçon
+          </Link>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={goToPrevious}
+            aria-label="Diapositive précédente"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-fh-bleu/20 text-fh-bleu transition-colors hover:bg-fh-bleu/5"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5" aria-hidden="true">
+              <path d="M15 18l-6-6 6-6" />
+            </svg>
+          </button>
 
           <div className="flex items-center gap-2">
             {HERO_SLIDES.map((slide, slideIndex) => (
@@ -131,64 +170,21 @@ export default function HeroCarousel() {
               />
             ))}
           </div>
-        </div>
-
-        {/* Colonne panneau logo, couleur selon la diapositive */}
-        <div
-          className={`relative flex h-36 shrink-0 items-center justify-center transition-colors duration-500 sm:h-48 lg:h-auto lg:w-[42%] ${PANEL_BG[activeSlide.panel]}`}
-        >
-          <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-white/15 p-3 sm:h-28 sm:w-28">
-            <Image
-              src="/fahimta.png"
-              alt="FAHIMTA"
-              width={160}
-              height={160}
-              priority
-              className="h-full w-full object-contain"
-            />
-          </div>
-
-          <button
-            type="button"
-            onClick={goToPrevious}
-            aria-label="Diapositive précédente"
-            className="absolute left-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/25 text-white backdrop-blur transition-colors hover:bg-white/40 sm:left-5 sm:h-10 sm:w-10"
-          >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={2}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="h-5 w-5"
-              aria-hidden="true"
-            >
-              <path d="M15 18l-6-6 6-6" />
-            </svg>
-          </button>
 
           <button
             type="button"
             onClick={goToNext}
             aria-label="Diapositive suivante"
-            className="absolute right-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/25 text-white backdrop-blur transition-colors hover:bg-white/40 sm:right-5 sm:h-10 sm:w-10"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-fh-bleu/20 text-fh-bleu transition-colors hover:bg-fh-bleu/5"
           >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={2}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="h-5 w-5"
-              aria-hidden="true"
-            >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5" aria-hidden="true">
               <path d="M9 18l6-6-6-6" />
             </svg>
           </button>
         </div>
       </div>
+
+      <div className="mx-auto max-w-5xl px-4 pb-8 sm:px-6 sm:pb-12">{mosaique}</div>
     </section>
   );
 }

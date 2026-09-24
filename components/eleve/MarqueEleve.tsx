@@ -6,12 +6,12 @@ const LOGO_FILENAME = "fahimta.png";
 
 /**
  * Marque de l'entête élève (fond fh-bleu) : robot sur pastille claire +
- * wordmark blanc, dernières lettres accentuées en orange. Composant serveur
- * dédié (comme components/Logo.tsx, qui lit le système de fichiers et ne
- * doit jamais être importé depuis un fichier "use client" — voir
- * app/eleve/layout.tsx) : pas de réutilisation directe de Logo.tsx ici, son
- * texte n'est pas personnalisable en deux teintes sans changer un composant
- * partagé par d'autres pages (admin, public).
+ * wordmark "Fahimta" blanc, dernières lettres accentuées en orange.
+ * Composant serveur dédié (comme components/Logo.tsx, qui lit le système de
+ * fichiers et ne doit jamais être importé depuis un fichier "use client" —
+ * voir app/eleve/layout.tsx) : pas de réutilisation directe de Logo.tsx ici,
+ * son texte n'est pas personnalisable en deux teintes sans changer un
+ * composant partagé par d'autres pages (admin, public).
  */
 export default function MarqueEleve() {
   const logoPath = path.join(process.cwd(), "public", LOGO_FILENAME);
@@ -23,7 +23,7 @@ export default function MarqueEleve() {
         <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/90 p-1">
           <Image
             src={`/${LOGO_FILENAME}`}
-            alt="fahimta"
+            alt="Fahimta"
             width={32}
             height={32}
             priority
@@ -32,7 +32,7 @@ export default function MarqueEleve() {
         </span>
       )}
       <span className="text-xl font-bold tracking-tight text-white">
-        fahim<span className="text-fh-orange">ta</span>
+        Fahim<span className="text-fh-orange">ta</span>
       </span>
     </span>
   );

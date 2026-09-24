@@ -56,8 +56,8 @@ export default function LoginForm() {
   }
 
   return (
-    <div className="w-full max-w-md rounded-2xl bg-fh-sable p-6 sm:p-8">
-      <h1 className="mb-6 text-center text-xl font-bold text-fh-bleu sm:text-2xl">
+    <div className="mx-auto w-full max-w-sm">
+      <h1 className="mb-8 text-xl font-bold text-fh-bleu sm:text-2xl">
         Se connecter
       </h1>
 
@@ -76,7 +76,7 @@ export default function LoginForm() {
             placeholder="+227 90 00 00 00"
             value={telephone}
             onChange={(event) => setTelephone(event.target.value)}
-            className="w-full rounded-lg border border-fh-bleu-vif/20 bg-fh-creme px-4 py-2.5 text-fh-bleu outline-none focus:border-fh-orange"
+            className="w-full rounded-lg border border-fh-bleu-vif/15 bg-fh-creme px-4 py-2.5 text-fh-bleu outline-none transition-shadow focus:border-fh-orange focus:ring-2 focus:ring-fh-orange/20"
           />
         </div>
 
@@ -93,7 +93,7 @@ export default function LoginForm() {
             autoComplete="current-password"
             value={motDePasse}
             onChange={(event) => setMotDePasse(event.target.value)}
-            className="w-full rounded-lg border border-fh-bleu-vif/20 bg-fh-creme px-4 py-2.5 text-fh-bleu outline-none focus:border-fh-orange"
+            className="w-full rounded-lg border border-fh-bleu-vif/15 bg-fh-creme px-4 py-2.5 text-fh-bleu outline-none transition-shadow focus:border-fh-orange focus:ring-2 focus:ring-fh-orange/20"
           />
         </div>
 

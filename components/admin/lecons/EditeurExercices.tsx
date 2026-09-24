@@ -45,6 +45,7 @@ interface EditeurExercicesProps {
 export default function EditeurExercices({ exercices, onChange, notionId }: EditeurExercicesProps) {
   const [genereEnCours, setGenereEnCours] = useState(false);
   const [exercicesGeneres, setExercicesGeneres] = useState<ExerciceGenere[] | null>(null);
+  const [tronque, setTronque] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
 
   function modifier(index: number, patch: Partial<ExerciceDraft>) {
@@ -66,8 +67,9 @@ export default function EditeurExercices({ exercices, onChange, notionId }: Edit
   async function lancerGeneration() {
     setGenereEnCours(true);
     try {
-      const { exercices: generes } = await genererSection(notionId, "exercices");
+      const { exercices: generes, tronque: reponseTronquee } = await genererSection(notionId, "exercices");
       setExercicesGeneres(generes);
+      setTronque(!!reponseTronquee);
     } catch (error) {
       setErreur(error instanceof ApiError ? error.message : "La génération a échoué.");
     } finally {
@@ -157,6 +159,13 @@ export default function EditeurExercices({ exercices, onChange, notionId }: Edit
             avecInsertionTerme
             avecInsertionCourbe
             avecInsertionVariations
+            avecInsertionHorloge
+            avecInsertionBinaire
+            avecInsertionCercleTrigo
+            avecInsertionRacines
+            avecInsertionMouvement
+            avecInsertionCirculaire
+            avecInsertionPlanIncline
           />
           <ChampMarkdown
             label="Corrigé"
@@ -166,6 +175,13 @@ export default function EditeurExercices({ exercices, onChange, notionId }: Edit
             avecInsertionTerme
             avecInsertionCourbe
             avecInsertionVariations
+            avecInsertionHorloge
+            avecInsertionBinaire
+            avecInsertionCercleTrigo
+            avecInsertionRacines
+            avecInsertionMouvement
+            avecInsertionCirculaire
+            avecInsertionPlanIncline
           />
         </div>
       ))}
@@ -183,7 +199,13 @@ export default function EditeurExercices({ exercices, onChange, notionId }: Edit
           notionId={notionId}
           exercices={exercicesGeneres}
           nombreExercicesExistants={exercices.length}
-          onRegenerer={() => genererSection(notionId, "exercices").then((reponse) => reponse.exercices)}
+          tronque={tronque}
+          onRegenerer={() =>
+            genererSection(notionId, "exercices").then((reponse) => ({
+              exercices: reponse.exercices,
+              tronque: reponse.tronque,
+            }))
+          }
           onAjouter={(generes) => {
             onChange([...exercices, ...generes.map(depuisExerciceGenere)]);
             setExercicesGeneres(null);

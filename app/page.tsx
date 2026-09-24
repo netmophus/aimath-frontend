@@ -1,5 +1,6 @@
 import Navbar from "@/components/Navbar";
 import HeroCarousel from "@/components/HeroCarousel";
+import MosaiquePhotosEleves from "@/components/MosaiquePhotosEleves";
 import ClassesBand from "@/components/ClassesBand";
 import Features from "@/components/Features";
 import StatsStrip from "@/components/StatsStrip";
@@ -11,7 +12,7 @@ export default function Home() {
     <>
       <Navbar />
       <main className="flex-1">
-        <HeroCarousel />
+        <HeroCarousel mosaique={<MosaiquePhotosEleves />} />
         <ClassesBand />
         <Features />
         <StatsStrip />

@@ -6,7 +6,7 @@ const LOGO_FILENAME = "fahimta.png";
 
 interface LogoProps {
   /**
-   * "dark" (défaut) : texte "fahimta" en fh-bleu, pour un fond clair
+   * "dark" (défaut) : texte "Fahimta" en fh-bleu, pour un fond clair
    * (ex. Navbar crème). "light" : texte en blanc, pour un fond sombre
    * (ex. Footer) — le robot (noir avec accents rouges) reçoit alors un
    * léger fond clair arrondi pour rester visible sur fond très sombre.
@@ -15,9 +15,10 @@ interface LogoProps {
 }
 
 /**
- * Logo FAHIMTA : image du robot (public/fahimta.png) + texte "fahimta",
- * cliquable vers l'accueil. Si l'image n'est pas présente, affiche
- * uniquement le repli textuel sans jamais échouer.
+ * Logo Fahimta : image du robot (public/fahimta.png — nom de fichier
+ * technique inchangé) + texte affiché "Fahimta", cliquable vers l'accueil.
+ * Si l'image n'est pas présente, affiche uniquement le repli textuel sans
+ * jamais échouer.
  */
 export default function Logo({ variant = "dark" }: LogoProps) {
   const logoPath = path.join(process.cwd(), "public", LOGO_FILENAME);
@@ -28,7 +29,7 @@ export default function Logo({ variant = "dark" }: LogoProps) {
       {hasLogo && (
         <Image
           src={`/${LOGO_FILENAME}`}
-          alt="FAHIMTA"
+          alt="Fahimta"
           width={40}
           height={40}
           priority
@@ -44,7 +45,7 @@ export default function Logo({ variant = "dark" }: LogoProps) {
           variant === "light" ? "text-white" : "text-fh-bleu"
         }`}
       >
-        fahimta
+        Fahimta
       </span>
     </span>
   );

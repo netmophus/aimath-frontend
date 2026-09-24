@@ -7,8 +7,22 @@ import rehypeKatex from "rehype-katex";
 import { remarkGlossaire } from "@/lib/remarkGlossaire";
 import { remarkCourbe } from "@/lib/remarkCourbe";
 import { remarkVariations } from "@/lib/remarkVariations";
+import { remarkHorloge } from "@/lib/remarkHorloge";
+import { remarkBinaire } from "@/lib/remarkBinaire";
+import { remarkCercleTrigo } from "@/lib/remarkCercleTrigo";
+import { remarkRacines } from "@/lib/remarkRacines";
+import { remarkMouvement } from "@/lib/remarkMouvement";
+import { remarkCirculaire } from "@/lib/remarkCirculaire";
+import { remarkPlanIncline } from "@/lib/remarkPlanIncline";
 import CourbeFonctionBloc from "@/components/CourbeFonctionBloc";
 import TableauVariationsBloc from "@/components/TableauVariationsBloc";
+import HorlogeModulaireBloc from "@/components/HorlogeModulaireBloc";
+import ConvertisseurBinaireBloc from "@/components/ConvertisseurBinaireBloc";
+import CercleTrigonometriqueBloc from "@/components/CercleTrigonometriqueBloc";
+import RacinesNiemesBloc from "@/components/RacinesNiemesBloc";
+import SimulationMouvementBloc from "@/components/SimulationMouvementBloc";
+import SimulationCirculaireBloc from "@/components/SimulationCirculaireBloc";
+import SimulationPlanInclineBloc from "@/components/SimulationPlanInclineBloc";
 
 interface RenduMarkdownProps {
   contenu: string;
@@ -34,6 +48,13 @@ interface PropsDfnTerme {
 
 interface PropsFigureCourbe {
   "data-courbe-source"?: string;
+  "data-horloge-source"?: string;
+  "data-binaire-source"?: string;
+  "data-cercletrigo-source"?: string;
+  "data-racines-source"?: string;
+  "data-mouvement-source"?: string;
+  "data-circulaire-source"?: string;
+  "data-plan-incline-source"?: string;
 }
 
 interface PropsTableVariations {
@@ -55,16 +76,38 @@ export default function RenduMarkdown({ contenu, className = "", onTermeClick }:
   return (
     <div className={`rendu-markdown text-sm text-fh-ardoise ${className}`}>
       <ReactMarkdown
-        remarkPlugins={[remarkMath, remarkGlossaire, remarkCourbe, remarkVariations]}
+        remarkPlugins={[remarkMath, remarkGlossaire, remarkCourbe, remarkVariations, remarkHorloge, remarkBinaire, remarkCercleTrigo, remarkRacines, remarkMouvement, remarkCirculaire, remarkPlanIncline]}
         rehypePlugins={[rehypeKatex]}
         components={{
           figure: (props) => {
-            const { "data-courbe-source": source } = props as PropsFigureCourbe;
-            // `source` absent : un <figure> qui ne vient pas de remarkCourbe
-            // (aucun cas actuel dans ce Markdown, mais on ne plante jamais
-            // pour autant) — on rend ses enfants tels quels.
-            if (source === undefined) return <figure>{props.children}</figure>;
-            return <CourbeFonctionBloc source={source} />;
+            const {
+              "data-courbe-source": sourceCourbe,
+              "data-horloge-source": sourceHorloge,
+              "data-binaire-source": sourceBinaire,
+              "data-cercletrigo-source": sourceCercleTrigo,
+              "data-racines-source": sourceRacines,
+              "data-mouvement-source": sourceMouvement,
+              "data-circulaire-source": sourceCirculaire,
+              "data-plan-incline-source": sourcePlanIncline,
+            } = props as PropsFigureCourbe;
+            // Huit plugins remark (courbe, horloge, binaire, cercletrigo,
+            // racines, mouvement, circulaire, plan-incline) réutilisent le
+            // même hName `figure` (voir lib/remarkHorloge.ts pour le detail
+            // de ce choix) — on distingue via l'attribut data-* présent,
+            // toujours un seul à la fois (node.lang mutuellement exclusifs
+            // côté plugins).
+            if (sourceCourbe !== undefined) return <CourbeFonctionBloc source={sourceCourbe} />;
+            if (sourceHorloge !== undefined) return <HorlogeModulaireBloc source={sourceHorloge} />;
+            if (sourceBinaire !== undefined) return <ConvertisseurBinaireBloc source={sourceBinaire} />;
+            if (sourceCercleTrigo !== undefined) return <CercleTrigonometriqueBloc source={sourceCercleTrigo} />;
+            if (sourceRacines !== undefined) return <RacinesNiemesBloc source={sourceRacines} />;
+            if (sourceMouvement !== undefined) return <SimulationMouvementBloc source={sourceMouvement} />;
+            if (sourceCirculaire !== undefined) return <SimulationCirculaireBloc source={sourceCirculaire} />;
+            if (sourcePlanIncline !== undefined) return <SimulationPlanInclineBloc source={sourcePlanIncline} />;
+            // Aucun des huit : un <figure> qui ne vient d'aucun de ces
+            // plugins (aucun cas actuel dans ce Markdown, mais on ne plante
+            // jamais pour autant) — on rend ses enfants tels quels.
+            return <figure>{props.children}</figure>;
           },
           table: (props) => {
             const { "data-variations-source": source } = props as PropsTableVariations;

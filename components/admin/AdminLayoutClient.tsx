@@ -68,7 +68,15 @@ export default function AdminLayoutClient({ children, logo }: AdminLayoutClientP
         </div>
       )}
 
-      <div className="flex min-h-screen flex-1 flex-col">
+      {/* min-w-0 indispensable : un enfant flex-1 sans min-width explicite
+          garde le min-width:auto par défaut du navigateur (= la largeur
+          minimale de SON contenu) — un contenu profondément imbriqué avec du
+          texte long (ex. l'arbre des leçons) pouvait alors forcer toute la
+          mise en page plus large que le viewport sur mobile, empêchant tout
+          rétrécissement malgré flex-1 (bug latent révélé en testant l'arbre
+          des leçons sur 390px, jamais déclenché avant sur les autres pages
+          admin). */}
+      <div className="flex min-h-screen min-w-0 flex-1 flex-col">
         <Topbar
           title={getAdminPageTitle(pathname)}
           onOpenMenu={() => setMenuOuvert(true)}

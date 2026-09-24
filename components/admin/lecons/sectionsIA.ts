@@ -10,6 +10,7 @@ export const LIBELLES_SECTION_IA: Record<SectionIA, string> = {
   demonstrations: "Démonstrations",
   a_retenir: "À retenir",
   exercices: "Exercices",
+  sujet_examen: "Sujet type examen",
 };
 
 /** Mention affichée dans chaque modale d'aperçu IA — rappelle qu'il s'agit

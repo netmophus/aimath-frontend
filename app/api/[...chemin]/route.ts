@@ -45,7 +45,16 @@ async function relayer(request: NextRequest, contexte: { params: Promise<{ chemi
   const typeContenu = reponse.headers.get("content-type");
   if (typeContenu) enTetesReponse.set("content-type", typeContenu);
 
-  return new NextResponse(corps, { status: reponse.status, headers: enTetesReponse });
+  // Un statut "null body" (204/205/304, cas fréquent d'un DELETE réussi) ne
+  // peut PAS porter de corps, même vide : `new NextResponse(corps, ...)`
+  // lève sinon une TypeError ("Response with null body status cannot have
+  // body"), que Next.js transforme en 500 générique côté navigateur — alors
+  // que Django avait bien répondu 204. D'où un DELETE qui semble échouer
+  // alors qu'il a réussi côté backend.
+  const STATUTS_SANS_CORPS = new Set([101, 103, 204, 205, 304]);
+  const corpsReponse = STATUTS_SANS_CORPS.has(reponse.status) ? null : corps;
+
+  return new NextResponse(corpsReponse, { status: reponse.status, headers: enTetesReponse });
 }
 
 export { relayer as GET, relayer as POST, relayer as PUT, relayer as PATCH, relayer as DELETE };
