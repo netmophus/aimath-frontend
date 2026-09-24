@@ -42,7 +42,7 @@ export default function BarreNavBasse() {
 
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-20 border-t border-fh-sable bg-white pb-[max(0.25rem,env(safe-area-inset-bottom))]"
+      className="fixed inset-x-0 bottom-0 z-20 border-t border-white/10 bg-fh-bleu pb-[max(0.25rem,env(safe-area-inset-bottom))] shadow-[0_-2px_10px_rgba(0,0,0,0.15)]"
       aria-label="Navigation principale"
     >
       <div className="mx-auto flex max-w-[440px] items-stretch justify-around">
@@ -55,8 +55,8 @@ export default function BarreNavBasse() {
               className="flex min-h-[56px] flex-1 flex-col items-center justify-center gap-0.5 py-1.5"
               aria-current={estActif ? "page" : undefined}
             >
-              <Icone className={`h-5 w-5 ${estActif ? "text-fh-orange" : "text-fh-ardoise/50"}`} />
-              <span className={`text-[11px] font-medium ${estActif ? "text-fh-orange" : "text-fh-ardoise/60"}`}>
+              <Icone className={`h-5 w-5 ${estActif ? "text-fh-orange" : "text-white/60"}`} />
+              <span className={`text-[11px] font-medium ${estActif ? "text-fh-orange" : "text-white/60"}`}>
                 {label}
               </span>
             </Link>
