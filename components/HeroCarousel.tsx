@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import Link from "next/link";
+import { useAuth } from "@/lib/auth";
 import { HERO_BADGE, HERO_SLIDES } from "@/lib/heroSlides";
 
 const AUTOPLAY_DELAY_MS = 5500;
@@ -33,6 +34,13 @@ function prefersReducedMotion(): boolean {
  * chacun). Navigation clavier : ← / → une fois le carrousel focus.
  */
 export default function HeroCarousel({ mosaique }: HeroCarouselProps) {
+  // Connecté → tableau de bord ; sinon → connexion. isAuthenticated vaut
+  // false tant que la réhydratation de session n'est pas confirmée (voir
+  // lib/auth.tsx), donc pas de flash : les boutons pointent prudemment vers
+  // /login pendant ce court instant, jamais vers /eleve avant confirmation.
+  const { isAuthenticated } = useAuth();
+  const hrefCta = isAuthenticated ? "/eleve" : "/login";
+
   const [index, setIndex] = useState(0);
   const [enPause, setEnPause] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -129,13 +137,13 @@ export default function HeroCarousel({ mosaique }: HeroCarouselProps) {
 
         <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
           <Link
-            href="/register"
+            href={hrefCta}
             className="rounded-full bg-fh-orange px-6 py-3 text-center text-sm font-semibold text-white transition-colors hover:bg-fh-orange-fonce sm:text-base"
           >
             Rejoins-les gratuitement
           </Link>
           <Link
-            href="/demo"
+            href={hrefCta}
             className="rounded-full border border-fh-bleu px-6 py-3 text-center text-sm font-semibold text-fh-bleu transition-colors hover:bg-fh-bleu/5 sm:text-base"
           >
             Voir une leçon
