@@ -56,6 +56,9 @@ export interface AuthUser {
    * pour filtrer une requête côté client, la classe vient du JWT côté API). */
   niveau: string | null;
   serie: string | null;
+  /** Absent juste après un login frais (LoginResponse ne le porte pas) —
+   * seulement connu à partir de la prochaine réhydratation via /me/. */
+  photoUrl: string | null;
 }
 
 interface AuthContextValue {
@@ -65,6 +68,11 @@ interface AuthContextValue {
   isAuthenticated: boolean;
   login: (telephone: string, password: string) => Promise<LoginResponse>;
   logout: () => void;
+  /** Met à jour localement l'identité en cache (ex. photoUrl après un
+   * enregistrement de profil réussi) sans réappeler /me/ — pour que l'avatar
+   * de l'en-tête reflète le changement immédiatement, dans la même session,
+   * sans attendre un rechargement de page. */
+  updateUser: (changements: Partial<AuthUser>) => void;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -78,6 +86,7 @@ function meToUser(me: MeResponse): AuthUser {
     statut: me.statut,
     niveau: me.niveau,
     serie: me.serie,
+    photoUrl: me.photo_url,
   };
 }
 
@@ -138,6 +147,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       statut: data.statut,
       niveau: data.niveau?.nom ?? null,
       serie: data.serie?.nom ?? null,
+      // LoginResponse ne porte pas la photo (voir AuthUser.photoUrl) —
+      // connue dès la prochaine réhydratation (rechargement de page, /me/).
+      photoUrl: null,
     };
     setUser(utilisateur);
     cacherUser(utilisateur);
@@ -154,9 +166,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   }, []);
 
+  const updateUser = useCallback((changements: Partial<AuthUser>) => {
+    setUser((actuel) => {
+      if (!actuel) return actuel;
+      const suivant = { ...actuel, ...changements };
+      cacherUser(suivant);
+      return suivant;
+    });
+  }, []);
+
   const value = useMemo<AuthContextValue>(
-    () => ({ user, isLoading, isAuthenticated: user !== null, login, logout }),
-    [user, isLoading, login, logout]
+    () => ({ user, isLoading, isAuthenticated: user !== null, login, logout, updateUser }),
+    [user, isLoading, login, logout, updateUser]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

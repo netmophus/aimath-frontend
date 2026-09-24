@@ -72,7 +72,12 @@ export default function EleveDashboardPage() {
 
   return (
     <div className="mx-auto w-full max-w-[1100px] px-4 pb-24 pt-[max(1rem,env(safe-area-inset-top))] sm:px-6 lg:px-8">
-      <SalutEleve prenom={user?.prenom ?? ""} nom={user?.nom ?? ""} classe={classe} />
+      <SalutEleve
+        prenom={user?.prenom ?? ""}
+        nom={user?.nom ?? ""}
+        classe={classe}
+        photoUrl={user?.photoUrl ?? null}
+      />
 
       <div className="mt-6 flex flex-col gap-8 lg:grid lg:grid-cols-[2fr_3fr] lg:items-start lg:gap-8">
         {chargementReprendre ? (

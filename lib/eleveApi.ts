@@ -4,7 +4,14 @@
  * passée en paramètre ici.
  */
 
-import { apiRequest, type NiveauInfo, type SerieInfo } from "./api";
+import {
+  apiRequest,
+  apiRequestMultipart,
+  type NiveauInfo,
+  type Role,
+  type SerieInfo,
+  type Statut,
+} from "./api";
 
 export interface MatiereInfo {
   id: number;
@@ -166,4 +173,52 @@ export interface TermeGlossaireEleve {
 
 export function getTermeGlossaire(slug: string): Promise<TermeGlossaireEleve> {
   return apiRequest<TermeGlossaireEleve>(`/api/eleve/glossaire/${slug}/`);
+}
+
+// --- GET/PATCH /api/eleve/profil/ : profil enrichi de l'élève connecté ---
+
+export type GenreEleve = "F" | "M" | "autre";
+
+export interface ProfilEleve {
+  id: number;
+  telephone: string;
+  email: string | null;
+  prenom: string;
+  nom: string;
+  role: Role;
+  statut: Statut;
+  niveau: string | null;
+  serie: string | null;
+  date_inscription: string;
+  date_naissance: string | null;
+  ecole: string | null;
+  ville: string | null;
+  genre: GenreEleve | null;
+  photo_url: string | null;
+}
+
+export function getProfilEleve(): Promise<ProfilEleve> {
+  return apiRequest<ProfilEleve>("/api/eleve/profil/");
+}
+
+export interface MajProfilEleveInput {
+  date_naissance: string;
+  ecole: string;
+  ville: string;
+  genre: GenreEleve | "";
+  /** undefined = photo inchangée ; File = nouvelle photo à envoyer. */
+  photo?: File;
+}
+
+/** PATCH /api/eleve/profil/ — multipart (voir apiRequestMultipart) : seul
+ * moyen d'envoyer à la fois des champs texte et un fichier en un appel. */
+export function majProfilEleve(payload: MajProfilEleveInput): Promise<ProfilEleve> {
+  const formData = new FormData();
+  formData.append("date_naissance", payload.date_naissance);
+  formData.append("ecole", payload.ecole);
+  formData.append("ville", payload.ville);
+  formData.append("genre", payload.genre);
+  if (payload.photo) formData.append("photo", payload.photo);
+
+  return apiRequestMultipart<ProfilEleve>("/api/eleve/profil/", formData, "PATCH");
 }

@@ -161,10 +161,15 @@ export default function EleveLayoutClient({ children, logo }: EleveLayoutClientP
             <div className="flex items-center justify-between gap-3 md:justify-end md:gap-4">
               <div className="flex min-w-0 items-center gap-3">
                 <span
-                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-fh-orange text-sm font-bold text-white"
+                  className="relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-fh-orange text-sm font-bold text-white"
                   aria-hidden="true"
                 >
-                  {initiales(user.prenom, user.nom)}
+                  {user.photoUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element -- URL Cloudinary externe (domaine variable), next/image n'apporte rien pour un avatar 44px.
+                    <img src={user.photoUrl} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    initiales(user.prenom, user.nom)
+                  )}
                 </span>
                 <div className="min-w-0">
                   <p className="truncate text-sm font-semibold text-white">

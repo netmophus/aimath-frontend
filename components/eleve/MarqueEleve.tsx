@@ -6,7 +6,7 @@ const LOGO_FILENAME = "fahimta.png";
 
 /**
  * Marque de l'entête élève (fond fh-bleu) : robot sur pastille claire +
- * wordmark "Fahimta" blanc, dernières lettres accentuées en orange.
+ * wordmark "Fahimta" entièrement blanc.
  * Composant serveur dédié (comme components/Logo.tsx, qui lit le système de
  * fichiers et ne doit jamais être importé depuis un fichier "use client" —
  * voir app/eleve/layout.tsx) : pas de réutilisation directe de Logo.tsx ici,
@@ -32,7 +32,7 @@ export default function MarqueEleve() {
         </span>
       )}
       <span className="text-xl font-bold tracking-tight text-white">
-        Fahim<span className="text-fh-orange">ta</span>
+        Fahimta
       </span>
     </span>
   );

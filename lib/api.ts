@@ -166,6 +166,55 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
   }
 }
 
+/**
+ * Variante multipart/form-data de rawRequest (upload de fichier, ex. photo
+ * de profil) : pas de Content-Type fixé à la main, le navigateur pose
+ * lui-même l'en-tête avec le bon "boundary" — le définir ici l'aurait cassé.
+ */
+async function rawRequestMultipart<T>(
+  path: string,
+  formData: FormData,
+  method: "POST" | "PATCH" | "PUT" = "PATCH"
+): Promise<T> {
+  const headers: Record<string, string> = {};
+  const access = tokenStorage.getAccess();
+  if (access) headers.Authorization = `Bearer ${access}`;
+
+  const response = await fetch(`${API_BASE_URL}${path}`, { method, headers, body: formData });
+
+  const text = await response.text();
+  const data: unknown = text ? JSON.parse(text) : null;
+
+  if (!response.ok) {
+    const message = extractErrorMessage(data) ?? "Une erreur est survenue.";
+    throw new ApiError(response.status, message, data);
+  }
+
+  return data as T;
+}
+
+/** Équivalent multipart de apiRequest : même retry automatique sur un access token expiré. */
+export async function apiRequestMultipart<T>(
+  path: string,
+  formData: FormData,
+  method: "POST" | "PATCH" | "PUT" = "PATCH"
+): Promise<T> {
+  try {
+    return await rawRequestMultipart<T>(path, formData, method);
+  } catch (error) {
+    const shouldRetry = error instanceof ApiError && error.status === 401;
+    if (!shouldRetry) throw error;
+
+    try {
+      await refreshAccessToken();
+    } catch {
+      tokenStorage.clear();
+      throw error;
+    }
+    return rawRequestMultipart<T>(path, formData, method);
+  }
+}
+
 // --- Types du domaine ---
 
 export type Role = "eleve" | "enseignant" | "admin" | "partenaire";
@@ -203,6 +252,7 @@ export interface MeResponse {
   niveau: string | null;
   serie: string | null;
   date_inscription: string;
+  photo_url: string | null;
 }
 
 // --- Cascade Cycle → Niveau → Série (formulaire d'inscription, public) ---

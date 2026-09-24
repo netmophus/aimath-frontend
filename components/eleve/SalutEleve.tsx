@@ -2,6 +2,7 @@ interface SalutEleveProps {
   prenom: string;
   nom: string;
   classe: string | null;
+  photoUrl: string | null;
 }
 
 function initiales(prenom: string, nom: string): string {
@@ -15,7 +16,7 @@ function initiales(prenom: string, nom: string): string {
  * (ce rôle revient à CarteReprendre) ni d'icônes menu/cloche décoratives
  * (abandonnées avec l'ancienne version "grille de tuiles").
  */
-export default function SalutEleve({ prenom, nom, classe }: SalutEleveProps) {
+export default function SalutEleve({ prenom, nom, classe, photoUrl }: SalutEleveProps) {
   return (
     <div className="flex items-center justify-between gap-3">
       <div className="min-w-0">
@@ -26,14 +27,19 @@ export default function SalutEleve({ prenom, nom, classe }: SalutEleveProps) {
             {prenom} {nom}
           </span>
         </p>
+        {classe && <p className="truncate text-xs font-medium text-fh-ardoise/70">{classe}</p>}
       </div>
       <div className="flex shrink-0 items-center gap-3">
-        {classe && <p className="hidden text-sm font-medium text-fh-ardoise lg:block">{classe}</p>}
         <span
-          className="flex h-11 w-11 items-center justify-center rounded-full bg-fh-orange text-sm font-bold text-white"
+          className="relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-fh-orange text-sm font-bold text-white"
           aria-hidden="true"
         >
-          {initiales(prenom, nom)}
+          {photoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element -- URL Cloudinary externe (domaine variable), next/image n'apporte rien pour un avatar 44px.
+            <img src={photoUrl} alt="" className="h-full w-full object-cover" />
+          ) : (
+            initiales(prenom, nom)
+          )}
         </span>
       </div>
     </div>
