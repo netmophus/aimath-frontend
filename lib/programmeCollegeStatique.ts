@@ -4,9 +4,9 @@
  * brancher ces pages sur la vraie API (mêmes routes /api/... que l'espace
  * élève, une fois un endpoint public équivalent créé côté backend).
  *
- * CE QUI EST RÉEL vs PLACEHOLDER : les 4 matières de 6e ET de 5e
+ * CE QUI EST RÉEL vs PLACEHOLDER : les 4 matières de 6e, 5e ET 4e
  * (Mathématiques, Physique, Chimie, SVT) ont désormais leur vrai contenu.
- * Seules les 4 matières de 4e/3e restent PROGRAMME_PLACEHOLDER — un texte
+ * Seules les 4 matières de 3e restent PROGRAMME_PLACEHOLDER — un texte
  * générique "Programme bientôt disponible", juste pour que le parcours de
  * navigation reste cliquable partout sans lien mort.
  */
@@ -655,6 +655,390 @@ const PROGRAMME_SVT_5E: ProgrammeMatiereStatique = {
   ],
 };
 
+/** RÉEL — repris de lib/maths_4e_statique.ts (fourni par la personne à
+ * l'origine de cette tâche). */
+const PROGRAMME_MATHS_4E: ProgrammeMatiereStatique = {
+  estPlaceholder: false,
+  themes: [
+    {
+      titre: "Configurations de l'espace",
+      volumeHoraire: 16,
+      chapitres: [
+        {
+          titre: "La sphère",
+          description:
+            "Observation et description du solide, vocabulaire lié à la sphère et à la boule. Analogie sphère/cercle et boule/disque (la boule est l'intérieur de la sphère). Calcul de l'aire d'une sphère et du volume d'une boule.",
+        },
+        {
+          titre: "Plans et droites de l'espace",
+          description:
+            "Positions relatives de deux droites dans l'espace, d'une droite et d'un plan, de deux plans (parallèles, perpendiculaires), en s'appuyant sur les solides connus (arêtes et faces).",
+        },
+        {
+          titre: "Perspective cavalière",
+          description:
+            "Règles élémentaires de la perspective cavalière. Propriétés conservées ou non (parallélisme, perpendicularité), arêtes cachées, inclinaison. Lire une configuration de l'espace et dessiner un cube ou un pavé droit en perspective.",
+        },
+      ],
+    },
+    {
+      titre: "Configurations du plan",
+      volumeHoraire: 25,
+      chapitres: [
+        {
+          titre: "Distance d'un point à une droite",
+          description:
+            "Définir la distance d'un point à une droite (perpendiculaire passant par ce point). Construire une droite à une distance donnée d'un point, et un point à une distance donnée d'une droite.",
+        },
+        {
+          titre: "Distance de deux droites",
+          description:
+            "Définir la distance de deux droites. Construire une droite à une distance donnée d'une droite donnée.",
+        },
+        {
+          titre: "Caractérisation de la bissectrice d'un angle",
+          description:
+            "La bissectrice comme axe de symétrie de l'angle et comme ensemble des points équidistants des côtés. Utiliser ces propriétés pour justifier l'appartenance d'un point à la bissectrice ou une égalité de distances.",
+        },
+        {
+          titre: "Triangle",
+          description:
+            "Droite des milieux (propriétés directe et réciproque). Droites particulières : médianes et centre de gravité, médiatrices et cercle circonscrit, hauteurs et orthocentre, bissectrices et cercle inscrit. Théorème de Pythagore (direct et réciproque) et relation métrique déduite de l'aire.",
+        },
+        {
+          titre: "Cercle",
+          description:
+            "Positions relatives d'une droite et d'un cercle : sécante, extérieure, tangente. Construire une tangente à un cercle passant par un point du cercle ou extérieur, en lien avec la distance d'un point à une droite.",
+        },
+      ],
+    },
+    {
+      titre: "Applications du plan",
+      volumeHoraire: 19,
+      chapitres: [
+        {
+          titre: "Symétrie orthogonale et symétrie centrale",
+          description:
+            "Notion d'application du plan. Définition des symétries orthogonale et centrale et leurs propriétés (invariance de l'axe ou du centre, symétrie égale à sa réciproque, image d'une droite). Reconnaître un axe ou un centre de symétrie d'une partie de figure.",
+        },
+        {
+          titre: "Translation",
+          description:
+            "Définition d'une translation et propriétés (conservation de l'alignement, des distances, des mesures angulaires ; image d'une droite). Construire l'image d'un point ou d'une figure à l'aide des propriétés du parallélogramme.",
+        },
+      ],
+    },
+    {
+      titre: "Outil vectoriel — Géométrie analytique",
+      volumeHoraire: 10,
+      chapitres: [
+        {
+          titre: "Vecteur",
+          description:
+            "Notion de vecteur (direction, sens, longueur), égalité de vecteurs, représentant d'origine donnée. Addition de vecteurs : somme, relation de Chasles, vecteur nul, opposé. Caractérisation vectorielle du milieu d'un segment. Lien entre translation et vecteur.",
+        },
+        {
+          titre: "Repérage",
+          description:
+            "Repère orthogonal et orthonormal. Couple de coordonnées d'un point (abscisse, ordonnée). Situer un point, trouver ses coordonnées, calculer les coordonnées du milieu d'un segment et d'un vecteur.",
+        },
+      ],
+    },
+    {
+      titre: "Organisation de calculs — Calculs numériques",
+      volumeHoraire: 28,
+      chapitres: [
+        {
+          titre: "PGCD - PPCM",
+          description:
+            "Algorithme d'Euclide pour déterminer le PGCD de deux nombres. Utilisation du PGCD et du PPCM dans la résolution de problèmes (pavages, plantation d'arbres...).",
+        },
+        {
+          titre: "Nombres décimaux (écriture a·10ⁿ)",
+          description:
+            "Calcul de 10^p (p entier relatif), relations 10^(–p) = 1/10^p. Écriture d'un décimal sous la forme a·10^p et notation scientifique. Ordre de grandeur, calculs, préfixes (kilo, milli, méga, micro...) et puissances de 10.",
+        },
+        {
+          titre: "Nombres rationnels",
+          description:
+            "Ensemble ℚ des nombres rationnels. Simplification (forme irréductible), comparaison, opérations (opposé, inverse d'un rationnel non nul, quotient). Reconnaître un rationnel non décimal. Encadrement et approximation décimale d'un rationnel positif.",
+        },
+        {
+          titre: "Puissances",
+          description:
+            "Puissances à exposant entier relatif d'un rationnel non nul. Transformer des écritures du type (aⁿ)(aᵖ), (aⁿ)ᵖ, (a·b)ⁿ, (a/b)ⁿ où a et b sont rationnels non nuls et n, p entiers relatifs.",
+        },
+      ],
+    },
+    {
+      titre: "Organisation de calculs — Calcul littéral",
+      volumeHoraire: 21,
+      chapitres: [
+        {
+          titre: "Calcul sur les expressions algébriques",
+          description:
+            "Développement, réduction, factorisation. Produits remarquables : (a+b)², (a–b)², (a+b)(a–b). Calculer la valeur d'une expression, utiliser identités remarquables et distributivité pour développer ou factoriser, choisir la forme adaptée à un calcul rapide.",
+        },
+        {
+          titre: "Équations, inéquations",
+          description:
+            "Équations se ramenant à ax + b = 0 dans ℚ. Inéquations du premier degré à une inconnue (ax + b ≥ 0, ax + b ≤ 0). Réinvestissement dans la résolution de problèmes de la vie quotidienne.",
+        },
+      ],
+    },
+    {
+      titre: "Organisation des données",
+      volumeHoraire: 6,
+      chapitres: [
+        {
+          titre: "Statistiques",
+          description:
+            "Moyenne et étendue d'une série statistique. Diagrammes à bandes et circulaires : représentation et interprétation. Utilisation de la calculatrice scientifique pour le calcul de la moyenne.",
+        },
+      ],
+    },
+  ],
+};
+
+/** RÉEL — repris de lib/physique_4e_statique.ts (fourni par la personne à
+ * l'origine de cette tâche). */
+const PROGRAMME_PHYSIQUE_4E: ProgrammeMatiereStatique = {
+  estPlaceholder: false,
+  themes: [
+    {
+      titre: "Mécanique",
+      volumeHoraire: 25,
+      chapitres: [
+        {
+          titre: "La force et sa nature vectorielle",
+          description:
+            "Définition de la force à partir de ses effets (déformer, mettre en mouvement ou modifier le mouvement). Forces de contact et à distance. Caractéristiques d'une force (vecteur-force), représentation par un vecteur. Mesure de l'intensité au dynamomètre ; unité : le newton (N).",
+        },
+        {
+          titre: "Interactions",
+          description:
+            "Interactions de contact et à distance. Simultanéité de l'action et de la réaction. Principe des interactions et sa généralité. Exemples : solide suspendu à un fil, bille sur un plan, interaction gravitationnelle. Tracer les vecteurs-force action/réaction.",
+        },
+        {
+          titre: "Étude de la force poids",
+          description:
+            "Définition et caractéristiques du poids (force d'attraction de la Terre, force à distance). Mesure de l'intensité au dynamomètre. Détermination du centre de gravité. Représentation du vecteur-poids. Variation du poids avec le lieu.",
+        },
+        {
+          titre: "Masse d'un corps",
+          description:
+            "Distinction poids/masse. Invariance de la masse avec le lieu. Proportionnalité entre poids et masse : relation P = m·g (g ≈ 10 N/kg à la surface de la Terre). Mesure d'une masse par double pesée (balance Roberval).",
+        },
+      ],
+    },
+    {
+      titre: "Température et chaleur",
+      volumeHoraire: 10,
+      chapitres: [
+        {
+          titre: "Thermomètre",
+          description:
+            "Principe du thermomètre à liquide, thermomètre de laboratoire, autres types. Étalonnage selon l'échelle Celsius. Autres grandeurs variables avec la température (résistance, couleur).",
+        },
+        {
+          titre: "Chaleur",
+          description:
+            "Échanges de chaleur (conduction, convection, rayonnement). Relation Q = m·c·(tf − ti). Unité : le joule (J). Chaleur massique et capacité thermique. Calorimètre et méthode des mélanges. Pouvoir calorifique d'un combustible.",
+        },
+      ],
+    },
+    {
+      titre: "Électricité",
+      volumeHoraire: 16,
+      chapitres: [
+        {
+          titre: "Électrostatique",
+          description:
+            "Électrisation par frottement et par contact. Forces électrostatiques, deux types de charges (positive/négative). Unité : le coulomb (C). Interprétation électronique (excès ou défaut d'électrons), charge élémentaire. Décharges électriques.",
+        },
+        {
+          titre: "Électrocinétique",
+          description:
+            "Courant électrique et ses trois effets, sens conventionnel. Intensité du courant (débit de charges), ampèremètre, unité : l'ampère (A). Loi d'additivité des intensités. Expressions I = n·e/t et I = Q/t.",
+        },
+        {
+          titre: "Tension électrique",
+          description:
+            "Mise en évidence et mesure d'une tension au voltmètre. Unité : le volt (V). Tension aux bornes d'une dérivation. Additivité des tensions le long d'un circuit. Compatibilité des appareils. Intérêt des montages série et dérivation.",
+        },
+      ],
+    },
+    {
+      titre: "Optique",
+      volumeHoraire: 9,
+      chapitres: [
+        {
+          titre: "Propagation rectiligne de la lumière",
+          description:
+            "Sources primaires et secondaires, diffusion, récepteurs (œil, pellicule, photopile). Corps opaques, transparents, translucides. Propagation rectiligne de la lumière ; modélisation par le rayon lumineux.",
+        },
+        {
+          titre: "Ombre et pénombre",
+          description: "Ombre et pénombre. Phases de la Lune, éclipse de Soleil, éclipse de Lune. Chambre noire.",
+        },
+      ],
+    },
+  ],
+};
+
+/** RÉEL — repris de lib/chimie_4e_statique.ts (fourni par la personne à
+ * l'origine de cette tâche). */
+const PROGRAMME_CHIMIE_4E: ProgrammeMatiereStatique = {
+  estPlaceholder: false,
+  themes: [
+    {
+      titre: "Solutions aqueuses",
+      volumeHoraire: 3,
+      chapitres: [
+        {
+          titre: "Dissolution des corps purs",
+          description:
+            "Réalisation d'une dissolution. Notions de solution, solvant, soluté. Concentration (unité g/L) et saturation. Distinction dissolution / fusion. Étude comparative de la dissolution dans l'eau (sucre, sel, chaux) ; effet de l'agitation.",
+        },
+      ],
+    },
+    {
+      titre: "Structure de la matière",
+      volumeHoraire: 18,
+      chapitres: [
+        {
+          titre: "Molécules et atomes",
+          description:
+            "Structure moléculaire du corps pur. Molécule comme assemblage d'atomes. Corps pur simple et corps pur composé. Structure de l'atome : noyau et cortège électronique, électroneutralité. Ordre de grandeur du rayon atomique. Modèles moléculaires.",
+        },
+        {
+          titre: "Notation chimique",
+          description:
+            "Symboles des atomes et formules des molécules. La mole et le nombre d'Avogadro (N = 6,023×10²³ mol⁻¹). Masse molaire et volume molaire (22,4 L/mol dans les conditions normales). Tableau des masses atomiques et tableau périodique.",
+        },
+        {
+          titre: "Réaction chimique",
+          description:
+            "Réactifs et produits (étude expérimentale). Équation-bilan : représentation symbolique et signification, équilibrage. Bilan à l'échelle de l'atome et de la mole. Utilisation de l'équation-bilan pour des calculs de quantités de matière, masses et volumes.",
+        },
+        {
+          titre: "Notion d'ion",
+          description:
+            "Définition d'un ion, ion monoatomique et polyatomique (exemples). Cations et anions. Distinction molécules/ions. Charge électrique d'un ion et d'une mole d'ions (introduite à partir d'étiquettes d'eau minérale).",
+        },
+      ],
+    },
+  ],
+};
+
+/** RÉEL — repris de lib/svt_4e_statique.ts (fourni par la personne à
+ * l'origine de cette tâche). */
+const PROGRAMME_SVT_4E: ProgrammeMatiereStatique = {
+  estPlaceholder: false,
+  themes: [
+    {
+      titre: "Environnement : gestion durable des ressources naturelles",
+      volumeHoraire: 8,
+      chapitres: [
+        {
+          titre: "La gestion de la faune et de la flore",
+          description:
+            "Aires protégées du Niger (parcs, réserves, forêts classées, créées dès 1940). Espèces animales et végétales protégées. Moyens de protection de la faune et de la flore ; causes de leur disparition. Rôle de l'éducation et de la sensibilisation.",
+        },
+        {
+          titre: "Gestion des eaux",
+          description:
+            "Nappes libres et captives. Exploitation des eaux souterraines (sources, puits, forages). Cycle de l'eau, cours d'eau du Niger. Notions d'aquifère, source, pollution, eau potable. Traitement de l'eau, protection des puits et forages, gestion rationnelle.",
+        },
+      ],
+    },
+    {
+      titre: "Alimentation chez l'Homme",
+      volumeHoraire: 10,
+      chapitres: [
+        {
+          titre: "La digestion des aliments",
+          description:
+            "Aliments simples et composés, rôles des aliments. Appareil digestif et coupe de dent, formule dentaire. Étapes de la digestion : transformations mécaniques et chimiques (enzymes, sucs digestifs). Digestion in vitro de l'amidon. Aboutissement aux nutriments.",
+        },
+        {
+          titre: "Absorption intestinale et assimilation",
+          description:
+            "Paroi intestinale et villosité. Passage des nutriments dans le sang et la lymphe. Distribution aux cellules et assimilation. Rôle énergétique (glucose, acides gras) et plastique (acides aminés). Stockage sous forme de glycogène (foie, muscle).",
+        },
+      ],
+    },
+    {
+      titre: "Reproduction chez l'Homme",
+      volumeHoraire: 4,
+      chapitres: [
+        {
+          titre: "Les appareils génitaux et leurs rôles",
+          description:
+            "Organisation des appareils génitaux masculin et féminin. Rôles : production des hormones et des gamètes. Schémas des gamètes (spermatozoïde, ovule). Organes externes et internes.",
+        },
+        {
+          titre: "Cycles menstruels",
+          description: "Cycles utérin et ovarien et la relation entre les deux.",
+        },
+      ],
+    },
+    {
+      titre: "Les agressions contre l'Homme",
+      volumeHoraire: 12,
+      chapitres: [
+        {
+          titre: "Quelques agresseurs de l'Homme et maladies",
+          description:
+            "Diversité des micro-organismes. Groupes de microbes. Maladies : paludisme, méningite cérébro-spinale, bilharziose, amibiase. Symptômes, agent causal, modes de propagation et de prévention. Cycle de développement des agents causals.",
+        },
+        {
+          titre: "Quelques IST fréquentes au Niger",
+          description:
+            "IST avec écoulements (gonococcie, chlamydiase, candidoses), avec ulcérations (chancre mou, syphilis), végétations, parasites. Symptômes, modes de contamination et de prévention. Relation IST/SIDA ; définition du VIH ; conduite à tenir.",
+        },
+      ],
+    },
+    {
+      titre: "Sols",
+      volumeHoraire: 6,
+      chapitres: [
+        {
+          titre: "Étude du sol",
+          description:
+            "Profil pédologique de type A-B-C (horizons). Constituants d'un sol (organiques, minéraux, gaz, solution du sol). Propriétés physiques et chimiques : texture, porosité, perméabilité, capacité de rétention en eau. Facteurs de formation : roche mère, êtres vivants, climat.",
+        },
+        {
+          titre: "Formation et évolution d'un sol",
+          description:
+            "Altération de la roche mère (désagrégation, altération chimique). Migration des éléments (lessivage). Humification et minéralisation de la matière organique. Différenciation des horizons. Caractéristiques d'un sol fertile ; types de sols au Niger.",
+        },
+      ],
+    },
+    {
+      titre: "Formation des roches magmatiques et métamorphiques",
+      volumeHoraire: 12,
+      chapitres: [
+        {
+          titre: "Le volcanisme",
+          description:
+            "Éruptions volcaniques de type effusif et explosif. Produits du volcanisme (solides, liquides, gazeux). Structure d'un volcan. Répartition des volcans à la surface du globe. Notions de volcan, volcanisme, magma, magmatisme.",
+        },
+        {
+          titre: "La formation des roches magmatiques",
+          description:
+            "Formation des magmas. Roches volcaniques et plutoniques : formation et structure. Identification et classification simple des roches magmatiques (observation du basalte et du granite à l'œil nu et à la loupe).",
+        },
+        {
+          titre: "Formation des roches métamorphiques",
+          description:
+            "Le métamorphisme et ses facteurs. Types de métamorphisme et leur localisation. Processus de formation et structure des roches métamorphiques ; caractères communs.",
+        },
+      ],
+    },
+  ],
+};
+
 /** PLACEHOLDER — même objet réutilisé partout où le vrai contenu manque
  * encore (jamais muté, lecture seule). */
 const PROGRAMME_PLACEHOLDER: ProgrammeMatiereStatique = {
@@ -679,10 +1063,10 @@ const PROGRAMMES_PAR_NIVEAU: Record<
     svt: PROGRAMME_SVT_5E,
   },
   "4e": {
-    mathematiques: PROGRAMME_PLACEHOLDER,
-    physique: PROGRAMME_PLACEHOLDER,
-    chimie: PROGRAMME_PLACEHOLDER,
-    svt: PROGRAMME_PLACEHOLDER,
+    mathematiques: PROGRAMME_MATHS_4E,
+    physique: PROGRAMME_PHYSIQUE_4E,
+    chimie: PROGRAMME_CHIMIE_4E,
+    svt: PROGRAMME_SVT_4E,
   },
   "3e": {
     mathematiques: PROGRAMME_PLACEHOLDER,
