@@ -4,11 +4,11 @@
  * brancher ces pages sur la vraie API (mêmes routes /api/... que l'espace
  * élève, une fois un endpoint public équivalent créé côté backend).
  *
- * CE QUI EST RÉEL vs PLACEHOLDER : les 4 matières de 6e (Mathématiques,
- * Physique, Chimie, SVT) ont désormais leur vrai contenu. Seules les 4
- * matières de 5e/4e/3e restent PROGRAMME_PLACEHOLDER — un texte générique
- * "Programme bientôt disponible", juste pour que le parcours de navigation
- * reste cliquable partout sans lien mort.
+ * CE QUI EST RÉEL vs PLACEHOLDER : les 4 matières de 6e ET de 5e
+ * (Mathématiques, Physique, Chimie, SVT) ont désormais leur vrai contenu.
+ * Seules les 4 matières de 4e/3e restent PROGRAMME_PLACEHOLDER — un texte
+ * générique "Programme bientôt disponible", juste pour que le parcours de
+ * navigation reste cliquable partout sans lien mort.
  */
 
 export type NiveauCollegeId = "6e" | "5e" | "4e" | "3e";
@@ -372,6 +372,289 @@ const PROGRAMME_SVT_6E: ProgrammeMatiereStatique = {
   ],
 };
 
+/** RÉEL — fourni telle quelle par la personne à l'origine de cette tâche. */
+const PROGRAMME_MATHS_5E: ProgrammeMatiereStatique = {
+  estPlaceholder: false,
+  themes: [
+    {
+      titre: "Configurations de l'espace",
+      volumeHoraire: 8,
+      chapitres: [
+        {
+          titre: "Prisme droit",
+          description:
+            "Observation et description du solide, vocabulaire. Reconnaître un prisme droit et ses cas particuliers (cube, pavé droit). Construire un patron et réaliser le solide. Calculer l'aire (somme des aires des polygones qui le composent) et le volume (aire de base × hauteur, S×h).",
+        },
+      ],
+    },
+    {
+      titre: "Configurations du plan",
+      volumeHoraire: 38,
+      chapitres: [
+        {
+          titre: "Distance de deux points",
+          description:
+            "Distance de deux points, inégalité triangulaire (AC ≤ AB + BC). Caractérisation du segment : M ∈ [AB] si et seulement si AB = AM + MB. Médiatrice d'un segment : ensemble des points équidistants des extrémités, régionnement du plan.",
+        },
+        {
+          titre: "Angles",
+          description:
+            "Angles opposés par le sommet (et leur égalité). Angles formés par deux droites parallèles et une sécante : alternes-internes, alternes-externes, correspondants, et leurs égalités.",
+        },
+        {
+          titre: "Triangle",
+          description:
+            "Somme des angles d'un triangle (constatée par pliage, puis justifiée). Caractérisation de triangles particuliers à partir des axes de symétrie. Médiatrices et centre du cercle circonscrit ; construction du cercle circonscrit.",
+        },
+        {
+          titre: "Cercle",
+          description:
+            "Cercle circonscrit à un triangle rectangle : un triangle rectangle est inscrit dans un demi-cercle de diamètre l'hypoténuse (et réciproque). Régionnement du plan par un cercle (intérieur, extérieur) ; position d'un point par rapport à un cercle.",
+        },
+        {
+          titre: "Polygone",
+          description:
+            "Définition d'un polygone. Parallélogrammes particuliers (losange, rectangle, carré) : propriétés de longueurs, d'angles, axes et centre de symétrie, cercle circonscrit. Trapèze et trapèzes particuliers (rectangle, isocèle) ; construction, codage et aire d'un trapèze.",
+        },
+        {
+          titre: "Polygone régulier",
+          description:
+            "Définition d'un polygone régulier. Construction d'un hexagone régulier (à partir d'un triangle équilatéral) et d'un octogone régulier (à partir d'un carré).",
+        },
+      ],
+    },
+    {
+      titre: "Applications du plan",
+      volumeHoraire: 8,
+      chapitres: [
+        {
+          titre: "Figures symétriques par rapport à une droite ou un point",
+          description:
+            "Symétrique du milieu d'un segment, de droites perpendiculaires, de droites parallèles. Utiliser les propriétés de conservation (alignement, distance, mesures d'angles) pour déduire la conservation du milieu, du parallélisme et de la perpendicularité par une symétrie (axiale ou centrale).",
+        },
+      ],
+    },
+    {
+      titre: "Outil vectoriel — Géométrie analytique",
+      volumeHoraire: 4,
+      chapitres: [
+        {
+          titre: "Repérage d'un point dans un plan",
+          description:
+            "Vocabulaire : nœud d'un quadrillage, notion de couple. Une origine étant donnée, lire le couple de coordonnées d'un nœud et placer un point dont on connaît les coordonnées. Différence entre le couple (a, b) et la paire {a, b}.",
+        },
+      ],
+    },
+    {
+      titre: "Organisation de calculs — Calculs numériques",
+      volumeHoraire: 33,
+      chapitres: [
+        {
+          titre: "Nombres premiers, PPCM et PGCD",
+          description:
+            "Division euclidienne (a = b×q + r, r < b). Nombres premiers : définition, reconnaissance (nombres jusqu'à 3 chiffres), décomposition en produit de facteurs premiers (naturels < 1000). Détermination du PGCD et du PPCM de deux entiers naturels.",
+        },
+        {
+          titre: "Fraction",
+          description:
+            "Simplification (fraction irréductible) à l'aide du PGCD. Addition, soustraction et division de fractions (en utilisant PGCD et/ou PPCM). Comparaison à l'unité, comparaison de deux fractions, encadrement par deux décimaux consécutifs de même ordre.",
+        },
+        {
+          titre: "Nombres décimaux relatifs",
+          description:
+            "Addition, soustraction, multiplication de deux décimaux relatifs. Comparaison de deux décimaux relatifs (comparer deux négatifs revient à comparer leurs opposés).",
+        },
+        {
+          titre: "Puissances",
+          description:
+            "Puissance à exposant entier naturel non nul d'un décimal relatif. Calcul de aⁿ. Transformer des écritures du type (aⁿ)(aᵖ), (aⁿ)ᵖ, (a·b)ⁿ et (a/b)ⁿ dans des cas simples.",
+        },
+      ],
+    },
+    {
+      titre: "Organisation de calculs — Calcul littéral",
+      volumeHoraire: 17,
+      chapitres: [
+        {
+          titre: "Initiation au calcul littéral",
+          description:
+            "Suppression des parenthèses dans des sommes et différences de relatifs : –(a+b) = (–a)+(–b), –(a–b) = b–a. Développement d'expressions du type a(x+y). Factorisation d'expressions du type ax+bx (repérer un facteur commun).",
+        },
+        {
+          titre: "Notions d'équations et d'inéquations",
+          description:
+            "Équations du type a + x = b et ax = b dans 𝔻. Inéquations du type a + x < 0 et a + x > 0 : identifier des décimaux solutions. Exemples d'équations ayant des solutions dans 𝔻 mais pas dans ℤ.",
+        },
+      ],
+    },
+    {
+      titre: "Organisation des données",
+      volumeHoraire: 12,
+      chapitres: [
+        {
+          titre: "Proportionnalité",
+          description:
+            "Représentation graphique point par point d'un tableau de proportionnalité. Représenter et exploiter la représentation graphique d'un phénomène de proportionnalité (exemples : vitesse, débit, masse volumique).",
+        },
+        {
+          titre: "Statistique",
+          description:
+            "Collecte et classification des données. Vocabulaire : population, individu, caractère, modalité, effectif, fréquence (en pourcentage), mode, série statistique. Calcul des effectifs et fréquences. Représentation par un diagramme en bâtons et interprétation.",
+        },
+      ],
+    },
+  ],
+};
+
+/** RÉEL — fourni telle quelle par la personne à l'origine de cette tâche. */
+const PROGRAMME_PHYSIQUE_5E: ProgrammeMatiereStatique = {
+  estPlaceholder: false,
+  themes: [
+    {
+      titre: "Propriétés physiques de la matière",
+      volumeHoraire: 13,
+      chapitres: [
+        {
+          titre: "Méthodes de séparation des constituants d'un mélange",
+          description:
+            "Méthodes de séparation : décantation, filtration, distillation. Mélange homogène et mélange hétérogène. L'élève décante, filtre et distille une eau trouble, distingue les deux types de mélanges et connaît les propriétés physiques de l'eau pure (eau distillée).",
+        },
+        {
+          titre: "Masse volumique — densité",
+          description:
+            "Définition de la masse volumique d'un solide, d'un liquide (eau) et d'un gaz (air). Détermination à l'aide d'une balance et d'une éprouvette graduée. Densité d'un corps par rapport à l'eau (solide, liquide) ou à l'air (gaz). Notations ρ (masse volumique) et d (densité).",
+        },
+        {
+          titre: "Dilatation",
+          description:
+            "Définition de la dilatation. Dilatation des solides, des liquides et des gaz (cas de l'air). Réaliser et comparer ces dilatations (approche qualitative : tige et boule métalliques, thermomètre à liquide, ballon de baudruche).",
+        },
+      ],
+    },
+    {
+      titre: "Électromagnétisme",
+      volumeHoraire: 4,
+      chapitres: [
+        {
+          titre: "Aimants et électroaimant",
+          description:
+            "Pôles d'un aimant, interaction entre aimants. Description et utilisation de la boussole. Aimantation d'une aiguille, d'un clou. Électroaimant : une bobine traversée par un courant se comporte comme un aimant (déviation d'une aiguille aimantée).",
+        },
+      ],
+    },
+  ],
+};
+
+/** RÉEL — fourni telle quelle par la personne à l'origine de cette tâche. */
+const PROGRAMME_CHIMIE_5E: ProgrammeMatiereStatique = {
+  estPlaceholder: false,
+  themes: [
+    {
+      titre: "Réactions chimiques",
+      volumeHoraire: 5,
+      chapitres: [
+        {
+          titre: "Réactions chimiques",
+          description:
+            "Combustion du magnésium, du fer, du cuivre et du soufre dans l'air. Notions de réactifs et de produits. Définition d'une réaction chimique et distinction avec une transformation physique. Écriture d'une équation de réaction avec les noms des réactifs et des produits (sans les formules). Sécurité lors des manipulations.",
+        },
+      ],
+    },
+  ],
+};
+
+/** RÉEL — fourni telle quelle par la personne à l'origine de cette tâche. */
+const PROGRAMME_SVT_5E: ProgrammeMatiereStatique = {
+  estPlaceholder: false,
+  themes: [
+    {
+      titre: "Dégradation de l'environnement",
+      volumeHoraire: 10,
+      chapitres: [
+        {
+          titre: "Désertification",
+          description:
+            "Distinguer sécheresse et désertification. Causes principales (surpâturage, sécheresse, surexploitation des terres, déboisement), conséquences (ensablement, régression des surfaces cultivables, exode rural, réduction de la biodiversité) et techniques de lutte (récupération des sols : zaï, cordons pierreux, haies vives ; conservation de l'eau). Aires protégées du Niger.",
+        },
+        {
+          titre: "Les pollutions et leurs conséquences",
+          description:
+            "Différentes formes de pollution (air, eaux, sol). Causes naturelles et artificielles, conséquences à court, moyen et long terme (réchauffement climatique, disparition de la faune et flore aquatiques). Moyens de lutte : traitement des eaux usées et ordures, réglementation, usage rationnel des pesticides et engrais.",
+        },
+      ],
+    },
+    {
+      titre: "Adaptations aux régimes alimentaires",
+      volumeHoraire: 8,
+      chapitres: [
+        {
+          titre: "Adaptation aux régimes alimentaires des vertébrés",
+          description:
+            "Régimes et comportements alimentaires. Adaptation des vertébrés (exemples : vache phytophage, chat zoophage). Comparaison de l'appareil digestif et de la denture de l'Homme, des herbivores et des carnivores.",
+        },
+        {
+          titre: "Adaptation aux régimes alimentaires des invertébrés",
+          description:
+            "Régimes et comportements alimentaires des invertébrés (criquet, moustique, papillon, mouche). Identification et comparaison des pièces buccales ; relation entre le type de pièces buccales et l'état physique de l'aliment (solide ou liquide).",
+        },
+      ],
+    },
+    {
+      titre: "Reproduction, croissance et développement chez les êtres vivants",
+      volumeHoraire: 8,
+      chapitres: [
+        {
+          titre: "Reproduction, croissance et développement chez les insectes",
+          description:
+            "Cycles de développement du criquet, de la mouche et du moustique. Différencier croissance et développement, développement direct et indirect, métamorphose et mue. Tracer et interpréter la courbe de croissance du criquet (métamorphose incomplète).",
+        },
+        {
+          titre: "Puberté et modifications pubertaires chez l'Homme",
+          description:
+            "Définir puberté et adolescence. Transformations physiques, physiologiques et comportementales. Caractères sexuels secondaires, développement des organes reproducteurs. Rôle des hormones (hypophyse, testicules, ovaires) : notion d'hormone.",
+        },
+      ],
+    },
+    {
+      titre: "Nutrition et reproduction des plantes sans fleurs",
+      volumeHoraire: 14,
+      chapitres: [
+        {
+          titre: "Classification et description des plantes sans fleurs",
+          description:
+            "Ptéridophytes (fougères), Bryophytes (mousses), Thallophytes (champignons, algues). Classer les plantes sans fleurs selon leur appareil végétatif ; décrire et schématiser un thalle, un mycélium, une fronde. Absence de chlorophylle chez les champignons (hétérotrophie).",
+        },
+        {
+          titre: "Reproduction chez les plantes sans fleurs",
+          description:
+            "Reproduction sexuée et asexuée (multiplication végétative) chez la moisissure, la spirogyre et la fougère. Organes reproducteurs (sporange, spores, prothalle). Multiplication par les spores et dissémination. Réaliser des cultures de moisissures.",
+        },
+        {
+          titre: "Modes de nutrition chez les plantes sans fleurs",
+          description:
+            "Mode de nutrition de la moisissure (hétérotrophie), étudié à partir de cultures réalisées en classe.",
+        },
+      ],
+    },
+    {
+      titre: "Roches sédimentaires",
+      volumeHoraire: 10,
+      chapitres: [
+        {
+          titre: "Étude de quelques roches sédimentaires",
+          description:
+            "Caractères généraux (disposition en strates, présence de fossiles), propriétés physiques et chimiques. Définir roche, roche sédimentaire, sédiment, minerai, minéral. Classification (détritiques, chimiques, biologiques). Réactions vis-à-vis de l'eau et de l'acide.",
+        },
+        {
+          titre: "Importance et gestion des roches sédimentaires",
+          description:
+            "Importance des roches sédimentaires : matériaux de construction (argile, calcaire, sable), ressources énergétiques (pétrole, charbon), minerais (or, cuivre, fer, uranium), sels. Notion de sédiment et de dépôt. Exploitation rationnelle des gisements.",
+        },
+      ],
+    },
+  ],
+};
+
 /** PLACEHOLDER — même objet réutilisé partout où le vrai contenu manque
  * encore (jamais muté, lecture seule). */
 const PROGRAMME_PLACEHOLDER: ProgrammeMatiereStatique = {
@@ -390,10 +673,10 @@ const PROGRAMMES_PAR_NIVEAU: Record<
     svt: PROGRAMME_SVT_6E,
   },
   "5e": {
-    mathematiques: PROGRAMME_PLACEHOLDER,
-    physique: PROGRAMME_PLACEHOLDER,
-    chimie: PROGRAMME_PLACEHOLDER,
-    svt: PROGRAMME_PLACEHOLDER,
+    mathematiques: PROGRAMME_MATHS_5E,
+    physique: PROGRAMME_PHYSIQUE_5E,
+    chimie: PROGRAMME_CHIMIE_5E,
+    svt: PROGRAMME_SVT_5E,
   },
   "4e": {
     mathematiques: PROGRAMME_PLACEHOLDER,
