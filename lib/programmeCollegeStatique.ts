@@ -4,11 +4,11 @@
  * brancher ces pages sur la vraie API (mêmes routes /api/... que l'espace
  * élève, une fois un endpoint public équivalent créé côté backend).
  *
- * CE QUI EST RÉEL vs PLACEHOLDER : les 4 matières de 6e, 5e ET 4e
- * (Mathématiques, Physique, Chimie, SVT) ont désormais leur vrai contenu.
- * Seules les 4 matières de 3e restent PROGRAMME_PLACEHOLDER — un texte
- * générique "Programme bientôt disponible", juste pour que le parcours de
- * navigation reste cliquable partout sans lien mort.
+ * CE QUI EST RÉEL vs PLACEHOLDER : les 4 matières des 4 niveaux du collège
+ * (6e, 5e, 4e, 3e — Mathématiques, Physique, Chimie, SVT) ont désormais
+ * leur vrai contenu. PROGRAMME_PLACEHOLDER (texte générique "Programme
+ * bientôt disponible") ne sert donc plus qu'en repli, si un futur niveau
+ * ou une future matière est ajouté(e) avant que son contenu soit prêt.
  */
 
 export type NiveauCollegeId = "6e" | "5e" | "4e" | "3e";
@@ -1039,11 +1039,400 @@ const PROGRAMME_SVT_4E: ProgrammeMatiereStatique = {
   ],
 };
 
-/** PLACEHOLDER — même objet réutilisé partout où le vrai contenu manque
- * encore (jamais muté, lecture seule). */
-const PROGRAMME_PLACEHOLDER: ProgrammeMatiereStatique = {
-  estPlaceholder: true,
-  themes: [],
+/** RÉEL — repris de lib/maths_3e_statique.ts (fourni par la personne à
+ * l'origine de cette tâche). */
+const PROGRAMME_MATHS_3E: ProgrammeMatiereStatique = {
+  estPlaceholder: false,
+  themes: [
+    {
+      titre: "Configurations de l'espace",
+      volumeHoraire: 10,
+      chapitres: [
+        {
+          titre: "Pyramide",
+          description:
+            "Observation, description et vocabulaire. Pyramide régulière : représentation en perspective cavalière, patron, réalisation. Calcul de l'aire et du volume (V = S·h/3).",
+        },
+        {
+          titre: "Cône de révolution",
+          description:
+            "Observation, description et vocabulaire. Représentation en perspective cavalière, patron, réalisation. Calcul de l'aire et du volume (la formule V = S·h/3 s'applique au cône comme à la pyramide).",
+        },
+      ],
+    },
+    {
+      titre: "Configurations du plan",
+      volumeHoraire: 24,
+      chapitres: [
+        {
+          titre: "Angle inscrit dans un cercle",
+          description:
+            "Définition et vocabulaire. Propriétés : relation entre angle inscrit et angle au centre associés ; angle inscrit et arc intercepté. Comparer deux angles interceptant le même arc.",
+        },
+        {
+          titre: "Application de la propriété de Pythagore",
+          description:
+            "Utiliser le théorème de Pythagore pour calculer une distance (hypoténuse, côté d'un triangle, diagonale d'un carré) et résoudre des problèmes de construction de triangles.",
+        },
+        {
+          titre: "Trigonométrie",
+          description:
+            "Rapports trigonométriques d'un angle aigu (sinus, cosinus, tangente) dans le triangle rectangle. Relation sin²a + cos²a = 1. Lecture de table et calculatrice. Valeurs remarquables pour 0°, 30°, 45°, 60°, 90°.",
+        },
+        {
+          titre: "Polygone régulier",
+          description:
+            "Triangle équilatéral et hexagone, carré et octogone, pentagone. Construction inscrite dans un cercle, symétries laissant le polygone invariant, aire. Somme des angles d'un polygone à n côtés : 180°(n−2).",
+        },
+        {
+          titre: "Propriété de Thalès",
+          description:
+            "Théorème direct et réciproque (à partir du triangle). Reconnaître une configuration de Thalès, démontrer le parallélisme de droites, résoudre des problèmes (partage de segments). Triangles semblables : proportionnalité des côtés, égalité des angles.",
+        },
+      ],
+    },
+    {
+      titre: "Applications du plan",
+      volumeHoraire: 9,
+      chapitres: [
+        {
+          titre: "Symétrie orthogonale",
+          description:
+            "Image de figures simples par la composée de deux symétries orthogonales d'axes parallèles (translation) ou perpendiculaires (symétrie centrale). Invariance du point d'intersection des axes, conservation des distances.",
+        },
+        {
+          titre: "Symétrie centrale",
+          description:
+            "Image de figures simples par la composée de deux symétries centrales. Reconnaître la composée de deux symétries centrales.",
+        },
+        {
+          titre: "Translation",
+          description:
+            "Propriétés de conservation (milieu, orthogonalité, parallélisme). Composée de deux translations (qui est une translation). Construire l'image de figures simples par la composée de deux translations.",
+        },
+      ],
+    },
+    {
+      titre: "Outil vectoriel — Géométrie analytique",
+      volumeHoraire: 18,
+      chapitres: [
+        {
+          titre: "Multiplication d'un vecteur par un réel",
+          description:
+            "Produit d'un vecteur par un réel : définition et propriétés. Construire k·AB. Vecteurs colinéaires : définition, vecteur directeur d'une droite. Prouver l'alignement de 3 points ou le parallélisme de 2 droites.",
+        },
+        {
+          titre: "Coordonnées d'un vecteur",
+          description:
+            "Coordonnées d'une somme, d'un produit par un réel. Égalité et condition de colinéarité de deux vecteurs. Dans un repère orthonormal : produit scalaire, condition d'orthogonalité, norme d'un vecteur, distance de deux points.",
+        },
+        {
+          titre: "Équations de droite",
+          description:
+            "Coordonnées d'un vecteur directeur. Coefficient directeur ; conditions de parallélisme et d'orthogonalité de deux droites. Trouver l'équation cartésienne d'une droite, déterminer le point d'intersection de deux droites, tracer une droite.",
+        },
+      ],
+    },
+    {
+      titre: "Organisation des calculs — Calculs numériques",
+      volumeHoraire: 15,
+      chapitres: [
+        {
+          titre: "Nombres réels",
+          description:
+            "Ensemble ℝ des nombres réels et opérations. Radicaux : définition, propriétés, comparaison, opérations ; rendre rationnel un dénominateur. Puissances à exposant entier relatif. Intervalles de ℝ, ordre et opérations, encadrements. Tables numériques et calculatrice.",
+        },
+      ],
+    },
+    {
+      titre: "Organisation des calculs — Calcul littéral",
+      volumeHoraire: 20,
+      chapitres: [
+        {
+          titre: "Monômes et polynômes",
+          description:
+            "Monôme : degré, coefficient, partie littérale, monômes semblables, addition et multiplication. Polynôme : degré, addition, multiplication. Développer et factoriser à l'aide des identités remarquables et de la distributivité.",
+        },
+        {
+          titre: "Équations, inéquations et systèmes",
+          description:
+            "Équations et inéquations du 1er degré à une inconnue dans ℝ (produit nul, intervalles). Systèmes de deux équations du 1er degré dans ℝ² (substitution, combinaison, résolution graphique). Mise en équation et résolution de problèmes.",
+        },
+      ],
+    },
+    {
+      titre: "Organisation des données",
+      volumeHoraire: 19,
+      chapitres: [
+        {
+          titre: "Fonction — Application — Bijection",
+          description:
+            "Reconnaître quand une fonction est une application, une bijection. Ensemble de définition. Image d'un élément. Fonctions définies par formule, courbe, tableau, diagramme sagittal.",
+        },
+        {
+          titre: "Applications linéaires",
+          description:
+            "Définition et propriétés de linéarité. Sens de variation (signe de a). Représentation graphique et coefficient directeur. Lien avec les situations de proportionnalité (vitesse, débit).",
+        },
+        {
+          titre: "Applications affines",
+          description:
+            "Définition, sens de variation (f(x) = ax + b). Lien entre les représentations graphiques d'une application affine et de son application linéaire associée. Représentation graphique et coefficient directeur.",
+        },
+        {
+          titre: "Statistique",
+          description:
+            "Regroupement en classes d'égale amplitude, effectifs des classes. Diagramme à bandes. Moyenne et étendue d'une série statistique dans le cas d'un caractère continu.",
+        },
+      ],
+    },
+  ],
+};
+
+/** RÉEL — repris de lib/physique_3e_statique.ts (fourni par la personne à
+ * l'origine de cette tâche). */
+const PROGRAMME_PHYSIQUE_3E: ProgrammeMatiereStatique = {
+  estPlaceholder: false,
+  themes: [
+    {
+      titre: "Mécanique",
+      volumeHoraire: 35,
+      chapitres: [
+        {
+          titre: "Équilibre d'un solide soumis à deux forces",
+          description:
+            "Étude expérimentale de l'équilibre sous deux forces opposées, condition d'équilibre. Exemples : solide suspendu à un fil, à un ressort, bille sur un plan. Courbe d'étalonnage et constante de raideur d'un ressort (unité N/m).",
+        },
+        {
+          titre: "Équilibre d'un solide mobile autour d'un axe",
+          description:
+            "Équilibre sous l'action de deux forces orthogonales à l'axe. Théorème des moments et son application aux poulies, leviers, treuils et à la balance. Vérification expérimentale ; équilibrage d'un solide en rotation.",
+        },
+        {
+          titre: "Travail d'une force dans un déplacement rectiligne",
+          description:
+            "Expression du travail d'une force constante. Unité : le joule (J). Travail moteur et travail résistant. Cas d'une force orthogonale au déplacement. Travail du poids d'un corps.",
+        },
+        {
+          titre: "Notion de puissance mécanique",
+          description:
+            "Définition de la puissance mécanique (P = W/t). Unité : le watt (W). Ordres de grandeur de quelques puissances (le cheval-vapeur est cité mais non utilisé).",
+        },
+        {
+          titre: "Machines simples",
+          description:
+            "Poulies, leviers, plan incliné. Conservation du travail dans une machine simple idéale. Rendement d'une machine réelle et généralisation de la notion de rendement mécanique.",
+        },
+        {
+          titre: "Énergie",
+          description:
+            "Formes d'énergie (mécanique, thermique, électrique, chimique, rayonnante, atomique). Transferts d'énergie (chaleur, travail, rayonnement). Transformation travail ↔ chaleur. Fonctionnement schématique du moteur à quatre temps.",
+        },
+        {
+          titre: "Poussée d'Archimède",
+          description:
+            "Étude expérimentale et théorème d'Archimède. La poussée comme résultante des forces de pression du fluide, égale au poids du liquide déplacé (P = ρ·g·V). Calcul pour un objet simple complètement immergé.",
+        },
+        {
+          titre: "Pression atmosphérique",
+          description:
+            "Atmosphère terrestre. Existence et mesure de la pression atmosphérique (baromètre). Variation de la pression atmosphérique.",
+        },
+      ],
+    },
+    {
+      titre: "Électricité",
+      volumeHoraire: 20,
+      chapitres: [
+        {
+          titre: "Conducteurs ohmiques à caractéristique linéaire",
+          description:
+            "Tracé de la caractéristique U = f(I). Définition du conducteur ohmique et de sa résistance. Loi d'Ohm (U = R·I), unité l'ohm (Ω). Code des couleurs. Conductance (siemens). Associations en série, parallèle et mixte ; résistance équivalente.",
+        },
+      ],
+    },
+    {
+      titre: "Optique",
+      volumeHoraire: 6,
+      chapitres: [
+        {
+          titre: "Réflexion de la lumière",
+          description:
+            "Réflexion sur un miroir plan, lois de la réflexion (i = r). Image donnée par un miroir plan (image virtuelle, symétrique de l'objet) ; expérience des deux bougies. Construction de l'image d'un objet.",
+        },
+        {
+          titre: "Réfraction de la lumière",
+          description:
+            "Réfraction d'un faisceau à la traversée d'un dioptre plan (air-eau). Observation de l'image d'un objet à travers un dioptre (expérience du bâton brisé).",
+        },
+      ],
+    },
+  ],
+};
+
+/** RÉEL — repris de lib/chimie_3e_statique.ts (fourni par la personne à
+ * l'origine de cette tâche). */
+const PROGRAMME_CHIMIE_3E: ProgrammeMatiereStatique = {
+  estPlaceholder: false,
+  themes: [
+    {
+      titre: "Chimie générale et minérale",
+      volumeHoraire: 14,
+      chapitres: [
+        {
+          titre: "Eau",
+          description:
+            "Formule et modèle angulaire de la molécule d'eau. Conservation de la molécule dans les solutions aqueuses et les différents états. Électrolyse et synthèse de l'eau (équations-bilan), réalisées avec un courant continu.",
+        },
+        {
+          titre: "Solutions aqueuses ioniques",
+          description:
+            "Solutions acides, basiques et neutres (bleu de bromothymol, puis pH). Concentration molaire (mol/L). Ions H⁺ et OH⁻, dissociation ionique de l'eau. Échelle de pH, effet de la dilution, neutralisation (équation-bilan). Papier pH.",
+        },
+        {
+          titre: "Caractérisation de quelques ions",
+          description:
+            "Caractérisation d'anions (Cl⁻, SO₄²⁻, CO₃²⁻) et de cations (Fe²⁺, Fe³⁺, Cu²⁺, Zn²⁺, Na⁺) par des réactions test. Équations-bilan. Neutralité électrique d'une solution ionique (anions et cations).",
+        },
+        {
+          titre: "Oxydoréduction",
+          description:
+            "Définitions : oxydation, réduction, oxydoréduction, oxydant, réducteur. Réactions en solution aqueuse et par voie sèche, échanges électroniques. Oxydoréduction dans l'électrolyse (pile Daniell). Corrosion et moyens de protection.",
+        },
+      ],
+    },
+    {
+      titre: "Chimie organique",
+      volumeHoraire: 6,
+      chapitres: [
+        {
+          titre: "Généralités",
+          description:
+            "Définition, importance et domaines de la chimie organique. Hydrocarbures et leurs familles : alcanes (méthane, éthane, propane, butane), alcènes (éthylène), alcynes (acétylène). Sources d'hydrocarbures. Formules brute, développée et semi-développée ; liaison saturée et insaturée.",
+        },
+        {
+          titre: "Réactions chimiques",
+          description:
+            "Exemples de réactions simples : combustion du butane et de l'acétylène, substitution du dichlore sur le méthane, addition du dihydrogène et de l'eau sur l'éthylène. Écriture des équations-bilan.",
+        },
+      ],
+    },
+  ],
+};
+
+/** RÉEL — repris de lib/svt_3e_statique.ts (fourni par la personne à
+ * l'origine de cette tâche). */
+const PROGRAMME_SVT_3E: ProgrammeMatiereStatique = {
+  estPlaceholder: false,
+  themes: [
+    {
+      titre: "Milieu intérieur",
+      volumeHoraire: 10,
+      chapitres: [
+        {
+          titre: "Le sang et la lymphe",
+          description:
+            "Constituants du sang, leurs propriétés et rôles. Plasma et sérum. Frottis sanguin. Sédimentation et coagulation du sang. La lymphe : composition, formation et rôle ; lien entre circulation lymphatique et sanguine.",
+        },
+        {
+          titre: "Transfusion sanguine et maladies du sang",
+          description:
+            "Groupes sanguins (système ABO et système rhésus). Possibilités et compatibilités de transfusion. Incompatibilité rhésus chez la femme enceinte. Maladies : anémie, drépanocytose, leucémie.",
+        },
+      ],
+    },
+    {
+      titre: "Nutrition chez l'Homme",
+      volumeHoraire: 16,
+      chapitres: [
+        {
+          titre: "Besoins nutritionnels chez l'Homme",
+          description:
+            "Besoins en énergie et en matières. Ration alimentaire équilibrée selon l'âge, le sexe, l'activité. Valeur énergétique d'un repas. Conséquences d'une mauvaise alimentation : carence, malnutrition, sous-alimentation, suralimentation. Hygiène alimentaire.",
+        },
+        {
+          titre: "La respiration et les échanges gazeux",
+          description:
+            "Appareil respiratoire, renouvellement de l'air dans les poumons (air inspiré/expiré). Transport des gaz respiratoires par le sang. Vésicule pulmonaire et échanges gazeux. Variation du rythme respiratoire à l'effort.",
+        },
+        {
+          titre: "La circulation sanguine",
+          description:
+            "Pompe cardiaque : description, organisation, contraction. Circuits sanguins (circulation générale et pulmonaire), fonctionnement des vaisseaux. Rythme cardiaque et activité physique. Pression artérielle et maladies cardiovasculaires.",
+        },
+        {
+          titre: "Le rôle du rein dans l'excrétion urinaire",
+          description:
+            "Appareil urinaire, constituants de l'urine, production par les tubes urinifères. Rôle épurateur du rein et régulation du milieu intérieur (homéostasie). Élimination de la sueur par la peau. Insuffisances rénales et dialyse.",
+        },
+      ],
+    },
+    {
+      titre: "Fonction de relation",
+      volumeHoraire: 10,
+      chapitres: [
+        {
+          titre: "Le fonctionnement du système nerveux",
+          description:
+            "Organisation du système nerveux et du neurone. Activité réflexe et volontaire, arc réflexe, trajet de l'influx nerveux. La synapse et son rôle. Hygiène du système nerveux : action nocive de l'alcool, des drogues et du tabac.",
+        },
+      ],
+    },
+    {
+      titre: "Régulation des naissances",
+      volumeHoraire: 6,
+      chapitres: [
+        {
+          titre: "Régulation des naissances",
+          description:
+            "Définir la contraception. Méthodes naturelles, mécaniques et chimiques (pilules) et leurs modes d'action.",
+        },
+      ],
+    },
+    {
+      titre: "Immunité et VIH/SIDA",
+      volumeHoraire: 13,
+      chapitres: [
+        {
+          titre: "Défenses en cas d'infection microbienne",
+          description:
+            "Voies de contamination et barrières naturelles (cas d'une plaie, du tétanos). Asepsie, antisepsie, lavage des mains. Réactions non spécifiques (inflammation, phagocytose) et spécifiques (anticorps, lymphocytes T, mémoire immunitaire).",
+        },
+        {
+          titre: "Renforcement des défenses naturelles",
+          description:
+            "Vaccination (immunité active et durable, histoire de Jenner et Pasteur, vaccins obligatoires au Niger). Sérothérapie (immunité passive, sérum antitétanique). Antibiothérapie, antibiogramme, risques d'un usage abusif.",
+        },
+        {
+          titre: "VIH/SIDA",
+          description:
+            "Le VIH provoque une immunodéficience en détruisant les lymphocytes T4. Phases de l'infection, séropositivité, distinction séropositif/SIDA. Nécessité et moyens de prévention.",
+        },
+      ],
+    },
+    {
+      titre: "Environnement — Gestion des ressources non renouvelables",
+      volumeHoraire: 13,
+      chapitres: [
+        {
+          titre: "Impact de l'exploitation des ressources géologiques non renouvelables",
+          description:
+            "Ressources non renouvelables du Niger (uranium, charbon, pétrole). Énergies fossiles. Effet de serre, réchauffement et changement climatique. Gestion durable des ressources non renouvelables.",
+        },
+      ],
+    },
+    {
+      titre: "Séismes",
+      volumeHoraire: 4,
+      chapitres: [
+        {
+          titre: "Les séismes",
+          description:
+            "Manifestations des tremblements de terre, origine et caractéristiques. Distinction magnitude/intensité. Localisation des séismes dans le monde. Méthodes d'étude (sismographe) et de prévention.",
+        },
+      ],
+    },
+  ],
 };
 
 const PROGRAMMES_PAR_NIVEAU: Record<
@@ -1069,10 +1458,10 @@ const PROGRAMMES_PAR_NIVEAU: Record<
     svt: PROGRAMME_SVT_4E,
   },
   "3e": {
-    mathematiques: PROGRAMME_PLACEHOLDER,
-    physique: PROGRAMME_PLACEHOLDER,
-    chimie: PROGRAMME_PLACEHOLDER,
-    svt: PROGRAMME_PLACEHOLDER,
+    mathematiques: PROGRAMME_MATHS_3E,
+    physique: PROGRAMME_PHYSIQUE_3E,
+    chimie: PROGRAMME_CHIMIE_3E,
+    svt: PROGRAMME_SVT_3E,
   },
 };
 
