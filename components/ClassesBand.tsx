@@ -94,12 +94,24 @@ export default function ClassesBand() {
           sur une carte interne) : c'est tout le bloc qui porte la couleur,
           pas un cadre à l'intérieur. */}
       <div className="mx-auto max-w-6xl py-10 sm:px-10 sm:py-14">
-        <div className="mb-8 max-w-xl">
+        <div className="mb-8 max-w-2xl">
           <h2 className="text-2xl font-bold text-fh-bleu sm:text-3xl">
             Tout le programme du Niger
           </h2>
-          <p className="mt-2 text-sm text-fh-ardoise sm:text-base">
-            De la 6e à la Terminale, dans toutes les séries
+          <p className="mt-3 text-sm leading-relaxed text-fh-ardoise sm:text-base">
+            Tout le programme officiel, de la{" "}
+            <span className="font-semibold text-fh-bleu">6e à la Terminale</span>,
+            dans toutes les séries. Des{" "}
+            <span className="font-semibold text-fh-orange">cours</span>,{" "}
+            <span className="font-semibold text-fh-orange">vidéos</span>,{" "}
+            <span className="font-semibold text-fh-orange">exercices</span>,{" "}
+            <span className="font-semibold text-fh-orange">examens types corrigés</span>{" "}
+            et <span className="font-semibold text-fh-orange">simulations</span> pour
+            vraiment comprendre les concepts.
+          </p>
+          <p className="mt-3 text-[17px] font-bold leading-relaxed">
+            <span className="text-fh-bleu">Crée ton compte</span>{" "}
+            <span className="text-fh-orange">→ tout est gratuit</span>
           </p>
         </div>
 
