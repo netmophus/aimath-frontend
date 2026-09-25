@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import { IconeAccueil, IconeAide, IconeLivre, IconeProfil } from "./icones";
+import { IconeAccueil, IconeAide, IconeCartes, IconeLivre, IconeProfil } from "./icones";
 
 interface Onglet {
   label: string;
@@ -24,6 +24,11 @@ interface Onglet {
  * matières") — il n'existe pas de route /eleve/programmes dédiée (seulement
  * /eleve/programmes/[id], une fiche par matière), donc pas de cible plus
  * précise possible. Actif aussi sur ces fiches individuelles.
+ *
+ * "Cartes" (libellé court plutôt que "Mes cartes", pour laisser de la place
+ * aux 5 onglets sur mobile — voir flex-1/justify-around ci-dessous, qui
+ * répartit la largeur également quel que soit leur nombre) mène à
+ * /eleve/mes-cartes, la liste des cartes Fahimta reçues d'un vendeur.
  */
 export default function BarreNavBasse() {
   const pathname = usePathname();
@@ -35,6 +40,12 @@ export default function BarreNavBasse() {
       href: "/eleve#mes-matieres",
       icone: IconeLivre,
       actif: (p) => p === "/eleve" || p.startsWith("/eleve/programmes"),
+    },
+    {
+      label: "Cartes",
+      href: "/eleve/mes-cartes",
+      icone: IconeCartes,
+      actif: (p) => p.startsWith("/eleve/mes-cartes"),
     },
     { label: "Aide", href: "/eleve/aide", icone: IconeAide, actif: (p) => p.startsWith("/eleve/aide") },
     { label: "Profil", href: "/eleve/profil", icone: IconeProfil, actif: (p) => p.startsWith("/eleve/profil") },

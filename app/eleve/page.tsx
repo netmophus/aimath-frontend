@@ -7,6 +7,7 @@ import { ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { getMesLecons, getMonProgramme, type LeconListeEleve, type ProgrammeEleve } from "@/lib/eleveApi";
 import SalutEleve from "@/components/eleve/SalutEleve";
+import AbonnementBadge from "@/components/eleve/AbonnementBadge";
 import CarteReprendre from "@/components/eleve/CarteReprendre";
 import CarteMatiere from "@/components/eleve/CarteMatiere";
 
@@ -78,6 +79,13 @@ export default function EleveDashboardPage() {
         classe={classe}
         photoUrl={user?.photoUrl ?? null}
       />
+
+      <div className="mt-4">
+        <AbonnementBadge
+          actif={user?.aUnAbonnementActif ?? false}
+          echeance={user?.abonnementActifJusquAu ?? null}
+        />
+      </div>
 
       <div className="mt-6 flex flex-col gap-8 lg:grid lg:grid-cols-[2fr_3fr] lg:items-start lg:gap-8">
         {chargementReprendre ? (

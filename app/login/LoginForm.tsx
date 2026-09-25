@@ -8,11 +8,19 @@ import { useRouter } from "next/navigation";
 import { ApiError, type Role } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 
+// Record<Role, string> (pas Partial) : TypeScript force ainsi une entrée
+// pour CHAQUE valeur du type Role — un rôle ajouté côté API sans être
+// ajouté ici casse le build plutôt que de planter silencieusement en
+// production (c'est exactement ce qui est arrivé pour "vendeur", ajouté à
+// Role dans lib/api.ts après coup, sans que cette map suive).
 const REDIRECTION_PAR_ROLE: Record<Role, string> = {
   admin: "/admin",
   enseignant: "/enseignant",
   eleve: "/eleve",
   partenaire: "/partenaire",
+  // Pas encore d'espace vendeur (voir la tâche dédiée) — route réservée,
+  // affichera un 404 en attendant plutôt qu'un plantage JS.
+  vendeur: "/vendeur",
 };
 
 export default function LoginForm() {
@@ -36,7 +44,11 @@ export default function LoginForm() {
     setEnvoiEnCours(true);
     try {
       const data = await login(telephone.trim(), motDePasse);
-      router.push(REDIRECTION_PAR_ROLE[data.role]);
+      // Filet de sécurité même si REDIRECTION_PAR_ROLE est un Record complet
+      // (donc déjà garanti par TypeScript) : une réponse API malformée ou un
+      // rôle renvoyé sous une forme inattendue ne doit jamais planter la
+      // redirection — "/" reste une destination sûre dans tous les cas.
+      router.push(REDIRECTION_PAR_ROLE[data.role] ?? "/");
     } catch (error) {
       if (error instanceof ApiError) {
         if (error.status === 403) {

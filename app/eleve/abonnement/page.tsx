@@ -1,33 +1,34 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { Suspense, useState, type FormEvent } from "react";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
 import { ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { activerCarteFahimta } from "@/lib/eleveApi";
-
-/** "2026-10-25" → "25 octobre 2026" — même format que le message de succès
- * renvoyé par le backend (voir comptes.cartes.formater_date_fr), pour que
- * l'affichage de l'échéance reste cohérent qu'il vienne de /me/ ou de la
- * réponse d'activation. */
-function formaterDateFr(iso: string): string {
-  return new Date(`${iso}T00:00:00`).toLocaleDateString("fr-FR", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
-}
+import RappelAbonnement from "@/components/eleve/RappelAbonnement";
 
 /**
  * Destination du bouton "Débloquer avec une carte Fahimta" (voir
  * components/eleve/MurDeblocage.tsx). Le paiement par carte (achat) reste
  * hors périmètre — cette page ne gère que l'ACTIVATION d'un code déjà
- * obtenu par ailleurs.
+ * obtenu par ailleurs (achat direct, ou carte reçue d'un vendeur via
+ * /eleve/mes-cartes, qui pré-remplit `code` par ce même paramètre d'URL).
  */
 export default function AbonnementPage() {
-  const { user, updateUser } = useAuth();
+  return (
+    <Suspense fallback={null}>
+      <AbonnementContenu />
+    </Suspense>
+  );
+}
 
-  const [code, setCode] = useState("");
+function AbonnementContenu() {
+  const { user, updateUser } = useAuth();
+  const searchParams = useSearchParams();
+
+  const [code, setCode] = useState(() => searchParams.get("code") ?? "");
   const [chargement, setChargement] = useState(false);
   const [message, setMessage] = useState<{ texte: string; tone: "succes" | "erreur" } | null>(null);
 
@@ -68,19 +69,15 @@ export default function AbonnementPage() {
           Procure-toi une carte Fahimta, saisis son code ci-dessous, et accède à tous les cours premium pendant
           30 jours.
         </p>
+        <Link
+          href="/eleve/mes-cartes"
+          className="mt-2 inline-block text-sm font-medium text-fh-orange hover:text-fh-orange-fonce"
+        >
+          Un vendeur t&apos;a envoyé une carte ? Voir mes cartes reçues →
+        </Link>
       </div>
 
-      {abonnementActif && echeance ? (
-        <div className="rounded-2xl border border-green-200 bg-green-50 px-4 py-4">
-          <p className="text-sm font-semibold text-green-800">
-            Ton abonnement est actif jusqu&apos;au {formaterDateFr(echeance)}.
-          </p>
-        </div>
-      ) : (
-        <div className="rounded-2xl border border-fh-sable bg-fh-creme px-4 py-4">
-          <p className="text-sm font-medium text-fh-ardoise">Tu n&apos;as pas d&apos;abonnement actif.</p>
-        </div>
-      )}
+      <RappelAbonnement actif={abonnementActif} echeance={echeance ?? null} />
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-3 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-fh-sable">
         <label htmlFor="code-carte" className="text-sm font-semibold text-fh-bleu">
@@ -111,6 +108,17 @@ export default function AbonnementPage() {
           >
             {message.texte}
           </p>
+        )}
+
+        {/* Seulement après une activation réussie : sans ça, l'élève reste
+            bloqué sur ce formulaire sans chemin évident vers ses cours. */}
+        {message?.tone === "succes" && (
+          <Link
+            href="/eleve"
+            className="flex min-h-11 items-center justify-center rounded-full bg-fh-orange px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-fh-orange-fonce"
+          >
+            Accéder à mes cours
+          </Link>
         )}
       </form>
     </div>

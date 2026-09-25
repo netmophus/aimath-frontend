@@ -1,7 +1,14 @@
+import { IconCreditCard } from "@tabler/icons-react";
+
 /**
- * Icônes SVG inline sobres pour l'espace élève (pas de lib d'icônes dans le
- * projet — aucune n'a été ajoutée pour rester léger). Chaque icône hérite sa
- * couleur de `currentColor` : on la colore via className sur le parent/elle.
+ * Icônes pour l'espace élève : SVG inline sobres pour la plupart (aucune lib
+ * d'icônes n'était utilisée à l'origine, pour rester léger), sauf IconeCartes
+ * qui enveloppe @tabler/icons-react (déjà une dépendance du projet, utilisée
+ * ailleurs — voir components/programme/BoutonRetour.tsx) plutôt que de
+ * dessiner une carte à la main. Chaque icône hérite sa couleur de
+ * `currentColor` : on la colore via className sur le parent/elle — même
+ * signature (className uniquement) pour toutes, tabler compris, afin que
+ * BarreNavBasse.tsx puisse les traiter de façon interchangeable.
  */
 
 interface IconeProps {
@@ -82,6 +89,23 @@ export function IconeChevron({ className = BASE }: IconeProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
       <path d="m9 6 6 6-6 6" />
+    </svg>
+  );
+}
+
+/** Onglet "Cartes" de la barre basse (voir BarreNavBasse.tsx) — vers
+ * /eleve/mes-cartes. `stroke={2}` pour un trait de même épaisseur que les
+ * icônes SVG maison ci-dessus (strokeWidth={2}). */
+export function IconeCartes({ className = BASE }: IconeProps) {
+  return <IconCreditCard className={className} stroke={2} aria-hidden="true" />;
+}
+
+/** Badge "Abonnement actif" du dashboard (voir AbonnementBadge.tsx). */
+export function IconeCoche({ className = BASE }: IconeProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
+      <circle cx={12} cy={12} r={9} />
+      <path d="m8.5 12.5 2.5 2.5 4.5-5" />
     </svg>
   );
 }

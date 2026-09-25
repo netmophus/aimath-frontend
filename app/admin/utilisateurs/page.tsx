@@ -16,6 +16,7 @@ const OPTIONS_ROLE: readonly { value: Role | ""; label: string }[] = [
   { value: "enseignant", label: "Enseignants" },
   { value: "admin", label: "Admins" },
   { value: "partenaire", label: "Partenaires" },
+  { value: "vendeur", label: "Vendeurs" },
 ];
 
 const OPTIONS_STATUT: readonly { value: Statut | ""; label: string }[] = [

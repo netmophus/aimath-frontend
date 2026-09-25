@@ -215,9 +215,60 @@ export async function apiRequestMultipart<T>(
   }
 }
 
+/**
+ * Variante "fichier binaire" de rawRequest (ex. export CSV) : un <a href>
+ * classique ne peut pas poser de header Authorization, donc le fichier est
+ * récupéré en Blob via fetch authentifié puis déclenché en téléchargement
+ * côté appelant (voir lib/carteApi.ts, telechargerExportCsv) plutôt que
+ * chargé directement dans le navigateur.
+ */
+async function rawRequestBlob(path: string): Promise<Blob> {
+  const headers: Record<string, string> = {};
+  const access = tokenStorage.getAccess();
+  if (access) headers.Authorization = `Bearer ${access}`;
+
+  const response = await fetch(`${API_BASE_URL}${path}`, { headers });
+
+  if (!response.ok) {
+    // Le corps d'une erreur est du JSON (DRF) même si la réponse de succès
+    // est un CSV — on tente de le décoder pour un message utile, sans
+    // planter si ce n'est pas du JSON valide (ex. page d'erreur HTML).
+    const text = await response.text();
+    let data: unknown = null;
+    try {
+      data = text ? JSON.parse(text) : null;
+    } catch {
+      // pas du JSON : on garde data = null, extractErrorMessage renverra
+      // null et le message générique de secours sera utilisé.
+    }
+    const message = extractErrorMessage(data) ?? "Une erreur est survenue.";
+    throw new ApiError(response.status, message, data);
+  }
+
+  return response.blob();
+}
+
+/** Équivalent Blob de apiRequest : même retry automatique sur un access token expiré. */
+export async function apiRequestBlob(path: string): Promise<Blob> {
+  try {
+    return await rawRequestBlob(path);
+  } catch (error) {
+    const shouldRetry = error instanceof ApiError && error.status === 401;
+    if (!shouldRetry) throw error;
+
+    try {
+      await refreshAccessToken();
+    } catch {
+      tokenStorage.clear();
+      throw error;
+    }
+    return rawRequestBlob(path);
+  }
+}
+
 // --- Types du domaine ---
 
-export type Role = "eleve" | "enseignant" | "admin" | "partenaire";
+export type Role = "eleve" | "enseignant" | "admin" | "partenaire" | "vendeur";
 export type Statut = "en_attente" | "actif" | "rejete" | "suspendu";
 
 export interface NiveauInfo {

@@ -5,6 +5,7 @@ const STYLES: Record<Role, string> = {
   enseignant: "bg-fh-bleu/10 text-fh-bleu",
   admin: "bg-fh-orange/10 text-fh-orange-fonce",
   partenaire: "bg-fh-accent text-fh-orange-fonce",
+  vendeur: "bg-green-100 text-green-700",
 };
 
 const LABELS: Record<Role, string> = {
@@ -12,6 +13,7 @@ const LABELS: Record<Role, string> = {
   enseignant: "Enseignant",
   admin: "Admin",
   partenaire: "Partenaire",
+  vendeur: "Vendeur",
 };
 
 export default function RoleBadge({ role }: { role: Role }) {

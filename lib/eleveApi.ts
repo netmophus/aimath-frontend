@@ -249,3 +249,26 @@ export function activerCarteFahimta(code: string): Promise<ActivationCarteRepons
     body: { code },
   });
 }
+
+// --- GET /api/eleve/mes-cartes/ : cartes reçues d'un vendeur ET/OU activées ---
+
+export type StatutCarteRecue = "active" | "utilisee";
+
+/** `code` EN CLAIR ici (contrairement à tous les endpoints admin/vendeur) :
+ * c'est la carte de l'élève connecté, il a le droit de voir son propre code
+ * pour l'activer (voir comptes.serializers.CarteRecueEleveSerializer).
+ * `date_attribution` peut être null : une carte activée SANS être passée
+ * par un vendeur (attribuee_a jamais renseigné) n'a pas de date d'attribution. */
+export interface CarteRecueEleve {
+  id: number;
+  code: string;
+  statut: StatutCarteRecue;
+  duree_jours: number;
+  date_attribution: string | null;
+  date_activation: string | null;
+}
+
+export async function getMesCartes(): Promise<CarteRecueEleve[]> {
+  const page = await apiRequest<ReponsePaginee<CarteRecueEleve>>("/api/eleve/mes-cartes/");
+  return page.results;
+}
