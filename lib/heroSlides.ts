@@ -25,14 +25,14 @@ export const HERO_BADGE = {
 
 export const HERO_SLIDES: readonly HeroSlide[] = [
   {
-    title: "Des élèves qui progressent avec Fahimta",
+    title: "Des élèves qui progressent",
     subtitle:
       "Cours rédigés, démonstrations, exercices corrigés et simulations — du collège au lycée, dans toutes les matières.",
   },
   {
     title: "Apprends même sans connexion",
     subtitle:
-      "Télécharge tes leçons et révise hors-ligne, où que tu sois — l'application fonctionne sans internet une fois tes cours enregistrés.",
+      "Télécharge tes leçons et révise hors-ligne, où que tu sois. L'application fonctionne sans internet une fois tes cours enregistrés.",
   },
   {
     title: "Comprends en manipulant",
