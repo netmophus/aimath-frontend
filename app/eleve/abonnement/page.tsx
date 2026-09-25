@@ -8,6 +8,7 @@ import { ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { activerCarteFahimta } from "@/lib/eleveApi";
 import RappelAbonnement from "@/components/eleve/RappelAbonnement";
+import PaiementNitaSection from "@/components/eleve/PaiementNitaSection";
 
 /**
  * Destination du bouton "Débloquer avec une carte Fahimta" (voir
@@ -121,6 +122,8 @@ function AbonnementContenu() {
           </Link>
         )}
       </form>
+
+      <PaiementNitaSection />
     </div>
   );
 }

@@ -272,3 +272,55 @@ export async function getMesCartes(): Promise<CarteRecueEleve[]> {
   const page = await apiRequest<ReponsePaginee<CarteRecueEleve>>("/api/eleve/mes-cartes/");
   return page.results;
 }
+
+// --- Paiement NITA : second moyen de créditer l'abonnement (avec les
+// cartes Fahimta ci-dessus) — voir comptes.nita_views côté backend. ---
+
+export interface PlanNita {
+  id: string;
+  label: string;
+  montant: number;
+  duree_jours: number;
+}
+
+/** Catalogue affiché côté front — un seul plan pour l'instant, MAIS le
+ * backend (comptes.nita.PLANS_NITA) est déjà structuré pour en accueillir
+ * d'autres (trimestriel, annuel…) sans changer la logique des endpoints,
+ * seulement cette liste le jour venu. */
+export const PLANS_NITA: readonly PlanNita[] = [
+  { id: "mensuel", label: "Mensuel", montant: 2000, duree_jours: 30 },
+];
+
+export interface InitierNitaReponse {
+  /** Référence à donner à l'élève — à saisir dans MYNITA ou au guichet. */
+  reference: string;
+  /** Identifiant de suivi Fahimta — à repasser tel quel à /nita/verifier/. */
+  requestId: string;
+}
+
+/** Peut échouer (502) avec "Impossible de démarrer le paiement NITA..."
+ * (ApiError.message) si NITA est injoignable — à afficher tel quel. */
+export function initierPaiementNita(plan: string): Promise<InitierNitaReponse> {
+  return apiRequest<InitierNitaReponse>("/api/eleve/nita/initier/", {
+    method: "POST",
+    body: { plan },
+  });
+}
+
+export interface VerifierNitaReponse {
+  confirme: boolean;
+  message: string;
+  /** Présent seulement si confirme === true. */
+  abonnement_actif_jusqu_au?: string;
+}
+
+/** Ré-interroge activement NITA côté serveur (jamais un simple statut
+ * local) et crédite l'abonnement si payé — idempotent, peut être rappelée
+ * sans risque (utilisé à la fois par le polling automatique et le bouton
+ * "Vérifier maintenant"). Peut échouer (502) si NITA est injoignable. */
+export function verifierPaiementNita(requestId: string): Promise<VerifierNitaReponse> {
+  return apiRequest<VerifierNitaReponse>("/api/eleve/nita/verifier/", {
+    method: "POST",
+    body: { requestId },
+  });
+}

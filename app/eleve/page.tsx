@@ -80,11 +80,17 @@ export default function EleveDashboardPage() {
         photoUrl={user?.photoUrl ?? null}
       />
 
-      <div className="mt-4">
+      <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-stretch">
         <AbonnementBadge
           actif={user?.aUnAbonnementActif ?? false}
           echeance={user?.abonnementActifJusquAu ?? null}
         />
+        <Link
+          href="/eleve/abonnement"
+          className="flex shrink-0 items-center justify-center rounded-xl bg-fh-orange px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-fh-orange-fonce"
+        >
+          {user?.aUnAbonnementActif ? "Prolonger mon abonnement" : "Activer mon abonnement"}
+        </Link>
       </div>
 
       <div className="mt-6 flex flex-col gap-8 lg:grid lg:grid-cols-[2fr_3fr] lg:items-start lg:gap-8">

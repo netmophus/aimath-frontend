@@ -7,6 +7,10 @@ import { IconeAccueil, IconeAide, IconeCartes, IconeLivre, IconeProfil } from ".
 
 interface Onglet {
   label: string;
+  /** Libellé abrégé pour les très petits écrans (< sm:) — voir l'onglet
+   * "Abonnement" ci-dessous, seul assez long pour en avoir besoin. Absent =
+   * `label` sert aussi de libellé court (cas des 4 autres onglets, déjà courts). */
+  labelCourt?: string;
   href: string;
   icone: typeof IconeAccueil;
   actif: (pathname: string) => boolean;
@@ -25,10 +29,13 @@ interface Onglet {
  * /eleve/programmes/[id], une fiche par matière), donc pas de cible plus
  * précise possible. Actif aussi sur ces fiches individuelles.
  *
- * "Cartes" (libellé court plutôt que "Mes cartes", pour laisser de la place
- * aux 5 onglets sur mobile — voir flex-1/justify-around ci-dessous, qui
- * répartit la largeur également quel que soit leur nombre) mène à
- * /eleve/mes-cartes, la liste des cartes Fahimta reçues d'un vendeur.
+ * "Abonnement" mène à /eleve/abonnement (carte Fahimta + paiement NITA) —
+ * PAS /eleve/mes-cartes : cette dernière reste accessible via son URL et le
+ * lien "Voir mes cartes reçues →" en haut de la page abonnement, mais n'a
+ * plus son propre onglet (l'abonnement, plus général, est la vraie
+ * destination attendue depuis la barre basse). `labelCourt="Abo"` : seul
+ * des 5 libellés assez long pour déborder sur un très petit écran (< sm:,
+ * même technique que components/eleve/CarteMatiere.tsx pour "Mathématiques").
  */
 export default function BarreNavBasse() {
   const pathname = usePathname();
@@ -42,10 +49,11 @@ export default function BarreNavBasse() {
       actif: (p) => p === "/eleve" || p.startsWith("/eleve/programmes"),
     },
     {
-      label: "Cartes",
-      href: "/eleve/mes-cartes",
+      label: "Abonnement",
+      labelCourt: "Abo",
+      href: "/eleve/abonnement",
       icone: IconeCartes,
-      actif: (p) => p.startsWith("/eleve/mes-cartes"),
+      actif: (p) => p.startsWith("/eleve/abonnement"),
     },
     { label: "Aide", href: "/eleve/aide", icone: IconeAide, actif: (p) => p.startsWith("/eleve/aide") },
     { label: "Profil", href: "/eleve/profil", icone: IconeProfil, actif: (p) => p.startsWith("/eleve/profil") },
@@ -57,7 +65,7 @@ export default function BarreNavBasse() {
       aria-label="Navigation principale"
     >
       <div className="mx-auto flex max-w-[440px] items-stretch justify-around">
-        {onglets.map(({ label, href, icone: Icone, actif }) => {
+        {onglets.map(({ label, labelCourt, href, icone: Icone, actif }) => {
           const estActif = actif(pathname);
           return (
             <Link
@@ -68,7 +76,14 @@ export default function BarreNavBasse() {
             >
               <Icone className={`h-5 w-5 ${estActif ? "text-fh-orange" : "text-white/60"}`} />
               <span className={`text-[11px] font-medium ${estActif ? "text-fh-orange" : "text-white/60"}`}>
-                {label}
+                {labelCourt ? (
+                  <>
+                    <span className="sm:hidden">{labelCourt}</span>
+                    <span className="hidden sm:inline">{label}</span>
+                  </>
+                ) : (
+                  label
+                )}
               </span>
             </Link>
           );
