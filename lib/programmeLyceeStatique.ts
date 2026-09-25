@@ -3,11 +3,11 @@
  * lib/programmeCollegeStatique.ts, avec un niveau de navigation
  * supplémentaire (la SÉRIE) : niveau → série → matière → thèmes/chapitres.
  *
- * CE QUI EST RÉEL vs PLACEHOLDER : toute la SECONDE, toute la PREMIÈRE et
- * TERMINALE × Séries A (1 matière) et C (4 matières) sont désormais
- * RÉELLES. Seule Terminale D reste PROGRAMME_PLACEHOLDER — le vrai contenu
- * sera intégré dans un second temps, comme cela a été fait pour le
- * collège.
+ * CE QUI EST RÉEL : tout le lycée est désormais RÉEL — Seconde (A, C),
+ * Première (A, C, D) et Terminale (A à 1 matière, C et D à 4 matières).
+ * Plus aucun placeholder ne subsiste (comme pour lib/programmeCollegeStatique.ts) :
+ * chaque ProgrammeMatiereStatique référencé depuis PROGRAMMES_PAR_NIVEAU a
+ * estPlaceholder: false.
  *
  * Séries par niveau (programme nigérien réel, à respecter strictement) :
  * Seconde → A, C uniquement (PAS de D) ; Première et Terminale → A, C, D.
@@ -1960,21 +1960,443 @@ const PROGRAMME_SVT_TLE_C: ProgrammeMatiereStatique = {
   ],
 };
 
-/** PLACEHOLDER — même objet réutilisé partout (jamais muté, lecture
- * seule), en attendant le vrai contenu de chaque combinaison. */
-const PROGRAMME_PLACEHOLDER: ProgrammeMatiereStatique = {
-  estPlaceholder: true,
-  themes: [],
+/** RÉEL — repris de lib/maths_tleD_statique.ts (fourni par la personne à
+ * l'origine de cette tâche). */
+const PROGRAMME_MATHS_TLE_D: ProgrammeMatiereStatique = {
+  estPlaceholder: false,
+  themes: [
+    {
+      titre: "Organisation des calculs — Calculs numériques",
+      volumeHoraire: 24,
+      chapitres: [
+        {
+          titre: "Nombres complexes",
+          description:
+            "Corps ℂ : formes algébrique, trigonométrique et exponentielle (z = re^iθ), conjugué, module, argument. Représentation géométrique, affixe. Formules de Moivre et d'Euler. Racines n-ièmes. Interprétation géométrique (distances, angles, alignement, cocyclicité). Équations du 2nd degré dans ℂ.",
+        },
+      ],
+    },
+    {
+      titre: "Applications affines du plan",
+      volumeHoraire: 9,
+      chapitres: [
+        {
+          titre: "Similitudes planes directes",
+          description:
+            "Similitudes planes directes : définition, caractérisation, application complexe associée, éléments caractéristiques (centre, rapport, angle). Construction des images de figures simples.",
+        },
+      ],
+    },
+    {
+      titre: "Organisation des données",
+      volumeHoraire: 123,
+      chapitres: [
+        {
+          titre: "Suites numériques",
+          description:
+            "Raisonnement par récurrence. Convergence et divergence, suites majorées/minorées et monotones. Suites de la forme uₙ₊₁ = f(uₙ). Théorèmes de comparaison (encadrement, gendarmes).",
+        },
+        {
+          titre: "Fonctions logarithmes",
+          description:
+            "Logarithme népérien (primitive de 1/x s'annulant en 1) : propriétés, dérivée, limites, représentation. Logarithme de base a, cas du logarithme décimal.",
+        },
+        {
+          titre: "Propriétés des fonctions continues ou dérivables",
+          description:
+            "Théorème des valeurs intermédiaires, image d'un intervalle. Fonction réciproque. Dérivée d'une composée et de la réciproque d'une bijection. Notations df/dx, d²f/dx².",
+        },
+        {
+          titre: "Fonction exponentielle",
+          description:
+            "Exponentielle de base e : propriétés, dérivée de e^u(x), limites usuelles. Exponentielle de base a (ax = e^(x·ln a)). Étude et représentation.",
+        },
+        {
+          titre: "Exemples d'étude de fonctions",
+          description:
+            "Résolution graphique d'équations et d'inéquations, point d'inflexion, asymptotes et position de la courbe. Fonctions rationnelles, irrationnelles, trigonométriques, logarithmiques et exponentielles. Encadrements et approximation d'un zéro.",
+        },
+        {
+          titre: "Calcul intégral",
+          description:
+            "Intégrale d'une fonction continue : relation de Chasles, linéarité, positivité, inégalité de la moyenne, valeur moyenne. Techniques (primitivation, changement de variable affine, intégration par parties). Applications : encadrements, calcul d'aires et de volumes.",
+        },
+        {
+          titre: "Équations différentielles",
+          description:
+            "Équations différentielles simples (y' = ay, y'' + ω²y = 0 et cas s'y ramenant), résolution et conditions initiales.",
+        },
+        {
+          titre: "Probabilités sur un ensemble fini",
+          description:
+            "Vocabulaire, calcul par dénombrement, propriétés. Probabilité conditionnelle (probabilité totale). Événements indépendants.",
+        },
+        {
+          titre: "Variables aléatoires",
+          description:
+            "Notion de variable aléatoire réelle. Loi de probabilité : espérance, variance, écart-type. Fonction de répartition. Loi binomiale, schéma de Bernoulli.",
+        },
+        {
+          titre: "Séries statistiques à deux variables",
+          description:
+            "Nuage de points, point moyen, droites de régression, coefficient de corrélation et son interprétation.",
+        },
+      ],
+    },
+  ],
 };
 
-function programmesPlaceholderPourMatieres(): Record<MatiereLyceeId, ProgrammeMatiereStatique> {
-  return {
-    mathematiques: PROGRAMME_PLACEHOLDER,
-    physique: PROGRAMME_PLACEHOLDER,
-    chimie: PROGRAMME_PLACEHOLDER,
-    svt: PROGRAMME_PLACEHOLDER,
-  };
-}
+/** RÉEL — repris de lib/physique_tleD_statique.ts (fourni par la personne
+ * à l'origine de cette tâche). */
+const PROGRAMME_PHYSIQUE_TLE_D: ProgrammeMatiereStatique = {
+  estPlaceholder: false,
+  themes: [
+    {
+      titre: "Mécanique",
+      volumeHoraire: 28,
+      chapitres: [
+        {
+          titre: "Cinématique",
+          description:
+            "Étude du mouvement d'un point : vecteurs position, vitesse et accélération. Mouvements rectilignes (uniforme, uniformément varié) et circulaires. Repère de Frenet. Équations horaires et trajectoires.",
+        },
+        {
+          titre: "Mouvement du centre d'inertie",
+          description:
+            "Relation fondamentale de la dynamique (théorème du centre d'inertie), système et forces extérieures. Applications aux mouvements de translation.",
+        },
+        {
+          titre: "Mouvement dans le champ de pesanteur",
+          description:
+            "Chute libre et mouvement d'un projectile dans le champ de pesanteur uniforme. Équations horaires, trajectoire parabolique, portée et flèche.",
+        },
+        {
+          titre: "Mouvement de particules chargées",
+          description:
+            "Mouvement d'une particule chargée dans un champ électrique uniforme (accélération, déviation) et dans un champ magnétique. Applications.",
+        },
+        {
+          titre: "Oscillateurs mécaniques",
+          description:
+            "Oscillateur mécanique (pendule élastique, pendule simple). Équation différentielle, période propre, énergie de l'oscillateur. Oscillations libres.",
+        },
+      ],
+    },
+    {
+      titre: "Vibration et propagation (ondes)",
+      volumeHoraire: 23,
+      chapitres: [
+        {
+          titre: "Généralités sur les ondes",
+          description: "Onde mécanique, onde progressive, transversale et longitudinale. Célérité, propagation d'une perturbation.",
+        },
+        {
+          titre: "Propagation d'un mouvement vibratoire",
+          description:
+            "Onde progressive sinusoïdale : période, fréquence, longueur d'onde (λ = v·T). Équation d'une onde, phase.",
+        },
+        {
+          titre: "Superposition de deux ondes",
+          description: "Superposition de deux mouvements vibratoires, ondes stationnaires, nœuds et ventres.",
+        },
+        {
+          titre: "Interférences et diffraction d'ondes",
+          description:
+            "Interférences d'ondes mécaniques et lumineuses, diffraction de la lumière, nature ondulatoire de la lumière.",
+        },
+      ],
+    },
+    {
+      titre: "Électromagnétisme",
+      volumeHoraire: 25,
+      chapitres: [
+        {
+          titre: "Champ magnétique",
+          description: "Champ magnétique créé par des courants (fil, bobine, solénoïde). Vecteur champ magnétique, spectres.",
+        },
+        {
+          titre: "Force de Lorentz",
+          description:
+            "Force de Lorentz sur une charge en mouvement dans un champ magnétique. Caractéristiques et applications.",
+        },
+        {
+          titre: "Force de Laplace",
+          description:
+            "Force de Laplace sur un conducteur parcouru par un courant. Loi de Laplace, applications (moteur, haut-parleur).",
+        },
+        {
+          titre: "Induction électromagnétique",
+          description:
+            "Phénomène d'induction, flux magnétique, loi de Faraday et loi de Lenz. Force électromotrice induite.",
+        },
+        {
+          titre: "Auto-induction",
+          description: "Auto-induction, inductance d'une bobine, f.é.m. d'auto-induction, énergie emmagasinée.",
+        },
+      ],
+    },
+    {
+      titre: "Oscillations électriques",
+      volumeHoraire: 9,
+      chapitres: [
+        {
+          titre: "Circuit oscillant LC",
+          description:
+            "Circuit LC et RLC : oscillations libres, équation différentielle, période propre. Amortissement, énergie.",
+        },
+        {
+          titre: "Circuit en régime sinusoïdal forcé",
+          description:
+            "Circuit RLC en régime sinusoïdal forcé : impédance, déphasage, résonance. Construction de Fresnel, puissance.",
+        },
+      ],
+    },
+    {
+      titre: "Phénomènes corpusculaires",
+      volumeHoraire: 10,
+      chapitres: [
+        {
+          titre: "Effet photoélectrique",
+          description:
+            "Effet photoélectrique, quantum d'énergie, photon. Relation d'Einstein, travail d'extraction, cellule photoélectrique.",
+        },
+        {
+          titre: "Noyau atomique",
+          description: "Constitution du noyau, énergie de liaison, défaut de masse (E = mc²), stabilité des noyaux.",
+        },
+        {
+          titre: "Réactions nucléaires",
+          description:
+            "Radioactivité (α, β, γ), lois de conservation, décroissance et période. Fission et fusion nucléaires, applications et dangers.",
+        },
+      ],
+    },
+  ],
+};
+
+/** RÉEL — repris de lib/chimie_tleD_statique.ts (fourni par la personne à
+ * l'origine de cette tâche). */
+const PROGRAMME_CHIMIE_TLE_D: ProgrammeMatiereStatique = {
+  estPlaceholder: false,
+  themes: [
+    {
+      titre: "Chimie générale : acides et bases en solution aqueuse",
+      volumeHoraire: 16,
+      chapitres: [
+        {
+          titre: "Solutions aqueuses",
+          description:
+            "Autoprotolyse de l'eau, produit ionique Ke, notion de pH. Solutions acides, basiques et neutres. Mesure du pH.",
+        },
+        {
+          titre: "Solutions aqueuses d'acides et de bases",
+          description:
+            "Acides forts et faibles, bases fortes et faibles. Calcul de pH, coefficient d'ionisation, constante d'acidité Ka et pKa.",
+        },
+        {
+          titre: "Couples acide-base",
+          description:
+            "Couples acide-base conjugués, force relative, classification. Diagramme de prédominance, domaines de pH.",
+        },
+        {
+          titre: "Réaction acide-base",
+          description:
+            "Réaction acide-base, dosage acido-basique, équivalence. Courbe de dosage pH-métrique, indicateurs colorés.",
+        },
+        {
+          titre: "Solutions tampon",
+          description: "Solutions tampon : préparation, propriétés, pouvoir tampon, importance biologique.",
+        },
+      ],
+    },
+    {
+      titre: "Chimie organique",
+      volumeHoraire: 24,
+      chapitres: [
+        {
+          titre: "Alcools",
+          description: "Alcools : structure, nomenclature, classes. Réactions : oxydation ménagée, déshydratation, estérification.",
+        },
+        {
+          titre: "Acides carboxyliques",
+          description:
+            "Acides carboxyliques et dérivés : structure, nomenclature, propriétés acides. Estérification et hydrolyse.",
+        },
+        {
+          titre: "Amines",
+          description:
+            "Amines : structure, nomenclature, classes (primaire, secondaire, tertiaire). Caractère basique et réactions.",
+        },
+        {
+          titre: "Acides aminés",
+          description:
+            "Acides α-aminés : structure, propriétés (caractère amphotère, zwitterion), chiralité. Liaison peptidique et introduction aux protéines.",
+        },
+      ],
+    },
+  ],
+};
+
+/** RÉEL — repris de lib/svt_tleD_statique.ts (fourni par la personne à
+ * l'origine de cette tâche). */
+const PROGRAMME_SVT_TLE_D: ProgrammeMatiereStatique = {
+  estPlaceholder: false,
+  themes: [
+    {
+      titre: "Le support de l'information génétique",
+      volumeHoraire: 10,
+      chapitres: [
+        {
+          titre: "Notion de l'information génétique",
+          description:
+            "Localisation de l'information génétique (noyau, chromosomes). Notion de gène, de génome. Mise en évidence du rôle du noyau (expériences de transplantation nucléaire).",
+        },
+        {
+          titre: "Nature chimique et structure de l'ADN",
+          description:
+            "Structure de la molécule d'ADN (double hélice, nucléotides, bases azotées, complémentarité). Universalité de la molécule. Le code génétique.",
+        },
+      ],
+    },
+    {
+      titre: "La transmission de l'information génétique",
+      volumeHoraire: 10,
+      chapitres: [
+        {
+          titre: "La reproduction conforme (mitose)",
+          description:
+            "Réplication de l'ADN (semi-conservative). Mitose : étapes, conservation du caryotype. Reproduction conforme de la cellule.",
+        },
+        {
+          titre: "Notion de cycle cellulaire",
+          description:
+            "Cycle cellulaire : interphase (G1, S, G2) et mitose. Variation de la quantité d'ADN au cours du cycle. Régulation du cycle.",
+        },
+      ],
+    },
+    {
+      titre: "L'expression de l'information génétique dans la cellule",
+      volumeHoraire: 10,
+      chapitres: [
+        {
+          titre: "Protéines",
+          description:
+            "Structure et diversité des protéines (acides aminés, structures primaire à quaternaire). Relation entre protéines et caractères de l'organisme.",
+        },
+        {
+          titre: "Mécanismes de l'expression génétique",
+          description:
+            "Transcription (ADN → ARN messager) et traduction (ARN → protéine). Code génétique, rôle des ARN de transfert et des ribosomes. Relation gène-protéine-caractère.",
+        },
+      ],
+    },
+    {
+      titre: "Reproduction sexuée et brassage génétique",
+      volumeHoraire: 24,
+      chapitres: [
+        {
+          titre: "Reproduction sexuée et méiose",
+          description:
+            "Méiose : étapes, réduction chromatique, formation des gamètes. Fécondation et rétablissement de la diploïdie. Stabilité du caryotype de l'espèce.",
+        },
+        {
+          titre: "Brassage des gènes",
+          description:
+            "Brassage intrachromosomique (crossing-over) et interchromosomique lors de la méiose. Diversité génétique des gamètes et des individus. Échiquier de croisement.",
+        },
+      ],
+    },
+    {
+      titre: "Hérédité et génétique humaine",
+      volumeHoraire: 10,
+      chapitres: [
+        {
+          titre: "Transmission des caractères héréditaires",
+          description:
+            "Lois de Mendel, monohybridisme et dihybridisme. Transmission autosomale et liée au sexe. Cartes factorielles, arbres généalogiques.",
+        },
+        {
+          titre: "Anomalies génétiques",
+          description:
+            "Mutations géniques et chromosomiques. Maladies héréditaires (drépanocytose, hémophilie, daltonisme) et anomalies du caryotype (trisomie 21). Conseil génétique.",
+        },
+      ],
+    },
+    {
+      titre: "Communication par voies nerveuse et humorale",
+      volumeHoraire: 30,
+      chapitres: [
+        {
+          titre: "Tissu nerveux et notions de réflexes",
+          description:
+            "Organisation du système nerveux, structure du neurone. Réflexes innés et conditionnés, arc réflexe. Propriétés du tissu nerveux.",
+        },
+        {
+          titre: "Messages nerveux",
+          description:
+            "Potentiel de repos et potentiel d'action. Propagation du message nerveux, synapses et transmission synaptique, plaque motrice. Codage du message.",
+        },
+        {
+          titre: "La glycémie",
+          description:
+            "Régulation de la glycémie : constante glycémique, rôle du foie et du pancréas (insuline, glucagon), homéostasie. Les deux types de diabète. Communication humorale.",
+        },
+      ],
+    },
+    {
+      titre: "Fonctionnement des appareils génitaux et leur régulation",
+      volumeHoraire: 15,
+      chapitres: [
+        {
+          titre: "Les appareils génitaux et leur fonctionnement",
+          description:
+            "Organisation des appareils génitaux. Gonades, gamétogenèse (spermatogenèse, ovogenèse), production d'hormones sexuelles, activité testiculaire.",
+        },
+        {
+          titre: "Régulation du fonctionnement des organes génitaux",
+          description:
+            "Cycles sexuels chez la femme (ovarien, utérin) et leur régulation par le complexe hypothalamo-hypophysaire. Contrôle hormonal de l'activité testiculaire.",
+        },
+        {
+          titre: "De la fécondation à la nidation",
+          description:
+            "Fécondation : localisation, étapes. Devenir de l'œuf : migration, divisions, nidation. Rôle de l'HCG et maintien de la grossesse.",
+        },
+      ],
+    },
+    {
+      titre: "Régulation des naissances",
+      volumeHoraire: 4,
+      chapitres: [
+        {
+          titre: "Les méthodes contraceptives et la stérilité",
+          description:
+            "Méthodes contraceptives (naturelles, mécaniques, chimiques), mode d'action des pilules. Causes de stérilité chez l'homme et la femme, procréation médicalement assistée.",
+        },
+      ],
+    },
+    {
+      titre: "Mécanismes de l'immunité",
+      volumeHoraire: 12,
+      chapitres: [
+        {
+          titre: "Le soi et le non-soi",
+          description: "Notion de soi et de non-soi, marqueurs du soi (système HLA). Reconnaissance de l'étranger (antigènes).",
+        },
+        {
+          titre: "Les réponses immunitaires",
+          description:
+            "Immunité non spécifique (inflammation, phagocytose) et spécifique. Réponse humorale (anticorps, lymphocytes B) et cellulaire (lymphocytes T). Mémoire immunitaire, vaccination.",
+        },
+        {
+          titre: "Le dysfonctionnement du système immunitaire : le SIDA",
+          description:
+            "Le VIH et son action sur les lymphocytes T4. Phases de l'infection, séropositivité et SIDA. Effondrement des défenses immunitaires, prévention.",
+        },
+      ],
+    },
+  ],
+};
 
 /**
  * Pour chaque série de chaque niveau, les matières RÉELLEMENT enseignées à
@@ -1987,8 +2409,9 @@ function programmesPlaceholderPourMatieres(): Record<MatiereLyceeId, ProgrammeMa
  * des clés présentes ici — jamais d'une liste fixe.
  *
  * Cas Seconde D (n'existe pas, voir SERIES_PAR_NIVEAU) : Record<SerieLyceeId, ...>
- * exige TOUTES les clés en TypeScript, cette entrée reste donc simplement
- * inaccessible depuis la navigation (trouverSerieLycee la rejette).
+ * exige TOUTES les clés en TypeScript, cette entrée reste donc un objet vide
+ * ({} — valide grâce à Partial), simplement inaccessible depuis la
+ * navigation (trouverSerieLycee la rejette).
  */
 const PROGRAMMES_PAR_NIVEAU: Record<
   NiveauLyceeId,
@@ -2007,7 +2430,7 @@ const PROGRAMMES_PAR_NIVEAU: Record<
       chimie: PROGRAMME_CHIMIE_2NDE_C,
       svt: PROGRAMME_SVT_2NDE_C,
     },
-    d: programmesPlaceholderPourMatieres(),
+    d: {},
   },
   premiere: {
     a: {
@@ -2037,7 +2460,12 @@ const PROGRAMMES_PAR_NIVEAU: Record<
       chimie: PROGRAMME_CHIMIE_TLE_C,
       svt: PROGRAMME_SVT_TLE_C,
     },
-    d: programmesPlaceholderPourMatieres(),
+    d: {
+      mathematiques: PROGRAMME_MATHS_TLE_D,
+      physique: PROGRAMME_PHYSIQUE_TLE_D,
+      chimie: PROGRAMME_CHIMIE_TLE_D,
+      svt: PROGRAMME_SVT_TLE_D,
+    },
   },
 };
 

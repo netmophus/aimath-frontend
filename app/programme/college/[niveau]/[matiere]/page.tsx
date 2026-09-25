@@ -29,10 +29,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
  * NIVEAU 3 du parcours : programme détaillé (thèmes → chapitres) pour une
  * matière d'un niveau donné. `niveau`/`matiere` non reconnus → 404.
  *
- * Données STATIQUES (lib/programmeCollegeStatique.ts) — seul Maths 6e est un
- * vrai contenu, le reste affiche un message "Programme bientôt disponible".
- * À remplacer par un appel API public plus tard (voir le commentaire en tête
- * de ce fichier de données).
+ * Données STATIQUES (lib/programmeCollegeStatique.ts) — les 4 niveaux × 4
+ * matières du collège ont toutes leur vrai contenu, aucun placeholder ne
+ * subsiste. À remplacer par un appel API public plus tard (voir le
+ * commentaire en tête de ce fichier de données).
  */
 export default async function ProgrammeMatierePage({ params }: PageProps) {
   const { niveau: niveauId, matiere: matiereId } = await params;

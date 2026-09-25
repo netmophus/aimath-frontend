@@ -35,10 +35,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
  * matière d'une série d'un niveau donné. `niveau`/`serie` (pour ce
  * niveau)/`matiere` non reconnus → 404.
  *
- * Données STATIQUES (lib/programmeLyceeStatique.ts) — toute la Seconde,
- * toute la Première et Terminale × Séries A et C sont déjà remplies ;
- * seule Terminale D est encore PROGRAMME_PLACEHOLDER et sera intégrée
- * dans un second temps.
+ * Données STATIQUES (lib/programmeLyceeStatique.ts) — tout le lycée a
+ * désormais son vrai contenu, aucun placeholder ne subsiste.
  *
  * `matiere` reconnue globalement (ex. "physique") mais PAS enseignée pour
  * ce niveau×série (ex. Terminale A n'a que les Mathématiques) → 404,
