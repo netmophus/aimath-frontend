@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import type { LeconListe } from "@/lib/leconApi";
 import type { NotionArbre } from "@/lib/arbreLecons";
 import StatutBadge from "@/components/admin/StatutBadge";
-import { LECON_STATUT_LABELS, LECON_STATUT_STYLES } from "./leconStatutStyles";
+import { ACCES_LECON_LABELS, ACCES_LECON_STYLES, LECON_STATUT_LABELS, LECON_STATUT_STYLES, accesLecon } from "./leconStatutStyles";
 
 interface NotionLigneProps {
   notion: NotionArbre;
@@ -16,6 +16,7 @@ interface NotionLigneProps {
   onDepublier: (id: number) => void;
   onSupprimer: (lecon: LeconListe) => void;
   onCreerPourNotion: () => void;
+  onBasculerAcces: (id: number, estGratuit: boolean) => void;
 }
 
 function formatDate(iso: string): string {
@@ -77,6 +78,7 @@ export default function NotionLigne({
   onDepublier,
   onSupprimer,
   onCreerPourNotion,
+  onBasculerAcces,
 }: NotionLigneProps) {
   const router = useRouter();
   const lecon = notion.lecon;
@@ -119,6 +121,7 @@ export default function NotionLigne({
             <TexteSurligne texte={lecon.titre} terme={termeRecherche} />
           </p>
           <StatutBadge statut={lecon.statut} styles={LECON_STATUT_STYLES} labels={LECON_STATUT_LABELS} />
+          <StatutBadge statut={accesLecon(lecon.est_gratuit)} styles={ACCES_LECON_STYLES} labels={ACCES_LECON_LABELS} />
         </div>
         <p className="text-xs text-fh-ardoise/70">
           {lecon.nb_exercices} exercice(s) · {lecon.nb_videos} vidéo(s) · modifié le {formatDate(lecon.modifie_le)}
@@ -135,6 +138,18 @@ export default function NotionLigne({
           className="rounded-full border border-fh-bleu/20 px-3 py-1.5 text-xs font-medium text-fh-bleu transition-colors hover:bg-fh-sable/60"
         >
           Modifier
+        </button>
+
+        <button
+          type="button"
+          disabled={enCours}
+          onClick={(event) => {
+            event.stopPropagation();
+            onBasculerAcces(lecon.id, !lecon.est_gratuit);
+          }}
+          className="rounded-full border border-fh-orange/40 px-3 py-1.5 text-xs font-medium text-fh-orange-fonce transition-colors hover:bg-fh-accent/40 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {lecon.est_gratuit ? "Rendre premium" : "Rendre gratuit"}
         </button>
 
         {lecon.statut === "publie" ? (

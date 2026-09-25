@@ -31,6 +31,8 @@ export interface LeconListe {
   id: number;
   titre: string;
   statut: LeconStatut;
+  /** Accessible sans abonnement ; indépendant de `statut`. */
+  est_gratuit: boolean;
   notion: NotionInfo;
   chemin: string;
   nb_exercices: number;
@@ -124,6 +126,8 @@ export interface LeconDetail {
   id: number;
   titre: string;
   statut: LeconStatut;
+  /** Accessible sans abonnement ; indépendant de `statut`. */
+  est_gratuit: boolean;
   notion: NotionContexteInfo;
   histoire: string;
   objectifs_pedagogiques: string;
@@ -165,6 +169,16 @@ export function publierLecon(id: number): Promise<LeconDetail> {
 
 export function depublierLecon(id: number): Promise<LeconDetail> {
   return apiRequest<LeconDetail>(`/api/admin/lecons/${id}/depublier/`, { method: "POST" });
+}
+
+/** Bascule rapide gratuit ↔ premium (badge de l'arbre, sans ouvrir
+ * l'éditeur) — PATCH ciblé sur le seul champ concerné, pas le payload
+ * complet de modifierLecon. */
+export function basculerAccesLecon(id: number, estGratuit: boolean): Promise<LeconDetail> {
+  return apiRequest<LeconDetail>(`/api/admin/lecons/${id}/`, {
+    method: "PATCH",
+    body: { est_gratuit: estGratuit },
+  });
 }
 
 // --- Modification complète (étape 2 : éditeur) ---
@@ -213,6 +227,7 @@ export interface ModifierLeconInput {
   a_retenir?: string;
   sujet_examen?: string;
   statut?: LeconStatut;
+  est_gratuit?: boolean;
   exercices?: ExerciceEcriture[];
   videos?: VideoEcriture[];
   ressources?: RessourceEcriture[];

@@ -14,6 +14,8 @@ interface ThemeAccordionProps {
   /** Identifiants des leçons déjà téléchargées pour le hors-ligne — pour le
    * badge sur chaque notion (voir NotionRow). */
   idsTelecharges: Set<number>;
+  /** Transmis tel quel à NotionRow — voir sa documentation. */
+  abonnementActif: boolean;
 }
 
 /** "Thème 1 — Organisation des calculs" → numéro "1" + titre nettoyé
@@ -36,7 +38,14 @@ function analyserTitreTheme(titre: string, position: number): { numero: string; 
  * chapitres et leurs notions directement (pas de second niveau d'accordéon,
  * pour rester simple à parcourir au pouce).
  */
-export default function ThemeAccordion({ theme, position, expanded, onToggle, idsTelecharges }: ThemeAccordionProps) {
+export default function ThemeAccordion({
+  theme,
+  position,
+  expanded,
+  onToggle,
+  idsTelecharges,
+  abonnementActif,
+}: ThemeAccordionProps) {
   const nbNotions = theme.chapitres.reduce((total, chapitre) => total + chapitre.notions.length, 0);
   const nbDisponibles = theme.chapitres.reduce(
     (total, chapitre) => total + chapitre.notions.filter((n) => n.a_lecon_publiee).length,
@@ -95,6 +104,7 @@ export default function ThemeAccordion({ theme, position, expanded, onToggle, id
                     key={notion.id}
                     notion={notion}
                     telechargee={notion.lecon_id !== null && idsTelecharges.has(notion.lecon_id)}
+                    abonnementActif={abonnementActif}
                   />
                 ))}
               </div>

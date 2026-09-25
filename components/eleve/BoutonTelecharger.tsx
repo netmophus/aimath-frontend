@@ -9,6 +9,12 @@ import { IconeCorbeille, IconeTelecharger } from "./icones";
 
 interface BoutonTelechargerProps {
   leconId: number;
+  /** Reflète lecon.verrouille (voir lib/eleveApi.ts) : quand true, le
+   * contenu reçu n'est qu'un aperçu — télécharger n'aurait aucun sens
+   * (l'élève croirait avoir sauvegardé le cours complet). Le bouton de
+   * téléchargement est alors remplacé par une explication ; une leçon déjà
+   * téléchargée avant de (re)devenir premium reste, elle, supprimable. */
+  verrouille: boolean;
   /** Prévenu à chaque changement d'état téléchargée/non-téléchargée — la page
    * de lecture s'en sert pour garder à jour l'ensemble des leçons
    * disponibles hors-ligne (utile au bouton "Voir la leçon" du glossaire).
@@ -23,7 +29,7 @@ type Etat = "verification" | "absente" | "en_cours" | "presente" | "suppression"
  * même son propre toast de retour (succès/erreur) : un seul exemplaire par
  * page, pas de risque d'empiler plusieurs notifications.
  */
-export default function BoutonTelecharger({ leconId, onChange }: BoutonTelechargerProps) {
+export default function BoutonTelecharger({ leconId, verrouille, onChange }: BoutonTelechargerProps) {
   const enLigne = useEnLigne();
   const [etat, setEtat] = useState<Etat>("verification");
   const [toast, setToast] = useState<{ message: string; tone: "succes" | "erreur" } | null>(null);
@@ -97,6 +103,17 @@ export default function BoutonTelecharger({ leconId, onChange }: BoutonTelecharg
         </div>
         {toast && <Toast message={toast.message} tone={toast.tone} onClose={() => setToast(null)} />}
       </>
+    );
+  }
+
+  // Absente et verrouillée (premium, élève non abonné) : télécharger ne
+  // récupérerait que l'aperçu (voir lib/eleveApi.ts, LeconEleve.verrouille)
+  // — pas de bouton trompeur, juste une explication.
+  if (verrouille) {
+    return (
+      <span className="inline-flex min-h-9 items-center gap-1.5 rounded-full bg-fh-sable/60 px-3 py-1.5 text-xs font-medium text-fh-ardoise/70">
+        🔒 Débloque ce cours pour le télécharger
+      </span>
     );
   }
 

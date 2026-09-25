@@ -253,6 +253,7 @@ export interface MeResponse {
   serie: string | null;
   date_inscription: string;
   photo_url: string | null;
+  a_un_abonnement_actif: boolean;
 }
 
 // --- Cascade Cycle → Niveau → Série (formulaire d'inscription, public) ---

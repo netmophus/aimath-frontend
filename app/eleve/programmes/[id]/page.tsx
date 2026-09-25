@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 
 import { ApiError } from "@/lib/api";
+import { useAuth } from "@/lib/auth";
 import { getProgrammeEleve, type ProgrammeDetailEleve } from "@/lib/eleveApi";
 import { listerIdsTelecharges } from "@/lib/offlineStore";
 import ThemeAccordion from "@/components/eleve/ThemeAccordion";
@@ -13,6 +14,8 @@ export default function ProgrammeEleveDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const programmeId = Number(params.id);
+  const { user } = useAuth();
+  const abonnementActif = user?.aUnAbonnementActif ?? false;
 
   const [programme, setProgramme] = useState<ProgrammeDetailEleve | null>(null);
   const [chargement, setChargement] = useState(true);
@@ -117,6 +120,7 @@ export default function ProgrammeEleveDetailPage() {
               expanded={themeOuvertId === theme.id}
               onToggle={() => toggleTheme(theme.id)}
               idsTelecharges={idsTelecharges}
+              abonnementActif={abonnementActif}
             />
           ))}
         </div>

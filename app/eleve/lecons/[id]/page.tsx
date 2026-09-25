@@ -18,6 +18,7 @@ import SujetExamenLecture from "@/components/eleve/SujetExamenLecture";
 import LecteurVideo from "@/components/eleve/LecteurVideo";
 import ModaleTerme from "@/components/eleve/ModaleTerme";
 import BoutonTelecharger from "@/components/eleve/BoutonTelecharger";
+import MurDeblocage from "@/components/eleve/MurDeblocage";
 
 type OngletId = "pourquoi" | "cours" | "demonstrations" | "exercices" | "examen";
 
@@ -200,10 +201,15 @@ export default function LeconEleveDetailPage() {
               Hors-ligne
             </span>
           )}
+          {lecon.verrouille && (
+            <span className="shrink-0 rounded-full bg-fh-accent px-2 py-0.5 text-[11px] font-medium text-fh-orange-fonce">
+              🔒 Premium
+            </span>
+          )}
         </div>
         <h1 className="text-xl font-bold text-fh-bleu">{lecon.titre}</h1>
         <div>
-          <BoutonTelecharger leconId={leconId} onChange={surChangementTelechargement} />
+          <BoutonTelecharger leconId={leconId} verrouille={lecon.verrouille} onChange={surChangementTelechargement} />
         </div>
       </div>
 
@@ -272,6 +278,8 @@ export default function LeconEleveDetailPage() {
               </div>
             )}
           </SectionLecon>
+
+          {lecon.verrouille && <MurDeblocage />}
 
           {!estVide(lecon.a_retenir) && (
             <div className="rounded-2xl bg-fh-accent px-4 py-4">

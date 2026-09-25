@@ -29,6 +29,7 @@ interface ArbreLeconsProps {
   onDepublier: (id: number) => void;
   onSupprimer: (lecon: LeconListe) => void;
   onCreerPourNotion: (contexte: NotionPreremplissage) => void;
+  onBasculerAcces: (id: number, estGratuit: boolean) => void;
 }
 
 interface BrancheCommuneProps {
@@ -40,6 +41,7 @@ interface BrancheCommuneProps {
   onDepublier: (id: number) => void;
   onSupprimer: (lecon: LeconListe) => void;
   onCreerPourNotion: (contexte: NotionPreremplissage) => void;
+  onBasculerAcces: (id: number, estGratuit: boolean) => void;
 }
 
 function ChapitreBranche({
@@ -67,6 +69,7 @@ function ChapitreBranche({
             onPublier={commun.onPublier}
             onDepublier={commun.onDepublier}
             onSupprimer={commun.onSupprimer}
+            onBasculerAcces={commun.onBasculerAcces}
             onCreerPourNotion={() =>
               commun.onCreerPourNotion({
                 programmeId,
@@ -140,6 +143,7 @@ export default function ArbreLecons({
   onDepublier,
   onSupprimer,
   onCreerPourNotion,
+  onBasculerAcces,
 }: ArbreLeconsProps) {
   const [deplies, setDeplies] = useState<Set<string>>(new Set());
 
@@ -181,6 +185,7 @@ export default function ArbreLecons({
     onDepublier,
     onSupprimer,
     onCreerPourNotion,
+    onBasculerAcces,
   };
 
   return (

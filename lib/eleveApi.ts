@@ -41,6 +41,8 @@ export interface NotionEleve {
   ordre: number;
   a_lecon_publiee: boolean;
   lecon_id: number | null;
+  /** null si a_lecon_publiee est false (rien à qualifier). */
+  lecon_est_gratuite: boolean | null;
 }
 
 export interface ChapitreEleve {
@@ -110,6 +112,8 @@ export interface LeconEleve {
   histoire: string;
   objectifs_pedagogiques: string;
   prerequis_texte: string;
+  /** Tronqué aux ~500 premiers caractères si `verrouille` est true — jamais
+   * le cours complet dans ce cas (voir LeconEleveSerializer côté backend). */
   cours_redige: string;
   demonstrations: string;
   a_retenir: string;
@@ -117,6 +121,11 @@ export interface LeconEleve {
   exercices: ExerciceEleve[];
   videos: VideoEleve[];
   ressources: RessourceEleve[];
+  /** true = contenu premium non accessible à cet élève : seuls titre,
+   * objectifs, histoire et un aperçu de cours_redige sont renseignés,
+   * tout le reste ci-dessus est vide/vidé PAR LE SERVEUR (pas un simple
+   * masquage d'affichage). */
+  verrouille: boolean;
 }
 
 export function getLeconEleve(id: number): Promise<LeconEleve> {

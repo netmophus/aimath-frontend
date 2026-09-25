@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 
 import { ApiError } from "@/lib/api";
 import {
+  basculerAccesLecon,
   depublierLecon,
   listerToutesLecons,
   publierLecon,
@@ -14,7 +15,13 @@ import {
   type LeconStatut,
 } from "@/lib/leconApi";
 import { getProgramme, listerProgrammes, type ProgrammeListe } from "@/lib/programmeApi";
-import { construireArbre, filtrerArbre, filtreArbreActif, type MatiereArbre } from "@/lib/arbreLecons";
+import {
+  construireArbre,
+  filtrerArbre,
+  filtreArbreActif,
+  remplacerLeconDansArbre,
+  type MatiereArbre,
+} from "@/lib/arbreLecons";
 import CreerLeconModal, { type NotionPreremplissage } from "@/components/admin/lecons/CreerLeconModal";
 import ArbreLecons from "@/components/admin/lecons/ArbreLecons";
 import DeleteConfirmModal from "@/components/admin/DeleteConfirmModal";
@@ -147,6 +154,26 @@ export default function LeconsPage() {
     }
   }
 
+  /**
+   * Bascule gratuit/premium : mise à jour OPTIMISTE (l'arbre change avant la
+   * réponse serveur — voir remplacerLeconDansArbre) avec rollback vers la
+   * valeur précédente si l'appel échoue, plutôt qu'un setRefreshCle qui
+   * rechargerait tout l'arbre pour un simple booléen.
+   */
+  async function handleBasculerAcces(id: number, estGratuit: boolean) {
+    setIdEnCours(id);
+    setArbreBrut((arbre) => (arbre ? remplacerLeconDansArbre(arbre, id, { est_gratuit: estGratuit }) : arbre));
+    try {
+      await basculerAccesLecon(id, estGratuit);
+      setToast({ message: estGratuit ? "Leçon rendue gratuite." : "Leçon rendue premium.", tone: "succes" });
+    } catch (error) {
+      setArbreBrut((arbre) => (arbre ? remplacerLeconDansArbre(arbre, id, { est_gratuit: !estGratuit }) : arbre));
+      setToast({ message: error instanceof ApiError ? error.message : "Action impossible.", tone: "erreur" });
+    } finally {
+      setIdEnCours(null);
+    }
+  }
+
   async function confirmerSuppression() {
     if (!leconASupprimer) return;
     await supprimerLecon(leconASupprimer.id);
@@ -247,6 +274,7 @@ export default function LeconsPage() {
           onDepublier={handleDepublier}
           onSupprimer={setLeconASupprimer}
           onCreerPourNotion={setModaleCreation}
+          onBasculerAcces={handleBasculerAcces}
         />
       )}
 

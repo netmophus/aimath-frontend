@@ -40,6 +40,7 @@ interface EditeurState {
   demonstrations: string;
   aRetenir: string;
   sujetExamen: string;
+  estGratuit: boolean;
   exercices: ExerciceDraft[];
   videos: VideoDraft[];
   ressources: RessourceDraft[];
@@ -55,6 +56,7 @@ function depuisLecon(lecon: LeconDetail): EditeurState {
     demonstrations: lecon.demonstrations,
     aRetenir: lecon.a_retenir,
     sujetExamen: lecon.sujet_examen,
+    estGratuit: lecon.est_gratuit,
     exercices: [...lecon.exercices]
       .sort((a, b) => a.ordre - b.ordre)
       .map((e) => ({ clef: nouvelleClef(), id: e.id, enonce: e.enonce, corrige: e.corrige, difficulte: e.difficulte })),
@@ -76,6 +78,7 @@ interface Comparable {
   demonstrations: string;
   a_retenir: string;
   sujet_examen: string;
+  est_gratuit: boolean;
   exercices: { id?: number; enonce: string; corrige: string; difficulte: Difficulte }[];
   videos: { id?: number; titre: string; url: string; description: string }[];
   ressources: { id?: number; titre: string; url: string }[];
@@ -92,6 +95,7 @@ function versComparable(etat: EditeurState): Comparable {
     demonstrations: etat.demonstrations,
     a_retenir: etat.aRetenir,
     sujet_examen: etat.sujetExamen,
+    est_gratuit: etat.estGratuit,
     exercices: etat.exercices.map(({ id, enonce, corrige, difficulte }) => ({ id, enonce, corrige, difficulte })),
     videos: etat.videos.map(({ id, titre, url, description }) => ({ id, titre, url, description })),
     ressources: etat.ressources.map(({ id, titre, url }) => ({ id, titre, url })),
@@ -226,6 +230,7 @@ export default function LeconEditeurPage() {
         demonstrations: etat.demonstrations,
         a_retenir: etat.aRetenir,
         sujet_examen: etat.sujetExamen,
+        est_gratuit: etat.estGratuit,
         exercices: etat.exercices.map((e, index) => ({
           id: e.id,
           enonce: e.enonce,
@@ -387,6 +392,22 @@ export default function LeconEditeurPage() {
             Retour
           </button>
         </div>
+      </div>
+
+      <div className="flex items-start gap-2.5 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-fh-sable sm:p-5">
+        <input
+          type="checkbox"
+          id="est-gratuit"
+          checked={etat.estGratuit}
+          onChange={(event) => setChamp("estGratuit", event.target.checked)}
+          className="mt-0.5 h-4 w-4 shrink-0 rounded border-fh-bleu/30 text-fh-orange focus:ring-fh-orange"
+        />
+        <label htmlFor="est-gratuit" className="text-sm text-fh-bleu">
+          <span className="font-semibold">Cours gratuit</span> (accessible sans abonnement)
+          <span className="block text-xs text-fh-ardoise/70">
+            Décoché par défaut : le cours est alors réservé aux élèves abonnés. Prend effet à l&apos;enregistrement.
+          </span>
+        </label>
       </div>
 
       <Section titre="1. Pourquoi cette notion ? (histoire, enjeux, usages)">

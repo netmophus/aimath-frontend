@@ -59,6 +59,13 @@ export interface AuthUser {
   /** Absent juste après un login frais (LoginResponse ne le porte pas) —
    * seulement connu à partir de la prochaine réhydratation via /me/. */
   photoUrl: string | null;
+  /** Sert uniquement à des indications visuelles côté client (ex. cadenas
+   * sur les cours premium dans une liste, voir NotionRow.tsx) — jamais le
+   * verrou réel, qui est TOUJOURS recalculé côté serveur à chaque requête
+   * (voir programme.acces.eleve_peut_acceder). Comme photoUrl ci-dessus,
+   * `false` par défaut juste après un login frais (LoginResponse ne le
+   * porte pas non plus) : se corrige à la prochaine réhydratation via /me/. */
+  aUnAbonnementActif: boolean;
 }
 
 interface AuthContextValue {
@@ -87,6 +94,7 @@ function meToUser(me: MeResponse): AuthUser {
     niveau: me.niveau,
     serie: me.serie,
     photoUrl: me.photo_url,
+    aUnAbonnementActif: me.a_un_abonnement_actif,
   };
 }
 
@@ -150,6 +158,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // LoginResponse ne porte pas la photo (voir AuthUser.photoUrl) —
       // connue dès la prochaine réhydratation (rechargement de page, /me/).
       photoUrl: null,
+      // Idem pour l'abonnement (voir AuthUser.aUnAbonnementActif) : purement
+      // cosmétique, sans conséquence sur le verrou réel (server-side).
+      aUnAbonnementActif: false,
     };
     setUser(utilisateur);
     cacherUser(utilisateur);

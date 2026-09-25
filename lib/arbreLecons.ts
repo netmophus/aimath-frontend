@@ -214,6 +214,38 @@ export function collecterClesADeplier(arbreFiltre: MatiereArbre[]): Set<string> 
   return cles;
 }
 
+/**
+ * Remplace, IMMUABLEMENT, les champs de la leçon `leconId` par `patch`
+ * partout où elle apparaît dans l'arbre (une seule fois en pratique — une
+ * notion a au plus une leçon) — pour la mise à jour optimiste de la bascule
+ * gratuit/premium (voir NotionLigne.tsx) : pas de refetch réseau, l'UI
+ * change instantanément, avec un rollback trivial (même fonction, patch
+ * inverse) si l'appel API échoue ensuite.
+ */
+export function remplacerLeconDansArbre(
+  arbre: MatiereArbre[],
+  leconId: number,
+  patch: Partial<LeconListe>
+): MatiereArbre[] {
+  return arbre.map((matiere) => ({
+    ...matiere,
+    programmes: matiere.programmes.map((programme) => ({
+      ...programme,
+      themes: programme.themes.map((theme) => ({
+        ...theme,
+        chapitres: theme.chapitres.map((chapitre) => ({
+          ...chapitre,
+          notions: chapitre.notions.map((notion) =>
+            notion.lecon && notion.lecon.id === leconId
+              ? { ...notion, lecon: { ...notion.lecon, ...patch } }
+              : notion
+          ),
+        })),
+      })),
+    })),
+  }));
+}
+
 /** "5/7 leçons" (+ " (3 publiées)" si au moins une leçon publiée). */
 export function formaterProgres(nbLecons: number, nbNotions: number, nbLeconsPubliees: number): string {
   const base = `${nbLecons}/${nbNotions} leçon${nbNotions > 1 ? "s" : ""}`;
