@@ -5,8 +5,11 @@ type CycleAccueilId = "college" | "lycee";
 
 interface ClassePastille {
   label: string;
-  /** Slug simple utilisé dans l'URL (ex. /programme/1re-c). */
-  slug: string;
+  /** Route complète vers le programme de ce niveau/série (ex.
+   * /programme/lycee/premiere/c) — pas de slug reconstruit, les routes
+   * collège et lycée n'ont pas la même forme (niveau seul vs
+   * niveau/série). */
+  href: string;
 }
 
 interface CycleAccueil {
@@ -37,32 +40,33 @@ const CYCLES_ACCUEIL: readonly CycleAccueil[] = [
       alt: "Élèves du collège étudiant ensemble",
     },
     classes: [
-      { label: "6e", slug: "6e" },
-      { label: "5e", slug: "5e" },
-      { label: "4e", slug: "4e" },
-      { label: "3e", slug: "3e" },
+      { label: "6e", href: "/programme/college/6e" },
+      { label: "5e", href: "/programme/college/5e" },
+      { label: "4e", href: "/programme/college/4e" },
+      { label: "3e", href: "/programme/college/3e" },
     ],
   },
   {
     id: "lycee",
     titre: "Lycée",
-    description: "2nde, 1re et Tle · séries C·D·E·A·G",
+    description: "2nde, 1re et Tle · séries C·D·A",
     image: {
       src: "/cycles/lycee.jpg",
       alt: "Élèves du lycée en pleine révision",
     },
     classes: [
-      { label: "2nde", slug: "2nde" },
-      { label: "1re C", slug: "1re-c" },
-      { label: "1re D", slug: "1re-d" },
-      { label: "1re E", slug: "1re-e" },
-      { label: "1re A", slug: "1re-a" },
-      { label: "1re G", slug: "1re-g" },
-      { label: "Tle C", slug: "tle-c" },
-      { label: "Tle D", slug: "tle-d" },
-      { label: "Tle E", slug: "tle-e" },
-      { label: "Tle A", slug: "tle-a" },
-      { label: "Tle G", slug: "tle-g" },
+      // Seconde n'a que 2 séries réelles (A et C — pas de D à ce niveau,
+      // voir SERIES_PAR_NIVEAU dans lib/programmeLyceeStatique.ts) : une
+      // pastille par série, comme pour 1re et Tle, plutôt qu'une pastille
+      // "2nde" unique qui devrait choisir arbitrairement entre les deux.
+      { label: "2nde A", href: "/programme/lycee/seconde/a" },
+      { label: "2nde C", href: "/programme/lycee/seconde/c" },
+      { label: "1re C", href: "/programme/lycee/premiere/c" },
+      { label: "1re D", href: "/programme/lycee/premiere/d" },
+      { label: "1re A", href: "/programme/lycee/premiere/a" },
+      { label: "Tle C", href: "/programme/lycee/terminale/c" },
+      { label: "Tle D", href: "/programme/lycee/terminale/d" },
+      { label: "Tle A", href: "/programme/lycee/terminale/a" },
     ],
   },
 ];
@@ -156,9 +160,10 @@ export default function ClassesBand() {
 
                   <ul className="pointer-events-auto relative z-20 mt-6 flex flex-wrap gap-2">
                     {cycle.classes.map((classe) => (
-                      <li key={classe.slug}>
+                      <li key={classe.href}>
                         <Link
-                          href={`/programme/${classe.slug}`}
+                          href={classe.href}
+                          aria-label={`Programme ${classe.label}`}
                           className="inline-block rounded-full border border-white/30 bg-white/15 px-4 py-2 text-sm font-medium text-white backdrop-blur-sm transition-colors duration-200 hover:border-white/50 hover:bg-white/30"
                         >
                           {classe.label}
