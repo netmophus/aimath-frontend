@@ -4,11 +4,10 @@
  * supplémentaire (la SÉRIE) : niveau → série → matière → thèmes/chapitres.
  *
  * CE QUI EST RÉEL vs PLACEHOLDER : toute la SECONDE (séries A et C) et
- * PREMIÈRE × Séries A et D (Mathématiques/Physique/Chimie/SVT) sont
- * désormais RÉELLES. Première C et toute la Terminale restent
+ * toute la PREMIÈRE (séries A, C et D — Mathématiques/Physique/Chimie/SVT)
+ * sont désormais RÉELLES. Seule la TERMINALE (toutes séries) reste
  * PROGRAMME_PLACEHOLDER — le vrai contenu sera intégré dans un second
- * temps, niveau par niveau/série par série, comme cela a été fait pour le
- * collège.
+ * temps, série par série, comme cela a été fait pour le collège.
  *
  * Séries par niveau (programme nigérien réel, à respecter strictement) :
  * Seconde → A, C uniquement (PAS de D) ; Première et Terminale → A, C, D.
@@ -1158,6 +1157,351 @@ const PROGRAMME_SVT_1RE_D: ProgrammeMatiereStatique = {
   ],
 };
 
+/** RÉEL — repris de lib/maths_1reC_statique.ts (fourni par la personne à
+ * l'origine de cette tâche). */
+const PROGRAMME_MATHS_1RE_C: ProgrammeMatiereStatique = {
+  estPlaceholder: false,
+  themes: [
+    {
+      titre: "Organisation des calculs — Calcul littéral",
+      volumeHoraire: 12,
+      chapitres: [
+        {
+          titre: "Équations, inéquations, polynômes, systèmes linéaires",
+          description:
+            "Polynômes du second degré : somme et produit des zéros, équations et inéquations avec paramètre. Factorisation d'un polynôme de degré n ≥ 3. Systèmes linéaires dans ℝ³ et ℝ⁴ (pivot de Gauss). Équations et inéquations irrationnelles.",
+        },
+      ],
+    },
+    {
+      titre: "Organisation des données",
+      volumeHoraire: 78,
+      chapitres: [
+        {
+          titre: "Généralités sur les fonctions numériques",
+          description:
+            "Comparaison de deux fonctions, opérations (somme, produit, quotient, composée). Fonctions associées à f et leurs courbes. Image directe et réciproque ; application injective, surjective, bijective.",
+        },
+        {
+          titre: "Limites — Continuité",
+          description:
+            "Limite d'une fonction (en +∞, −∞, en un réel), limites et opérations, limite à gauche et à droite. Unicité de la limite. Continuité en un point et sur un intervalle. Prolongement par continuité.",
+        },
+        {
+          titre: "Dérivation",
+          description:
+            "Nombre dérivé en un point, dérivabilité, tangente. Fonction dérivée des fonctions usuelles ; dérivée d'une somme, produit, quotient. Signe de la dérivée et sens de variation, extremums.",
+        },
+        {
+          titre: "Exemples d'étude de fonctions numériques",
+          description:
+            "Asymptotes et points particuliers. Fonctions polynômes (degré ≤ 3), homographiques, rationnelles, et trigonométriques (sin, cos, tan, sin(ax+b), cos(ax+b)). Étude, représentation et résolution de problèmes.",
+        },
+        {
+          titre: "Primitives",
+          description:
+            "Notion de primitive d'une fonction continue sur un intervalle. Détermination de l'ensemble des primitives et de la primitive prenant une valeur donnée (cas simples : polynômes, sinus, cosinus).",
+        },
+        {
+          titre: "Suites numériques",
+          description:
+            "Définition (graphique, formule, récurrence). Raisonnement par récurrence. Variation. Suites arithmétiques et géométriques (raison, terme général, somme). Notion de convergence (comportement quand n croît).",
+        },
+        {
+          titre: "Statistique descriptive",
+          description:
+            "Séries à une variable : regroupement par classes, histogramme. Caractéristiques de position (classe modale, médiane, moyenne) et de dispersion (variance, écart-type, étendue, écart moyen) d'une série groupée.",
+        },
+        {
+          titre: "Dénombrement",
+          description:
+            "Cardinal d'un ensemble fini, réunion, produit cartésien, parties. Arbres de choix. Arrangements, permutations (Aⁿₚ, factorielle), combinaisons (Cⁿₚ). Formule du binôme et triangle de Pascal.",
+        },
+      ],
+    },
+    {
+      titre: "Géométrie plane",
+      volumeHoraire: 45,
+      chapitres: [
+        {
+          titre: "Angles orientés et trigonométrie",
+          description:
+            "Angles orientés, relation de Chasles. Angle inscrit dans un cercle, théorème de l'angle inscrit et de l'angle au centre, cocyclicité, arcs capables. Formules d'addition et de duplication. Équations et inéquations trigonométriques.",
+        },
+        {
+          titre: "Applications du produit scalaire et du barycentre",
+          description:
+            "Équations d'un cercle (paramétrique, cartésienne). Distance d'un point à une droite. Lignes de niveau : fonction scalaire de Leibniz, applications M↦AM·AB, M↦MA·MB, M↦MA/MB.",
+        },
+        {
+          titre: "Transformations du plan",
+          description:
+            "Isométries : symétrie glissée, déplacement et antidéplacement, propriétés. Homothéties et leurs composées. Similitudes (composée d'une homothétie et d'une isométrie) : construction d'images de figures.",
+        },
+      ],
+    },
+    {
+      titre: "Géométrie dans l'espace",
+      volumeHoraire: 15,
+      chapitres: [
+        {
+          titre: "Vecteurs de l'espace",
+          description: "Définition et opérations sur les vecteurs de l'espace, combinaisons linéaires, coplanarité.",
+        },
+        {
+          titre: "Positions de droites et plans de l'espace",
+          description:
+            "Orthogonalité et projections orthogonales dans l'espace. Représentations paramétriques et équations cartésiennes de droites et plans. Intersections de droites et plans. Distance d'un point à un plan.",
+        },
+        {
+          titre: "Produit scalaire et produit vectoriel dans l'espace",
+          description:
+            "Produit scalaire dans l'espace : définition, expressions, vecteurs orthogonaux, norme. Produit vectoriel : définition, notation, et utilisation pour déterminer un vecteur normal à un plan.",
+        },
+      ],
+    },
+  ],
+};
+
+/** RÉEL — repris de lib/physique_1reC_statique.ts (fourni par la personne
+ * à l'origine de cette tâche). */
+const PROGRAMME_PHYSIQUE_1RE_C: ProgrammeMatiereStatique = {
+  estPlaceholder: false,
+  themes: [
+    {
+      titre: "Mécanique",
+      volumeHoraire: 54,
+      chapitres: [
+        {
+          titre: "Mouvement",
+          description:
+            "Caractère relatif du mouvement : référentiels, repères, positions, trajectoires. Vitesse d'un point mobile, caractéristiques du vecteur-vitesse (unités m·s⁻¹, rad·s⁻¹). Mouvements rectiligne uniforme et circulaire uniforme. Abscisse curviligne et angulaire.",
+        },
+        {
+          titre: "Centre d'inertie",
+          description:
+            "Solide isolé et pseudo-isolé, forces extérieures et intérieures. Mise en évidence et propriétés barycentriques du centre d'inertie. Principe d'inertie.",
+        },
+        {
+          titre: "Quantité de mouvement",
+          description:
+            "Définition, caractéristiques et représentation du vecteur quantité de mouvement (unité kg·m·s⁻¹). Système de deux solides, conservation pour un système isolé, variation pour un solide.",
+        },
+        {
+          titre: "Travail et puissance",
+          description:
+            "Travail et puissance des forces en translation (W = F·AB·cosα) et en rotation autour d'un axe fixe. Caractère algébrique du travail. Couple de forces et moment. Puissances moyenne et instantanée.",
+        },
+        {
+          titre: "Énergie cinétique",
+          description:
+            "Énergie cinétique de translation et de rotation, moment d'inertie (J∆, unité kg·m²). Théorème de l'énergie cinétique en translation et en rotation, et ses applications.",
+        },
+        {
+          titre: "Énergie potentielle",
+          description:
+            "Champ de pesanteur uniforme. Énergie potentielle de pesanteur et sa variation. Énergie potentielle élastique.",
+        },
+        {
+          titre: "Énergie mécanique",
+          description:
+            "Définition et expression de l'énergie mécanique d'un solide. Conservation et non-conservation (conséquences pratiques : moteurs, freinage).",
+        },
+      ],
+    },
+    {
+      titre: "Électricité",
+      volumeHoraire: 28,
+      chapitres: [
+        {
+          titre: "Énergie électrique — Champ électrostatique",
+          description:
+            "Champ électrostatique, vecteur champ, relation F = qE (unité V·m⁻¹), champ uniforme entre les armatures d'un condensateur plan. Énergie potentielle d'une charge, différence de potentiel, conservation de l'énergie.",
+        },
+        {
+          titre: "Loi d'Ohm pour un récepteur non ohmique",
+          description:
+            "Caractéristique U = f(I) d'un récepteur non ohmique, force contre-électromotrice (f.c.e.m.). Loi d'Ohm pour un récepteur non ohmique. Bilan énergétique dans un circuit électrique et électronique.",
+        },
+        {
+          titre: "Condensateurs",
+          description:
+            "Charge et décharge, capacité (unité farad), mesure à l'oscilloscope. Associations série et parallèle, capacité équivalente. Énergie emmagasinée. Montages dérivateur et intégrateur. Alimentation continue stabilisée.",
+        },
+      ],
+    },
+    {
+      titre: "Optique",
+      volumeHoraire: 32,
+      chapitres: [
+        {
+          titre: "Réfraction de la lumière",
+          description:
+            "Lois de Descartes, indice de réfraction, réfringence. Réflexion totale et angle de réfraction limite. Applications (fibres optiques, mirages).",
+        },
+        {
+          titre: "Lentilles minces",
+          description:
+            "Lentilles convergentes et divergentes : foyers, plans focaux, distance focale, formules de conjugaison et de grandissement. Vergence (unité dioptrie), système de lentilles accolées. Applications (microscope, appareil photo, correction de l'œil).",
+        },
+        {
+          titre: "Dispersion — Diffraction de la lumière",
+          description:
+            "Prisme et dispersion de la lumière blanche (lois du prisme). Spectres d'émission et d'absorption. Lumière monochromatique.",
+        },
+      ],
+    },
+  ],
+};
+
+/** RÉEL — repris de lib/chimie_1reC_statique.ts (fourni par la personne à
+ * l'origine de cette tâche). */
+const PROGRAMME_CHIMIE_1RE_C: ProgrammeMatiereStatique = {
+  estPlaceholder: false,
+  themes: [
+    {
+      titre: "Chimie organique",
+      volumeHoraire: 20,
+      chapitres: [
+        {
+          titre: "Alcanes",
+          description:
+            "Structure (perspective, représentation de Newman), chaîne linéaire ou ramifiée, isomères. Nomenclature. Réactions : bromation du méthane, combustion. Bilans molaire, massique et volumique dans les calculs.",
+        },
+        {
+          titre: "Dérivés insaturés : alcènes et alcynes",
+          description:
+            "Structures, longueurs de liaisons (C–C, C=C, C≡C), nomenclature, isomérie Z/E. Réactions d'addition (règle de Markovnikov). Polymérisation : monomère, polymère, motif élémentaire (polyéthylène).",
+        },
+        {
+          titre: "Composés aromatiques",
+          description:
+            "Structure du benzène. Réactions d'addition (dihydrogène, dichlore) et de substitution (halogénation, nitration). Isomérie ortho, méta, para. Applications des dérivés.",
+        },
+        {
+          titre: "Combustibles fossiles",
+          description:
+            "Origine du charbon, du gaz naturel et du pétrole. Pouvoir calorifique (unités joule, tec, tep). Transformations du pétrole : distillation, craquage, reformage. Produits de la distillation.",
+        },
+      ],
+    },
+    {
+      titre: "Chimie minérale et générale : métaux et oxydoréduction",
+      volumeHoraire: 28,
+      chapitres: [
+        {
+          titre: "Couples oxydant-réducteur, classification qualitative",
+          description:
+            "Notion de couple oxydant-réducteur, couple H₃O⁺/H₂. Classification qualitative selon le pouvoir oxydant ou réducteur. L'oxydant le plus fort réagit avec le réducteur le plus fort.",
+        },
+        {
+          titre: "Piles et potentiels d'oxydoréduction, classification quantitative",
+          description:
+            "Pile : principe, force électromotrice, demi-pile à hydrogène. Potentiel d'oxydoréduction, potentiel standard (H₃O⁺/H₂ = 0), échelle des potentiels. Classification quantitative des couples.",
+        },
+        {
+          titre: "Généralisation de l'oxydoréduction",
+          description:
+            "Généralisation de la notion de couple. Nombre d'oxydation : détermination, identification et équilibrage d'une réaction d'oxydoréduction. Oxydoréduction par voie sèche, électrolyse (chlorure d'étain), protection contre la corrosion.",
+        },
+      ],
+    },
+  ],
+};
+
+/** RÉEL — repris de lib/svt_1reC_statique.ts (fourni par la personne à
+ * l'origine de cette tâche). */
+const PROGRAMME_SVT_1RE_C: ProgrammeMatiereStatique = {
+  estPlaceholder: false,
+  themes: [
+    {
+      titre: "La cellule, unité d'organisation des êtres vivants",
+      volumeHoraire: 8,
+      chapitres: [
+        {
+          titre: "Organisation de la cellule vivante",
+          description:
+            "Structures et ultrastructures des cellules eucaryotes (animale et végétale), organites caractéristiques. Comparaison cellule animale / végétale et cellule eucaryote / procaryote. Observation au microscope (oignon, cellules de la joue).",
+        },
+      ],
+    },
+    {
+      titre: "La production primaire au niveau de l'organisme chlorophyllien",
+      volumeHoraire: 12,
+      chapitres: [
+        {
+          titre: "Nutrition minérale d'un végétal chlorophyllien",
+          description:
+            "Absorption de l'eau et des ions (poils absorbants, sève brute, xylème, circulation ascendante). Osmose et pression osmotique, perméabilités membranaires, transports actif et passif. Turgescence, plasmolyse, isotonie, hypotonie, hypertonie. Aspiration foliaire.",
+        },
+        {
+          titre: "Nutrition carbonée d'un végétal chlorophyllien",
+          description:
+            "Chloroplaste, siège de la photosynthèse ; pigments chlorophylliens. Réactions de la phase claire (photochimiques) et de la phase sombre (chimiques). Entrée du CO₂ par les stomates.",
+        },
+        {
+          titre: "Devenir des substances synthétisées",
+          description:
+            "Sève élaborée : composition, transport (circulation descendante). Devenir des substances : croissance, respiration, mise en réserve (fruits, tubercules, bulbes).",
+        },
+      ],
+    },
+    {
+      titre: "Production d'énergie à partir des molécules organiques",
+      volumeHoraire: 8,
+      chapitres: [
+        {
+          titre: "La respiration au niveau cellulaire",
+          description:
+            "Siège de la respiration (mitochondrie), étapes des réactions respiratoires à partir de la molécule de glucose. Schéma de l'ultrastructure d'une mitochondrie.",
+        },
+        {
+          titre: "Les fermentations",
+          description:
+            "Fermentation alcoolique et fermentation lactique. Comparaison du rendement en ATP entre la respiration et les fermentations. Expériences de fermentation.",
+        },
+      ],
+    },
+    {
+      titre: "Structure interne de la Terre",
+      volumeHoraire: 10,
+      chapitres: [
+        {
+          titre: "Séisme",
+          description:
+            "Manifestations, conséquences et origine des séismes. Sismographe et sismogramme. Foyer, épicentre, intensité, magnitude, échelle de Richter. Propriétés et caractéristiques des ondes sismiques P, L, S. Moyens de prévention.",
+        },
+        {
+          titre: "La structure du globe",
+          description:
+            "Croûte continentale et océanique, manteau. Discontinuités (Moho, Gutenberg, Lehmann). Lithosphère, asthénosphère, mésosphère. Apport de la sismographie ; accrétion océanique au niveau des dorsales.",
+        },
+      ],
+    },
+    {
+      titre: "Notions de stratigraphie",
+      volumeHoraire: 12,
+      chapitres: [
+        {
+          titre: "Principes de la stratigraphie et méthodes de datation",
+          description:
+            "Principes (superposition, continuité, identité paléontologique, recoupement, inclusion). Datation relative et datation absolue (décroissance radioactive : ¹⁴C/¹²C, K/Ar, Rb/Sr ; période radioactive).",
+        },
+        {
+          titre: "L'échelle des temps géologiques",
+          description:
+            "Ères primaire, secondaire, tertiaire, quaternaire. Notions de fossile, fossilisation, fossiles stratigraphiques et de faciès. Principes d'établissement de l'échelle stratigraphique.",
+        },
+        {
+          titre: "La carte géologique et la coupe géologique",
+          description:
+            "Composantes d'une carte géologique, accidents géologiques (structures tabulaire, faillée, monoclinale, synclinale, plissée). Lecture d'une carte et réalisation d'une coupe géologique tabulaire.",
+        },
+      ],
+    },
+  ],
+};
+
 /** PLACEHOLDER — même objet réutilisé partout (jamais muté, lecture
  * seule), en attendant le vrai contenu de chaque combinaison. */
 const PROGRAMME_PLACEHOLDER: ProgrammeMatiereStatique = {
@@ -1207,7 +1551,12 @@ const PROGRAMMES_PAR_NIVEAU: Record<
       chimie: PROGRAMME_CHIMIE_1RE_A,
       svt: PROGRAMME_SVT_1RE_A,
     },
-    c: programmesPlaceholderPourMatieres(),
+    c: {
+      mathematiques: PROGRAMME_MATHS_1RE_C,
+      physique: PROGRAMME_PHYSIQUE_1RE_C,
+      chimie: PROGRAMME_CHIMIE_1RE_C,
+      svt: PROGRAMME_SVT_1RE_C,
+    },
     d: {
       mathematiques: PROGRAMME_MATHS_1RE_D,
       physique: PROGRAMME_PHYSIQUE_1RE_D,
