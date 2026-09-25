@@ -35,10 +35,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
  * matière d'une série d'un niveau donné. `niveau`/`serie` (pour ce
  * niveau)/`matiere` non reconnus → 404.
  *
- * Données STATIQUES (lib/programmeLyceeStatique.ts) — toute la Seconde et
- * toute la Première sont déjà remplies ; seule la Terminale est encore
- * PROGRAMME_PLACEHOLDER et sera intégrée série par série dans un second
- * temps.
+ * Données STATIQUES (lib/programmeLyceeStatique.ts) — toute la Seconde,
+ * toute la Première et Terminale × Séries A et C sont déjà remplies ;
+ * seule Terminale D est encore PROGRAMME_PLACEHOLDER et sera intégrée
+ * dans un second temps.
+ *
+ * `matiere` reconnue globalement (ex. "physique") mais PAS enseignée pour
+ * ce niveau×série (ex. Terminale A n'a que les Mathématiques) → 404,
+ * jamais un placeholder : obtenirProgrammeLycee renvoie alors undefined.
  */
 export default async function ProgrammeMatiereLyceePage({ params }: PageProps) {
   const { niveau: niveauId, serie: serieId, matiere: matiereId } = await params;
@@ -50,6 +54,7 @@ export default async function ProgrammeMatiereLyceePage({ params }: PageProps) {
   if (!matiere) notFound();
 
   const programme = obtenirProgrammeLycee(niveau.id, serie.id, matiere.id);
+  if (!programme) notFound();
   const volumeHoraireTotal = programme.themes.reduce((total, theme) => total + theme.volumeHoraire, 0);
 
   return (

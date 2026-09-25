@@ -6,7 +6,11 @@ import CtaCreerCompte from "@/components/programme/CtaCreerCompte";
 import FilAriane from "@/components/programme/FilAriane";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { MATIERES_LYCEE, trouverNiveauLycee, trouverSerieLycee } from "@/lib/programmeLyceeStatique";
+import {
+  matieresDisponiblesLycee,
+  trouverNiveauLycee,
+  trouverSerieLycee,
+} from "@/lib/programmeLyceeStatique";
 
 interface PageProps {
   params: Promise<{ niveau: string; serie: string }>;
@@ -26,6 +30,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
  * Terminale C → Mathématiques/Physique/Chimie/SVT). `niveau` non reconnu, ou
  * `serie` non reconnue POUR CE NIVEAU (ex. "d" en Seconde) → 404 — jamais de
  * combinaison niveau/série inventée à la volée.
+ *
+ * Le nombre de matières affichées varie selon la combinaison (4 dans la
+ * grande majorité des cas, 1 seule — Mathématiques — pour Terminale A) :
+ * matieresDisponiblesLycee() dérive la liste réelle depuis les données,
+ * jamais une liste fixe de 4 matières.
  */
 export default async function ProgrammeSerieLyceePage({ params }: PageProps) {
   const { niveau: niveauId, serie: serieId } = await params;
@@ -33,6 +42,7 @@ export default async function ProgrammeSerieLyceePage({ params }: PageProps) {
   if (!niveau) notFound();
   const serie = trouverSerieLycee(niveau.id, serieId);
   if (!serie) notFound();
+  const matieres = matieresDisponiblesLycee(niveau.id, serie.id);
 
   return (
     <>
@@ -59,7 +69,7 @@ export default async function ProgrammeSerieLyceePage({ params }: PageProps) {
         </p>
 
         <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
-          {MATIERES_LYCEE.map((matiere) => (
+          {matieres.map((matiere) => (
             <CarteNavigation
               key={matiere.id}
               href={`/programme/lycee/${niveau.id}/${serie.id}/${matiere.id}`}

@@ -3,15 +3,24 @@
  * lib/programmeCollegeStatique.ts, avec un niveau de navigation
  * supplémentaire (la SÉRIE) : niveau → série → matière → thèmes/chapitres.
  *
- * CE QUI EST RÉEL vs PLACEHOLDER : toute la SECONDE (séries A et C) et
- * toute la PREMIÈRE (séries A, C et D — Mathématiques/Physique/Chimie/SVT)
- * sont désormais RÉELLES. Seule la TERMINALE (toutes séries) reste
- * PROGRAMME_PLACEHOLDER — le vrai contenu sera intégré dans un second
- * temps, série par série, comme cela a été fait pour le collège.
+ * CE QUI EST RÉEL vs PLACEHOLDER : toute la SECONDE, toute la PREMIÈRE et
+ * TERMINALE × Séries A (1 matière) et C (4 matières) sont désormais
+ * RÉELLES. Seule Terminale D reste PROGRAMME_PLACEHOLDER — le vrai contenu
+ * sera intégré dans un second temps, comme cela a été fait pour le
+ * collège.
  *
  * Séries par niveau (programme nigérien réel, à respecter strictement) :
  * Seconde → A, C uniquement (PAS de D) ; Première et Terminale → A, C, D.
  * Aucune série E ni G.
+ *
+ * NOMBRE DE MATIÈRES VARIABLE : la grande majorité des combinaisons
+ * niveau×série ont 4 matières scientifiques (Mathématiques, Physique,
+ * Chimie, SVT). EXCEPTION : Terminale A (littéraire) n'a QUE les
+ * Mathématiques — pas de Physique/Chimie/SVT en dernière année. Cette
+ * variabilité est portée par les données elles-mêmes (PROGRAMMES_PAR_NIVEAU
+ * est un Partial<Record<MatiereLyceeId, ...>>, pas un Record complet) et
+ * dérivée via matieresDisponiblesLycee() — jamais une liste fixe de 4
+ * matières codée dans l'UI.
  */
 
 export type NiveauLyceeId = "seconde" | "premiere" | "terminale";
@@ -1502,6 +1511,455 @@ const PROGRAMME_SVT_1RE_C: ProgrammeMatiereStatique = {
   ],
 };
 
+/** RÉEL — repris du contenu fourni pour la Terminale série A. Particularité
+ * du programme nigérien : en Terminale A (littéraire), les Mathématiques
+ * sont la SEULE matière scientifique — pas de Physique/Chimie/SVT à ce
+ * niveau (contrairement à Seconde A et Première A, qui ont les 4). */
+const PROGRAMME_MATHS_TLE_A: ProgrammeMatiereStatique = {
+  estPlaceholder: false,
+  themes: [
+    {
+      titre: "Organisation des données",
+      volumeHoraire: 72,
+      chapitres: [
+        {
+          titre: "Suites numériques",
+          description:
+            "Raisonnement par récurrence. Généralités sur les suites : sens de variation, convergence et divergence. Suites arithmétiques et géométriques : convergence, calculs et résolution de problèmes (exemples en sciences humaines, finances).",
+        },
+        {
+          titre: "Fonctions exponentielles",
+          description:
+            "Fonction exponentielle de base a (a > 0, a ≠ 1) : propriétés algébriques, dérivée, sens de variation, représentation. Fonction exponentielle de base e : nombre e, limites usuelles, dérivée de e^u(x). Fonction exponentielle de base 10.",
+        },
+        {
+          titre: "Fonctions logarithmes",
+          description:
+            "Logarithme népérien (ln) comme réciproque de l'exponentielle : propriétés algébriques, dérivée, limites, représentation. Logarithme décimal (log). Résolution d'équations, inéquations et systèmes comportant logarithmes et exponentielles (degré ≤ 3).",
+        },
+        {
+          titre: "Étude de fonctions numériques",
+          description:
+            "Étude et représentation de fonctions simples : x↦ax+b+c/(dx+e), fonctions puissances x↦xⁿ et x↦x^(1/n), fonctions comportant des logarithmes et/ou des exponentielles. Recherche d'asymptotes.",
+        },
+        {
+          titre: "Probabilités sur un ensemble fini",
+          description:
+            "Vocabulaire et définitions. Calcul des probabilités par dénombrement. Propriétés (probabilité comprise entre 0 et 1). Lien entre statistiques et probabilités.",
+        },
+        {
+          titre: "Variables aléatoires",
+          description:
+            "Notion de variable aléatoire réelle. Loi de probabilité : espérance mathématique, variance, écart-type. Fonction de répartition. Loi binomiale et calcul de ses paramètres.",
+        },
+        {
+          titre: "Statistiques",
+          description:
+            "Séries à une variable : quartiles, déciles, centiles. Séries à deux variables : nuage de points, point moyen, droite de Mayer.",
+        },
+      ],
+    },
+  ],
+};
+
+/** RÉEL — repris de lib/maths_tleC_statique.ts (fourni par la personne à
+ * l'origine de cette tâche). */
+const PROGRAMME_MATHS_TLE_C: ProgrammeMatiereStatique = {
+  estPlaceholder: false,
+  themes: [
+    {
+      titre: "Organisation des calculs — Calculs numériques",
+      volumeHoraire: 48,
+      chapitres: [
+        {
+          titre: "Arithmétique",
+          description:
+            "Anneau ℤ, multiples et sous-groupes, division euclidienne, numération décimale et binaire. Congruences modulo n, anneau ℤ/nℤ. PGCD et PPCM (algorithme d'Euclide, Bézout, théorème de Gauss). Nombres premiers, décomposition en facteurs premiers, corps ℤ/pℤ.",
+        },
+        {
+          titre: "Nombres complexes",
+          description:
+            "Corps ℂ : formes algébrique, trigonométrique et exponentielle (z = re^iθ), conjugué, module, argument. Représentation géométrique, affixe. Formules de Moivre et d'Euler, linéarisation, racines n-ièmes. Interprétation géométrique (distances, angles, alignement, cocyclicité). Équations du 2nd et 3e degré dans ℂ.",
+        },
+      ],
+    },
+    {
+      titre: "Géométrie plane",
+      volumeHoraire: 60,
+      chapitres: [
+        {
+          titre: "Calculs barycentriques",
+          description:
+            "Barycentre de n points : définition et propriétés. Lignes de niveau, fonction scalaire de Leibniz, formules réduites des expressions vectorielles et scalaires.",
+        },
+        {
+          titre: "Applications affines du plan",
+          description:
+            "Généralités : application affine, application linéaire associée, matrice. Isométries affines (translations, symétries, rotations, symétrie glissée) et leur classification. Similitudes directes et indirectes : caractérisation, application complexe associée, éléments caractéristiques.",
+        },
+        {
+          titre: "Coniques",
+          description:
+            "Définitions géométriques (foyer et directrice). Équations cartésiennes réduites, hyperbole rapportée à ses asymptotes, équations paramétriques. Tangente en un point et représentation graphique d'une conique.",
+        },
+      ],
+    },
+    {
+      titre: "Géométrie dans l'espace",
+      volumeHoraire: 32,
+      chapitres: [
+        {
+          titre: "Applications affines de l'espace",
+          description:
+            "Translation, homothétie, symétrie orthogonale (par rapport à un plan ou une droite), rotation, vissage. Isométries de l'espace et leur classification à partir des points invariants. Applications à l'alignement, au parallélisme et à l'orthogonalité.",
+        },
+      ],
+    },
+    {
+      titre: "Organisation des données",
+      volumeHoraire: 68,
+      chapitres: [
+        {
+          titre: "Suites numériques",
+          description:
+            "Raisonnement par récurrence. Convergence et divergence, suites majorées/minorées et monotones. Suites de la forme uₙ₊₁ = f(uₙ) et uₙ₊₁ = a·uₙ + b·uₙ₋₁. Théorèmes de comparaison (encadrement, gendarmes).",
+        },
+        {
+          titre: "Fonctions logarithmes",
+          description:
+            "Logarithme népérien (défini comme primitive de 1/x s'annulant en 1) : propriétés, dérivée, limites, représentation. Logarithme de base a (logₐx = ln x / ln a), cas du logarithme décimal.",
+        },
+        {
+          titre: "Propriétés des fonctions continues ou dérivables",
+          description:
+            "Théorème des valeurs intermédiaires, image d'un intervalle. Fonction réciproque. Dérivée d'une composée et de la réciproque d'une bijection. Notations df/dx, d²f/dx².",
+        },
+        {
+          titre: "Fonctions exponentielles",
+          description:
+            "Exponentielle de base e : propriétés, dérivée de e^u(x), limites usuelles. Exponentielle de base a (ax = e^(x·ln a)), réciproque du logarithme de base a. Étude et représentation.",
+        },
+        {
+          titre: "Exemples d'étude de fonctions",
+          description:
+            "Résolution graphique d'équations et d'inéquations, point d'inflexion, directions asymptotiques, position par rapport aux asymptotes et à la tangente. Fonctions rationnelles, irrationnelles, trigonométriques, logarithmiques et exponentielles. Encadrements et approximation d'un zéro.",
+        },
+        {
+          titre: "Calcul intégral",
+          description:
+            "Intégrale d'une fonction continue : relation de Chasles, linéarité, positivité, inégalité de la moyenne, valeur moyenne. Techniques (primitivation, changement de variable affine, intégration par parties). Applications : encadrements, calcul d'aires et de volumes.",
+        },
+        {
+          titre: "Équations différentielles",
+          description:
+            "Équations différentielles simples (y' = ay, y'' + ω²y = 0 et cas s'y ramenant), résolution et conditions initiales.",
+        },
+        {
+          titre: "Probabilités sur un ensemble fini",
+          description:
+            "Vocabulaire, calcul par dénombrement, propriétés. Probabilité conditionnelle (formule de Bayes, probabilité totale). Événements indépendants, produit d'espaces probabilisés finis.",
+        },
+        {
+          titre: "Variables aléatoires",
+          description:
+            "Notion de variable aléatoire réelle. Loi de probabilité : espérance, variance, écart-type. Fonction de répartition. Loi binomiale, schéma de Bernoulli, épreuves répétées.",
+        },
+        {
+          titre: "Statistiques",
+          description:
+            "Séries à deux variables : point moyen, droites de régression, coefficient de corrélation et son interprétation.",
+        },
+      ],
+    },
+  ],
+};
+
+/** RÉEL — repris de lib/physique_tleC_statique.ts (fourni par la personne
+ * à l'origine de cette tâche). */
+const PROGRAMME_PHYSIQUE_TLE_C: ProgrammeMatiereStatique = {
+  estPlaceholder: false,
+  themes: [
+    {
+      titre: "Mécanique",
+      volumeHoraire: 38,
+      chapitres: [
+        {
+          titre: "Cinématique",
+          description:
+            "Étude du mouvement d'un point : vecteurs position, vitesse et accélération. Mouvements rectilignes (uniforme, uniformément varié) et circulaires. Repère de Frenet, base intrinsèque. Équations horaires et trajectoires.",
+        },
+        {
+          titre: "Mouvement du centre d'inertie",
+          description:
+            "Relation fondamentale de la dynamique (théorème du centre d'inertie), système et forces extérieures. Applications aux mouvements de translation et à la détermination des équations du mouvement.",
+        },
+        {
+          titre: "Mouvement dans le champ de pesanteur",
+          description:
+            "Chute libre et mouvement d'un projectile dans le champ de pesanteur uniforme. Équations horaires, trajectoire parabolique, portée et flèche.",
+        },
+        {
+          titre: "Mouvement de particules chargées",
+          description:
+            "Mouvement d'une particule chargée dans un champ électrique uniforme (accélération, déviation) et dans un champ magnétique. Applications (oscilloscope, accélérateurs).",
+        },
+        {
+          titre: "Oscillateurs mécaniques",
+          description:
+            "Oscillateur mécanique (pendule élastique, pendule simple). Équation différentielle du mouvement, période propre, énergie de l'oscillateur. Oscillations libres.",
+        },
+      ],
+    },
+    {
+      titre: "Vibration et propagation (ondes)",
+      volumeHoraire: 32,
+      chapitres: [
+        {
+          titre: "Généralités sur les ondes",
+          description:
+            "Notion d'onde mécanique, onde progressive, transversale et longitudinale. Célérité, propagation d'une perturbation.",
+        },
+        {
+          titre: "Propagation d'un mouvement vibratoire",
+          description:
+            "Onde progressive sinusoïdale : période, fréquence, longueur d'onde, relation λ = v·T. Équation d'une onde, notion de phase.",
+        },
+        {
+          titre: "Superposition de deux ondes",
+          description: "Superposition de deux mouvements vibratoires, ondes stationnaires. Nœuds et ventres.",
+        },
+        {
+          titre: "Interférences et diffraction d'ondes",
+          description:
+            "Interférences d'ondes mécaniques et lumineuses (conditions, franges). Diffraction de la lumière. Nature ondulatoire de la lumière.",
+        },
+      ],
+    },
+    {
+      titre: "Électromagnétisme",
+      volumeHoraire: 22,
+      chapitres: [
+        {
+          titre: "Champ magnétique",
+          description:
+            "Champ magnétique créé par des courants (fil, bobine, solénoïde). Vecteur champ magnétique, spectres magnétiques.",
+        },
+        {
+          titre: "Force de Lorentz",
+          description:
+            "Force de Lorentz sur une charge en mouvement dans un champ magnétique. Caractéristiques et applications.",
+        },
+        {
+          titre: "Force de Laplace",
+          description:
+            "Force de Laplace sur un conducteur parcouru par un courant dans un champ magnétique. Loi de Laplace, applications (moteur, haut-parleur).",
+        },
+        {
+          titre: "Induction électromagnétique",
+          description:
+            "Phénomène d'induction, flux magnétique, loi de Faraday et loi de Lenz. Force électromotrice induite.",
+        },
+        {
+          titre: "Auto-induction",
+          description:
+            "Auto-induction, inductance d'une bobine, f.é.m. d'auto-induction. Énergie emmagasinée dans une bobine.",
+        },
+      ],
+    },
+    {
+      titre: "Oscillations électriques",
+      volumeHoraire: 16,
+      chapitres: [
+        {
+          titre: "Circuit oscillant",
+          description:
+            "Circuit LC et RLC : oscillations électriques libres, équation différentielle, période propre. Amortissement, énergie du circuit oscillant.",
+        },
+        {
+          titre: "Circuit en régime sinusoïdal forcé",
+          description:
+            "Circuit RLC en régime sinusoïdal forcé : impedance, déphasage, résonance. Construction de Fresnel, puissance.",
+        },
+      ],
+    },
+    {
+      titre: "Phénomènes corpusculaires",
+      volumeHoraire: 18,
+      chapitres: [
+        {
+          titre: "Effet photoélectrique",
+          description:
+            "Effet photoélectrique, quantum d'énergie, photon. Relation d'Einstein, travail d'extraction, cellule photoélectrique.",
+        },
+        {
+          titre: "Noyau atomique",
+          description:
+            "Constitution du noyau, énergie de liaison, défaut de masse (relation E = mc²). Stabilité des noyaux.",
+        },
+        {
+          titre: "Réactions nucléaires",
+          description:
+            "Radioactivité (α, β, γ), lois de conservation, décroissance radioactive et période. Fission et fusion nucléaires, applications et dangers.",
+        },
+      ],
+    },
+  ],
+};
+
+/** RÉEL — repris de lib/chimie_tleC_statique.ts (fourni par la personne à
+ * l'origine de cette tâche). */
+const PROGRAMME_CHIMIE_TLE_C: ProgrammeMatiereStatique = {
+  estPlaceholder: false,
+  themes: [
+    {
+      titre: "Chimie générale : acides et bases en solution aqueuse",
+      volumeHoraire: 16,
+      chapitres: [
+        {
+          titre: "Solutions aqueuses",
+          description:
+            "Autoprotolyse de l'eau, produit ionique Ke, notion de pH. Solutions acides, basiques et neutres. Mesure du pH.",
+        },
+        {
+          titre: "Solutions aqueuses d'acides et de bases",
+          description:
+            "Acides forts et faibles, bases fortes et faibles. Calcul de pH, coefficient d'ionisation, constante d'acidité Ka et pKa.",
+        },
+        {
+          titre: "Couples acide-base",
+          description:
+            "Couples acide-base conjugués, force relative, classification. Diagramme de prédominance, domaines de pH.",
+        },
+        {
+          titre: "Réaction acide-base",
+          description:
+            "Réaction acide-base, dosage acido-basique, équivalence. Courbe de dosage pH-métrique, indicateurs colorés.",
+        },
+        {
+          titre: "Solutions tampon",
+          description:
+            "Solutions tampon : préparation, propriétés, pouvoir tampon. Importance biologique et applications.",
+        },
+      ],
+    },
+    {
+      titre: "Chimie organique",
+      volumeHoraire: 14,
+      chapitres: [
+        {
+          titre: "Alcools",
+          description:
+            "Alcools : structure, nomenclature, classes (primaire, secondaire, tertiaire). Réactions : oxydation ménagée, déshydratation, estérification.",
+        },
+        {
+          titre: "Acides carboxyliques",
+          description:
+            "Acides carboxyliques et dérivés : structure, nomenclature, propriétés acides. Estérification et hydrolyse, réaction avec les bases.",
+        },
+      ],
+    },
+    {
+      titre: "Cinétique chimique",
+      volumeHoraire: 6,
+      chapitres: [
+        {
+          titre: "Cinétique chimique",
+          description:
+            "Vitesse de réaction, facteurs cinétiques (concentration, température, catalyseur). Suivi temporel d'une transformation, temps de demi-réaction.",
+        },
+      ],
+    },
+  ],
+};
+
+/** RÉEL — repris de lib/svt_tleC_statique.ts (fourni par la personne à
+ * l'origine de cette tâche). */
+const PROGRAMME_SVT_TLE_C: ProgrammeMatiereStatique = {
+  estPlaceholder: false,
+  themes: [
+    {
+      titre: "Les processus géologiques à l'origine de l'accumulation des ressources géologiques",
+      volumeHoraire: 10,
+      chapitres: [
+        {
+          titre: "Altération et sédimentation",
+          description:
+            "Mécanismes d'altération des roches (décomposition chimique, désagrégation mécanique, action biologique). Transport des sédiments, sédimentation et diagenèse. Formation des évaporites (sel de cuisine, gypse). Comparaison granite sain / arène granitique.",
+        },
+        {
+          titre: "Métamorphisme",
+          description:
+            "Définition du métamorphisme. Métamorphisme de contact et métamorphisme général. Notion de série métamorphique. Diversité des roches métamorphiques selon les facteurs (pression, température) et la nature chimique des roches.",
+        },
+        {
+          titre: "Magmatisme (volcanisme et plutonisme)",
+          description:
+            "Roches de la famille du granite (granite, rhyolite) et du basalte (basalte, gabbro). Distinction volcanisme / plutonisme. Origine des magmas, structures microlitique et grenue. Roches acides et basiques.",
+        },
+      ],
+    },
+    {
+      titre: "Quelques ressources géologiques exploitées au Niger",
+      volumeHoraire: 12,
+      chapitres: [
+        {
+          titre: "Les gisements métallifères et les processus associés",
+          description:
+            "Gisements par cristallisation fractionnée (nickel, cobalt, platine), métamorphisme de contact (fer, cuivre), filoniens (or), altération (bauxite), sédimentation (or, fer, phosphate). Indices de présence des ressources.",
+        },
+        {
+          titre: "Le pétrole",
+          description:
+            "Conditions et étapes de formation du pétrole (dépôt de matières organiques, enfouissement, maturation, migration). Étapes de la prospection et de l'exploitation. Énergies renouvelables et non renouvelables. Avantages et inconvénients.",
+        },
+      ],
+    },
+    {
+      titre: "Le fonctionnement des appareils génitaux et leur régulation",
+      volumeHoraire: 16,
+      chapitres: [
+        {
+          titre: "Les appareils génitaux et leur fonctionnement",
+          description:
+            "Organisation des appareils génitaux masculin et féminin. Gonades : structure et fonctions. Gamétogenèse (spermatogenèse et ovogenèse, réinvestissement de la méiose). Production d'hormones sexuelles et activité testiculaire.",
+        },
+        {
+          titre: "Régulation du fonctionnement des organes génitaux",
+          description:
+            "Cycles sexuels chez la femme (ovarien, utérin, glaire cervicale) et leur régulation par le complexe hypothalamo-hypophysaire. Contrôle hormonal de l'activité testiculaire.",
+        },
+        {
+          titre: "De la fécondation à la nidation",
+          description:
+            "Fécondation : définition, localisation (tiers supérieur des trompes), étapes. Devenir de l'œuf : migration, premières divisions, nidation. Rôle de l'hormone HCG et maintien de la progestérone en début de grossesse.",
+        },
+      ],
+    },
+    {
+      titre: "La régulation des naissances",
+      volumeHoraire: 4,
+      chapitres: [
+        {
+          titre: "Les méthodes contraceptives et la stérilité",
+          description:
+            "Méthodes contraceptives (naturelles, mécaniques, chimiques), mode d'action des pilules et fiabilité. Lien entre connaissance des mécanismes hormonaux et régulation des naissances. Causes de stérilité chez l'homme et la femme.",
+        },
+      ],
+    },
+    {
+      titre: "La communication par voie humorale",
+      volumeHoraire: 8,
+      chapitres: [
+        {
+          titre: "La régulation de la glycémie",
+          description:
+            "Constante glycémique (≈ 1 g/L), hypoglycémie et hyperglycémie. Organes de stockage (foie, muscles, tissu adipeux), rôle du foie. Systèmes hypo- et hyperglycémiant (insuline, glucagon), autorégulation, homéostasie. Les deux types de diabète et leur origine.",
+        },
+      ],
+    },
+  ],
+};
+
 /** PLACEHOLDER — même objet réutilisé partout (jamais muté, lecture
  * seule), en attendant le vrai contenu de chaque combinaison. */
 const PROGRAMME_PLACEHOLDER: ProgrammeMatiereStatique = {
@@ -1519,15 +1977,22 @@ function programmesPlaceholderPourMatieres(): Record<MatiereLyceeId, ProgrammeMa
 }
 
 /**
- * Pour chaque série de chaque niveau, un jeu de 4 matières placeholder —
- * y compris pour les séries D de Seconde (qui n'existent pas et ne sont
- * jamais liées depuis l'UI, voir SERIES_PAR_NIVEAU) : Record<SerieLyceeId, ...>
+ * Pour chaque série de chaque niveau, les matières RÉELLEMENT enseignées à
+ * ce niveau — d'où `Partial<Record<...>>` plutôt qu'un Record complet :
+ * la Terminale A (littéraire) n'a QUE les Mathématiques comme matière
+ * scientifique (pas de Physique/Chimie/SVT), contrairement à toutes les
+ * autres combinaisons niveau×série qui ont les 4. La liste affichée à
+ * l'écran (matieresDisponiblesLycee) et le 404 d'une matière absente
+ * (obtenirProgrammeLycee renvoie alors undefined) découlent directement
+ * des clés présentes ici — jamais d'une liste fixe.
+ *
+ * Cas Seconde D (n'existe pas, voir SERIES_PAR_NIVEAU) : Record<SerieLyceeId, ...>
  * exige TOUTES les clés en TypeScript, cette entrée reste donc simplement
  * inaccessible depuis la navigation (trouverSerieLycee la rejette).
  */
 const PROGRAMMES_PAR_NIVEAU: Record<
   NiveauLyceeId,
-  Record<SerieLyceeId, Record<MatiereLyceeId, ProgrammeMatiereStatique>>
+  Record<SerieLyceeId, Partial<Record<MatiereLyceeId, ProgrammeMatiereStatique>>>
 > = {
   seconde: {
     a: {
@@ -1565,8 +2030,13 @@ const PROGRAMMES_PAR_NIVEAU: Record<
     },
   },
   terminale: {
-    a: programmesPlaceholderPourMatieres(),
-    c: programmesPlaceholderPourMatieres(),
+    a: { mathematiques: PROGRAMME_MATHS_TLE_A },
+    c: {
+      mathematiques: PROGRAMME_MATHS_TLE_C,
+      physique: PROGRAMME_PHYSIQUE_TLE_C,
+      chimie: PROGRAMME_CHIMIE_TLE_C,
+      svt: PROGRAMME_SVT_TLE_C,
+    },
     d: programmesPlaceholderPourMatieres(),
   },
 };
@@ -1586,10 +2056,26 @@ export function trouverMatiereLycee(id: string): MatiereLycee | undefined {
   return MATIERES_LYCEE.find((matiere) => matiere.id === id);
 }
 
+/** Matières réellement enseignées pour ce niveau×série (4 pour la grande
+ * majorité des combinaisons, 1 seule — Mathématiques — pour Terminale A).
+ * Dérivée des clés présentes dans PROGRAMMES_PAR_NIVEAU, jamais d'une
+ * liste fixe : c'est ce qui pilote le nombre de cartes affichées au
+ * niveau 3 du parcours (choix de la matière). */
+export function matieresDisponiblesLycee(
+  niveauId: NiveauLyceeId,
+  serieId: SerieLyceeId
+): readonly MatiereLycee[] {
+  const programmes = PROGRAMMES_PAR_NIVEAU[niveauId][serieId];
+  return MATIERES_LYCEE.filter((matiere) => programmes[matiere.id] !== undefined);
+}
+
+/** undefined si la matière n'est pas enseignée pour ce niveau×série (ex.
+ * Physique en Terminale A) — au niveau 4 du parcours, ce cas doit se
+ * traduire par un 404, jamais par un placeholder. */
 export function obtenirProgrammeLycee(
   niveauId: NiveauLyceeId,
   serieId: SerieLyceeId,
   matiereId: MatiereLyceeId
-): ProgrammeMatiereStatique {
+): ProgrammeMatiereStatique | undefined {
   return PROGRAMMES_PAR_NIVEAU[niveauId][serieId][matiereId];
 }
