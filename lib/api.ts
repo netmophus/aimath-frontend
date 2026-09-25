@@ -254,6 +254,8 @@ export interface MeResponse {
   date_inscription: string;
   photo_url: string | null;
   a_un_abonnement_actif: boolean;
+  /** Date ISO ("2026-10-25") de fin d'abonnement, ou null si jamais abonné. */
+  abonnement_actif_jusqu_au: string | null;
 }
 
 // --- Cascade Cycle → Niveau → Série (formulaire d'inscription, public) ---

@@ -4,8 +4,8 @@ import Link from "next/link";
  * Affiché à la place de la suite du cours quand la leçon est verrouillée
  * (voir lecon.verrouille, app/eleve/lecons/[id]/page.tsx). Pédagogique et
  * invitant plutôt que frustrant : on explique la valeur du contenu masqué,
- * pas juste "accès refusé". Le paiement (carte Fahimta) n'existe pas encore
- * — /eleve/abonnement affiche pour l'instant un message "bientôt disponible".
+ * pas juste "accès refusé". /eleve/abonnement gère l'ACTIVATION d'une carte
+ * déjà obtenue — l'achat/la distribution des cartes reste hors périmètre.
  */
 export default function MurDeblocage() {
   return (

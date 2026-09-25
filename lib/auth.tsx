@@ -66,6 +66,10 @@ export interface AuthUser {
    * `false` par défaut juste après un login frais (LoginResponse ne le
    * porte pas non plus) : se corrige à la prochaine réhydratation via /me/. */
   aUnAbonnementActif: boolean;
+  /** Date ISO de fin d'abonnement (ou null) — pour l'affichage sur
+   * /eleve/abonnement. Même remarque que ci-dessus : `null` par défaut
+   * juste après un login frais. */
+  abonnementActifJusquAu: string | null;
 }
 
 interface AuthContextValue {
@@ -95,6 +99,7 @@ function meToUser(me: MeResponse): AuthUser {
     serie: me.serie,
     photoUrl: me.photo_url,
     aUnAbonnementActif: me.a_un_abonnement_actif,
+    abonnementActifJusquAu: me.abonnement_actif_jusqu_au,
   };
 }
 
@@ -161,6 +166,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Idem pour l'abonnement (voir AuthUser.aUnAbonnementActif) : purement
       // cosmétique, sans conséquence sur le verrou réel (server-side).
       aUnAbonnementActif: false,
+      abonnementActifJusquAu: null,
     };
     setUser(utilisateur);
     cacherUser(utilisateur);

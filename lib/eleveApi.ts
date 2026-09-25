@@ -231,3 +231,21 @@ export function majProfilEleve(payload: MajProfilEleveInput): Promise<ProfilElev
 
   return apiRequestMultipart<ProfilEleve>("/api/eleve/profil/", formData, "PATCH");
 }
+
+// --- POST /api/eleve/activer-carte/ : activation d'une carte Fahimta ---
+
+export interface ActivationCarteReponse {
+  message: string;
+  /** Date ISO ("2026-10-25") de la nouvelle échéance d'abonnement. */
+  abonnement_actif_jusqu_au: string;
+}
+
+/** Le backend accepte le code avec ou sans tirets/espaces, casse
+ * indifférente — aucune normalisation nécessaire ici, elle est faite
+ * côté serveur (voir comptes.cartes.normaliser_code). */
+export function activerCarteFahimta(code: string): Promise<ActivationCarteReponse> {
+  return apiRequest<ActivationCarteReponse>("/api/eleve/activer-carte/", {
+    method: "POST",
+    body: { code },
+  });
+}
