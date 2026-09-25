@@ -3,11 +3,12 @@
  * lib/programmeCollegeStatique.ts, avec un niveau de navigation
  * supplémentaire (la SÉRIE) : niveau → série → matière → thèmes/chapitres.
  *
- * CE QUI EST RÉEL vs PLACEHOLDER : toute la SECONDE (séries A et C,
- * Mathématiques/Physique/Chimie/SVT) est désormais RÉELLE. Première et
- * Terminale (toutes séries) restent PROGRAMME_PLACEHOLDER — le vrai
- * contenu sera intégré dans un second temps, niveau par niveau/série par
- * série, comme cela a été fait pour le collège.
+ * CE QUI EST RÉEL vs PLACEHOLDER : toute la SECONDE (séries A et C) et
+ * PREMIÈRE × Série A (Mathématiques/Physique/Chimie/SVT) sont désormais
+ * RÉELLES. Première C/D et toute la Terminale restent
+ * PROGRAMME_PLACEHOLDER — le vrai contenu sera intégré dans un second
+ * temps, niveau par niveau/série par série, comme cela a été fait pour le
+ * collège.
  *
  * Séries par niveau (programme nigérien réel, à respecter strictement) :
  * Seconde → A, C uniquement (PAS de D) ; Première et Terminale → A, C, D.
@@ -612,6 +613,242 @@ const PROGRAMME_SVT_2NDE_A: ProgrammeMatiereStatique = {
   ],
 };
 
+/** RÉEL — repris de lib/maths_1reA_statique.ts (fourni par la personne à
+ * l'origine de cette tâche). */
+const PROGRAMME_MATHS_1RE_A: ProgrammeMatiereStatique = {
+  estPlaceholder: false,
+  themes: [
+    {
+      titre: "Organisation des calculs — Calcul littéral",
+      volumeHoraire: 9,
+      chapitres: [
+        {
+          titre: "Équations, inéquations, polynômes, systèmes linéaires",
+          description:
+            "Polynômes du second degré : équations et inéquations, somme et produit des zéros, mise en équation. Factorisation d'un polynôme de degré n (n = 3 et 4), théorème de factorisation. Systèmes d'équations linéaires dans ℝ³ et ℝ⁴ (méthode du pivot de Gauss).",
+        },
+      ],
+    },
+    {
+      titre: "Organisation des données",
+      volumeHoraire: 69,
+      chapitres: [
+        {
+          titre: "Généralités sur les fonctions numériques",
+          description:
+            "Comparaison de deux fonctions (algébrique et graphique). Opérations sur les fonctions (somme, différence, produit, quotient, composée). Fonctions associées à f et leurs courbes. Image directe et réciproque ; application injective, surjective, bijective.",
+        },
+        {
+          titre: "Limites — Continuité",
+          description:
+            "Notion de limite d'une fonction (en +∞, −∞, en un réel). Comportement des fonctions de référence. Limites et opérations, limite à gauche et à droite. Continuité d'une fonction en un point et sur un intervalle (ouvert, fermé, semi-ouvert).",
+        },
+        {
+          titre: "Dérivation",
+          description:
+            "Nombre dérivé en un point (à gauche, à droite), dérivabilité. Interprétation graphique, équation de la tangente. Fonction dérivée des fonctions usuelles ; dérivée d'une somme, d'un produit, d'un quotient. Signe de la dérivée et sens de variation. Extremums.",
+        },
+        {
+          titre: "Exemples d'étude de fonctions numériques",
+          description:
+            "Asymptotes et points particuliers. Fonctions polynômes de degré ≤ 3, fonctions homographiques, fonctions rationnelles et irrationnelles simples. Étude, représentation et exploitation graphique dans la résolution de problèmes.",
+        },
+        {
+          titre: "Suites numériques",
+          description:
+            "Définition d'une suite (graphique, formule, récurrence). Variation d'une suite. Suites arithmétiques et géométriques : raison, premier terme, terme général, somme de termes consécutifs.",
+        },
+        {
+          titre: "Statistique descriptive",
+          description:
+            "Séries à une variable : regroupement par classes, centre et amplitude, histogramme. Caractéristiques de position (classe modale, médiane, moyenne) et de dispersion (variance, écart-type, étendue, écart moyen) d'une série groupée en classes.",
+        },
+        {
+          titre: "Dénombrement",
+          description:
+            "Cardinal d'un ensemble fini, arbres de choix et tableaux. p-listes, arrangements, permutations (notations Aⁿₚ, factorielle), combinaisons (Cⁿₚ). Formule du binôme de Newton et triangle de Pascal.",
+        },
+      ],
+    },
+  ],
+};
+
+/** RÉEL — repris de lib/physique_1reA_statique.ts (fourni par la personne
+ * à l'origine de cette tâche). */
+const PROGRAMME_PHYSIQUE_1RE_A: ProgrammeMatiereStatique = {
+  estPlaceholder: false,
+  themes: [
+    {
+      titre: "Phénomènes corpusculaires",
+      volumeHoraire: 18,
+      chapitres: [
+        {
+          titre: "Structure du noyau",
+          description:
+            "Constituants du noyau, vocabulaire : proton, neutron, nombre de charge, nombre de masse, nucléide, isotope. Notation AZX.",
+        },
+        {
+          titre: "Radioactivité et rayonnements radioactifs",
+          description:
+            "Les divers types de rayonnements (α, β, γ). Période radioactive et courbe de décroissance radioactive.",
+        },
+        {
+          titre: "Fission, fusion",
+          description:
+            "Distinction entre réaction de fission et de fusion. Équilibrage d'une équation de réaction nucléaire. Relation d'Einstein E = mc². Unités (u, MeV, J).",
+        },
+        {
+          titre: "Effets biologiques, environnement, radioprotection",
+          description:
+            "Effets néfastes des rayonnements sur l'homme et l'environnement. Règles fondamentales de protection : distance, activité, temps, écrans.",
+        },
+        {
+          titre: "Applications de la radioactivité",
+          description:
+            "Datation, marquage radioactif, utilisations thérapeutiques (médecine), centrales nucléaires. Dater un échantillon à l'aide de la courbe de décroissance.",
+        },
+        {
+          titre: "Uranium : minerais, extraction, traitement, enrichissement",
+          description:
+            "L'uranium comme combustible nucléaire, ses minerais. Procédés de détection (compteur Geiger, compteur à scintillation), d'extraction, de traitement et d'enrichissement.",
+        },
+      ],
+    },
+    {
+      titre: "Optique",
+      volumeHoraire: 8,
+      chapitres: [
+        {
+          titre: "Réfraction de la lumière",
+          description:
+            "Réfraction sur un dioptre plan (air-verre), lois de Descartes, indice de réfraction (air, verre, eau). Réflexion partielle et totale (fibres optiques, couches antireflets).",
+        },
+        {
+          titre: "Lentilles convergentes",
+          description:
+            "Schématiser une lentille convergente, ses points remarquables. Construire l'image donnée par une lentille convergente et mesurer la distance focale.",
+        },
+      ],
+    },
+    {
+      titre: "Énergies renouvelables",
+      volumeHoraire: 10,
+      chapitres: [
+        {
+          titre: "Énergies renouvelables",
+          description:
+            "Définition des énergies renouvelables. Types (solaire, éolienne, hydraulique, biomasse et énergie des déchets) et domaines d'application de chacune.",
+        },
+      ],
+    },
+  ],
+};
+
+/** RÉEL — repris de lib/chimie_1reA_statique.ts (fourni par la personne à
+ * l'origine de cette tâche). */
+const PROGRAMME_CHIMIE_1RE_A: ProgrammeMatiereStatique = {
+  estPlaceholder: false,
+  themes: [
+    {
+      titre: "Engrais",
+      volumeHoraire: 12,
+      chapitres: [
+        {
+          titre: "Éléments fertilisants",
+          description:
+            "Symboles des éléments (C, H, O, N, P, K). Corps purs H₂O, CO₂, NH₃, O₂, N₂. Besoins des plantes en éléments fertilisants. Vocabulaire : chlorure, nitrate, phosphate, ammonium, urée.",
+        },
+        {
+          titre: "Principaux engrais et analyse chimique",
+          description:
+            "Principaux engrais : azotés, phosphatés, potassiques. Signification de la « formule d'un engrais » composé, exemple (N, P₂O₅, K₂O).",
+        },
+        {
+          titre: "Cycle de l'azote dans la nature",
+          description:
+            "Description qualitative du cycle de l'azote. Lecture et utilisation d'un schéma modélisant le cycle.",
+        },
+        {
+          titre: "Procédé de fabrication d'un engrais",
+          description:
+            "Analyse du schéma de l'unité de fabrication du nitrate d'ammonium : matières premières et étapes d'élaboration.",
+        },
+        {
+          titre: "Engrais naturels",
+          description:
+            "Engrais naturels (fumier, compost, engrais vert). Fabrication du compost, rôle des engrais dans les cultures locales, avantages et inconvénients.",
+        },
+      ],
+    },
+  ],
+};
+
+/** RÉEL — repris de lib/svt_1reA_statique.ts (fourni par la personne à
+ * l'origine de cette tâche). */
+const PROGRAMME_SVT_1RE_A: ProgrammeMatiereStatique = {
+  estPlaceholder: false,
+  themes: [
+    {
+      titre: "La cellule : organisation, transmission et expression de l'information génétique",
+      volumeHoraire: 18,
+      chapitres: [
+        {
+          titre: "Organisation de la cellule",
+          description:
+            "Structures et ultrastructures des cellules animale et végétale (observation au microscope : épiderme d'oignon, cellules de la joue). Organites caractéristiques. Comparaison cellule animale / cellule végétale. La cellule comme unité du vivant.",
+        },
+        {
+          titre: "La mitose et l'ADN",
+          description:
+            "Mitose ou reproduction conforme : étapes. Relation chromosome-ADN, structure de la molécule d'ADN, réplication. Expérience sur pointes de racines d'oignon.",
+        },
+        {
+          titre: "Synthèse des protéines et notion de gène",
+          description:
+            "Sièges et étapes de la synthèse des protéines : transcription de l'ADN en ARN messager (noyau), traduction en protéine (cytoplasme). Code génétique. Définition d'un gène.",
+        },
+      ],
+    },
+    {
+      titre: "Reproduction chez les Mammifères : cas de l'Homme",
+      volumeHoraire: 18,
+      chapitres: [
+        {
+          titre: "Organisation et physiologie des organes génitaux",
+          description:
+            "Appareils reproducteurs masculin et féminin. Gonades, gamétogenèse (spermatogenèse et ovogenèse). Méiose (comparée à la mitose). Régulation hormonale, cycles sexuels chez la femme, activité testiculaire.",
+        },
+        {
+          titre: "Fécondation et régulation des naissances",
+          description:
+            "Fécondation : définition, lieu, étapes. Régulation des naissances : contraception hormonale chez la femme. Principales causes de stérilité.",
+        },
+        {
+          titre: "Le VIH/SIDA",
+          description:
+            "Signification de VIH et SIDA, structure du virus. Modes de contamination et de non-transmission, prévention, dépistage. Mode d'action (cible : lymphocytes T), maladies opportunistes. Différence entre séropositivité et SIDA maladie.",
+        },
+      ],
+    },
+    {
+      titre: "Le tissu nerveux",
+      volumeHoraire: 14,
+      chapitres: [
+        {
+          titre: "Tissu nerveux et notions de réflexes",
+          description:
+            "Nerf, moelle épinière, ultrastructure de la cellule nerveuse. Propriétés du tissu nerveux (excitabilité, conductibilité). Réflexes innés et conditionnés, arc réflexe. Expérience du réflexe de flexion chez la grenouille.",
+        },
+        {
+          titre: "Messages nerveux",
+          description:
+            "Potentiel de repos et potentiel d'action (au niveau de la membrane plasmique). Propagation du message nerveux dans un neurone et un nerf, naissance au niveau d'un récepteur sensoriel. Synapses et transmission synaptique ; la plaque motrice.",
+        },
+      ],
+    },
+  ],
+};
+
 /** PLACEHOLDER — même objet réutilisé partout (jamais muté, lecture
  * seule), en attendant le vrai contenu de chaque combinaison. */
 const PROGRAMME_PLACEHOLDER: ProgrammeMatiereStatique = {
@@ -655,7 +892,12 @@ const PROGRAMMES_PAR_NIVEAU: Record<
     d: programmesPlaceholderPourMatieres(),
   },
   premiere: {
-    a: programmesPlaceholderPourMatieres(),
+    a: {
+      mathematiques: PROGRAMME_MATHS_1RE_A,
+      physique: PROGRAMME_PHYSIQUE_1RE_A,
+      chimie: PROGRAMME_CHIMIE_1RE_A,
+      svt: PROGRAMME_SVT_1RE_A,
+    },
     c: programmesPlaceholderPourMatieres(),
     d: programmesPlaceholderPourMatieres(),
   },

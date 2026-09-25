@@ -36,9 +36,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
  * niveau)/`matiere` non reconnus → 404.
  *
  * Données STATIQUES (lib/programmeLyceeStatique.ts) — toute la Seconde
- * (A et C) est déjà remplie ; Première et Terminale sont encore
- * PROGRAMME_PLACEHOLDER et seront intégrées niveau/série par niveau/série
- * dans un second temps.
+ * (A et C) et Première × Série A sont déjà remplies ; Première C/D et
+ * toute la Terminale sont encore PROGRAMME_PLACEHOLDER et seront intégrées
+ * niveau/série par niveau/série dans un second temps.
  */
 export default async function ProgrammeMatiereLyceePage({ params }: PageProps) {
   const { niveau: niveauId, serie: serieId, matiere: matiereId } = await params;
