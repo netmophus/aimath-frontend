@@ -35,10 +35,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
  * matière d'une série d'un niveau donné. `niveau`/`serie` (pour ce
  * niveau)/`matiere` non reconnus → 404.
  *
- * Données STATIQUES (lib/programmeLyceeStatique.ts) — tout est
- * PROGRAMME_PLACEHOLDER pour l'instant (contrairement au collège, déjà
- * rempli) : le vrai contenu sera intégré niveau/série par niveau/série dans
- * un second temps.
+ * Données STATIQUES (lib/programmeLyceeStatique.ts) — Seconde × Série C est
+ * déjà remplie ; le reste est encore PROGRAMME_PLACEHOLDER et sera intégré
+ * niveau/série par niveau/série dans un second temps.
  */
 export default async function ProgrammeMatiereLyceePage({ params }: PageProps) {
   const { niveau: niveauId, serie: serieId, matiere: matiereId } = await params;
