@@ -10,6 +10,7 @@ import SalutEleve from "@/components/eleve/SalutEleve";
 import AbonnementBadge from "@/components/eleve/AbonnementBadge";
 import CarteReprendre from "@/components/eleve/CarteReprendre";
 import CarteMatiere from "@/components/eleve/CarteMatiere";
+import InstallationPwaBouton from "@/components/eleve/InstallationPwaBouton";
 
 export default function EleveDashboardPage() {
   const { user } = useAuth();
@@ -91,6 +92,10 @@ export default function EleveDashboardPage() {
         >
           {user?.aUnAbonnementActif ? "Prolonger mon abonnement" : "Activer mon abonnement"}
         </Link>
+      </div>
+
+      <div className="mt-3">
+        <InstallationPwaBouton />
       </div>
 
       <div className="mt-6 flex flex-col gap-8 lg:grid lg:grid-cols-[2fr_3fr] lg:items-start lg:gap-8">

@@ -6,10 +6,12 @@ import Features from "@/components/Features";
 import StatsStrip from "@/components/StatsStrip";
 import CtaBlock from "@/components/CtaBlock";
 import Footer from "@/components/Footer";
+import InstallationPwaBanniere from "@/components/InstallationPwaBanniere";
 
 export default function Home() {
   return (
     <>
+      <InstallationPwaBanniere />
       <Navbar />
       <main className="flex-1">
         <HeroCarousel mosaique={<MosaiquePhotosEleves />} />
