@@ -14,6 +14,10 @@ export interface ChampFormulaire {
   options?: readonly { value: number; label: string }[];
   /** Utilisé seulement si type === "textarea" (défaut : 3). */
   lignes?: number;
+  /** Uniquement significatif si `disposition="grille"` (voir plus bas) :
+   * ce champ occupe les deux colonnes au lieu d'une seule. Sans effet en
+   * disposition "colonne" (défaut). */
+  pleineLargeur?: boolean;
 }
 
 interface EntityFormModalProps {
@@ -25,6 +29,17 @@ interface EntityFormModalProps {
   onSubmit: (valeurs: Record<string, string>) => Promise<void>;
   onClose: () => void;
   libelleSoumettre?: string;
+  /** "colonne" (défaut) : un champ par ligne, comportement historique
+   * inchangé pour tous les formulaires existants. "grille" : deux colonnes
+   * à partir de sm: (une seule sur mobile), pour un formulaire avec
+   * beaucoup de champs courts — voir ChampFormulaire.pleineLargeur pour
+   * qu'un champ précis (ex. un mot de passe) occupe toute la largeur même
+   * en grille. Opt-in explicite : ne change rien pour les appelants
+   * existants qui ne passent pas cette prop. */
+  disposition?: "colonne" | "grille";
+  /** Passthrough vers Modal (voir components/admin/Modal.tsx) — "lg" utile
+   * pour laisser respirer une disposition "grille" à deux colonnes. */
+  taille?: "md" | "lg";
 }
 
 /**
@@ -41,6 +56,8 @@ export default function EntityFormModal({
   onSubmit,
   onClose,
   libelleSoumettre = "Enregistrer",
+  disposition = "colonne",
+  taille,
 }: EntityFormModalProps) {
   const [valeurs, setValeurs] = useState<Record<string, string>>(valeursInitiales);
   const [erreur, setErreur] = useState<string | null>(null);
@@ -68,15 +85,20 @@ export default function EntityFormModal({
   }
 
   return (
-    <Modal titre={titre} onClose={onClose}>
+    <Modal titre={titre} onClose={onClose} taille={taille}>
       {description && (
         <p className="mb-4 rounded-lg bg-fh-accent/40 px-3 py-2 text-sm text-fh-ardoise">
           {description}
         </p>
       )}
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <form
+        onSubmit={handleSubmit}
+        className={
+          disposition === "grille" ? "grid grid-cols-1 gap-4 sm:grid-cols-2" : "flex flex-col gap-4"
+        }
+      >
         {champs.map((champ) => (
-          <div key={champ.nom}>
+          <div key={champ.nom} className={champ.pleineLargeur ? "sm:col-span-2" : undefined}>
             <label htmlFor={champ.nom} className="mb-1 block text-sm font-medium text-fh-ardoise">
               {champ.label}
             </label>
@@ -120,10 +142,10 @@ export default function EntityFormModal({
         ))}
 
         {erreur && (
-          <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{erreur}</p>
+          <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 sm:col-span-2">{erreur}</p>
         )}
 
-        <div className="mt-2 flex justify-end gap-2">
+        <div className="mt-2 flex justify-end gap-2 sm:col-span-2">
           <button
             type="button"
             onClick={onClose}

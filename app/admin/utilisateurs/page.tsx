@@ -27,6 +27,9 @@ const OPTIONS_STATUT: readonly { value: Statut | ""; label: string }[] = [
   { value: "rejete", label: "Rejetés" },
 ];
 
+// disposition="grille" (voir EntityFormModal) : Prénom|Nom, Téléphone|Email,
+// Rôle en pleine largeur (évite une case vide à côté — le select prend toute
+// la ligne plutôt que de laisser un trou), Mot de passe|Confirmation.
 const CHAMPS_CREATION: readonly ChampFormulaire[] = [
   { nom: "prenom", label: "Prénom", type: "text", requis: true },
   { nom: "nom", label: "Nom", type: "text", requis: true },
@@ -37,6 +40,7 @@ const CHAMPS_CREATION: readonly ChampFormulaire[] = [
     label: "Rôle",
     type: "select",
     requis: true,
+    pleineLargeur: true,
     options: [
       { value: 1, label: "Enseignant" },
       { value: 2, label: "Admin" },
@@ -268,6 +272,8 @@ export default function UtilisateursPage() {
         <EntityFormModal
           titre="Créer un compte"
           description="Le compte sera actif immédiatement. L'utilisateur devra changer ce mot de passe provisoire."
+          disposition="grille"
+          taille="lg"
           champs={CHAMPS_CREATION}
           valeursInitiales={{ prenom: "", nom: "", telephone: "", email: "", role: "", password: "", password2: "" }}
           onSubmit={handleCreerCompte}

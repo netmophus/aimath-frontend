@@ -10,15 +10,22 @@ import VendeurRow from "@/components/admin/vendeurs/VendeurRow";
 
 // Adresse facultative (ville/quartier/école ou point de vente) : sert le
 // suivi admin (traçabilité) — voir comptes.models.User, aucun champ requis.
+//
+// disposition="grille" (voir EntityFormModal) : formulaire à deux colonnes
+// (Prénom|Nom, Téléphone|Commission, Ville|Quartier), avec le mot de passe
+// et l'école/point de vente en pleine largeur (pleineLargeur) — trop de
+// champs pour rester confortable en une seule colonne. Rien d'autre ne
+// change (validation, soumission) : uniquement l'ORDRE/LARGEUR déclarés ici,
+// EntityFormModal ne connaît que "un champ par ligne" vs "deux colonnes".
 const CHAMPS_CREATION: readonly ChampFormulaire[] = [
   { nom: "prenom", label: "Prénom", type: "text", requis: true },
   { nom: "nom", label: "Nom", type: "text", requis: true },
   { nom: "telephone", label: "Téléphone", type: "text", requis: true },
   { nom: "commission_fcfa", label: "Commission (FCFA par carte)", type: "number", requis: true },
-  { nom: "mot_de_passe", label: "Mot de passe provisoire", type: "password", requis: true },
+  { nom: "mot_de_passe", label: "Mot de passe provisoire", type: "password", requis: true, pleineLargeur: true },
   { nom: "ville", label: "Ville (facultatif)", type: "text" },
   { nom: "quartier", label: "Quartier (facultatif)", type: "text" },
-  { nom: "ecole_ou_point_vente", label: "École ou point de vente (facultatif)", type: "text" },
+  { nom: "ecole_ou_point_vente", label: "École ou point de vente (facultatif)", type: "text", pleineLargeur: true },
 ];
 
 const CHAMPS_MODIFICATION: readonly ChampFormulaire[] = [
@@ -27,7 +34,7 @@ const CHAMPS_MODIFICATION: readonly ChampFormulaire[] = [
   { nom: "commission_fcfa", label: "Commission (FCFA par carte)", type: "number", requis: true },
   { nom: "ville", label: "Ville (facultatif)", type: "text" },
   { nom: "quartier", label: "Quartier (facultatif)", type: "text" },
-  { nom: "ecole_ou_point_vente", label: "École ou point de vente (facultatif)", type: "text" },
+  { nom: "ecole_ou_point_vente", label: "École ou point de vente (facultatif)", type: "text", pleineLargeur: true },
 ];
 
 /**
@@ -146,6 +153,8 @@ export default function VendeursPage() {
         <EntityFormModal
           titre="Créer un vendeur"
           description="Le compte sera actif immédiatement. Le vendeur devra changer ce mot de passe provisoire."
+          disposition="grille"
+          taille="lg"
           champs={CHAMPS_CREATION}
           valeursInitiales={{
             prenom: "",
@@ -167,6 +176,8 @@ export default function VendeursPage() {
         <EntityFormModal
           titre={`Modifier « ${vendeurAModifier.prenom} ${vendeurAModifier.nom} »`}
           description="Modifier la commission ne change pas celle des cartes déjà assignées — seulement des futures assignations."
+          disposition="grille"
+          taille="lg"
           champs={CHAMPS_MODIFICATION}
           valeursInitiales={{
             prenom: vendeurAModifier.prenom,
