@@ -13,14 +13,26 @@ const COULEUR_NATURE = { Acide: "text-red-700", Neutre: "text-green-700", Basiqu
 
 /* ============================================================================================ 2. Échelle de pH */
 
-const NB_PARTICULES_PH = 28;
+/** Nombre d'ions dessinés (constant, lisible) : on ne représente pas les vraies concentrations, seulement le bon rapport. */
+const NB_PARTICULES_PH = 20;
+const COLONNES_PH = 5;
+const LIGNES_PH = 4;
+
+/** Part d'ions H₃O⁺ (rouges) : 50 % à pH 7, 90 % à pH 1 et moins, 10 % à pH 13 et plus, variation linéaire et symétrique. */
+export const partOxonium = (ph: number): number => Math.min(0.9, Math.max(0.1, 0.5 + ((7 - ph) / 6) * 0.4));
+
+/**
+ * Case de la grille (5 × 4) occupée par l'ion i. L'ordre « i × 7 modulo 20 » éparpille les ions successifs : les rouges
+ * et les bleus sont mélangés dans tout le bécher, sans se chevaucher, et un ion garde sa place quand le pH change
+ * (seule sa couleur bascule).
+ */
+const caseIon = (i: number) => (i * 7) % NB_PARTICULES_PH;
 
 export function SimulationPh() {
   const [ph, setPh] = useState(7);
   const dix = Math.round(ph * 10);
   const nature = natureSolution(dix);
-  const frac = (14 - ph) / 14; // part de H₃O⁺ (représentation qualitative)
-  const nH = Math.round(NB_PARTICULES_PH * frac);
+  const nH = Math.round(NB_PARTICULES_PH * partOxonium(ph)); // représentation qualitative : pH 7 → autant de rouges que de bleus
   const nOH = NB_PARTICULES_PH - nH;
   const liquide = couleurPapier(ph);
 
@@ -37,9 +49,12 @@ export function SimulationPh() {
             <rect x={40} y={78} width={180} height={170} className={T} fill={liquide} opacity={0.88} />
             {Array.from({ length: NB_PARTICULES_PH }, (_, i) => {
               const oxonium = i < nH;
+              const c = caseIon(i);
+              const x = 56 + ((c % COLONNES_PH) + 0.5) * (148 / COLONNES_PH) + (alea(i, 1) - 0.5) * 8;
+              const y = 98 + (Math.floor(c / COLONNES_PH) + 0.5) * (122 / LIGNES_PH) + (alea(i, 2) - 0.5) * 8;
               return (
-                <g key={i} transform={`translate(${56 + alea(i, 1) * 148} ${98 + alea(i, 2) * 122})`}>
-                  <circle r={9} className={`${T} particule`} style={variables({ "--duree": `${3.2 + alea(i, 3) * 2}s`, "--ax": `${(alea(i, 4) - 0.5) * 14}px`, "--ay": `${(alea(i, 5) - 0.5) * 14}px`, "--bx": `${(alea(i, 6) - 0.5) * 14}px`, "--by": `${(alea(i, 7) - 0.5) * 14}px`, "--cx": `${(alea(i, 8) - 0.5) * 14}px`, "--cy": `${(alea(i, 9) - 0.5) * 14}px` })} fill={oxonium ? "#fff7ed" : "#e0e7ff"} stroke={oxonium ? COULEURS.oxonium : COULEURS.hydroxyde} strokeWidth={2.2} />
+                <g key={i} transform={`translate(${x.toFixed(1)} ${y.toFixed(1)})`}>
+                  <circle r={9} className={`${T} particule`} style={variables({ "--duree": `${3.2 + alea(i, 3) * 2}s`, "--ax": `${(alea(i, 4) - 0.5) * 14}px`, "--ay": `${(alea(i, 5) - 0.5) * 14}px`, "--bx": `${(alea(i, 6) - 0.5) * 14}px`, "--by": `${(alea(i, 7) - 0.5) * 14}px`, "--cx": `${(alea(i, 8) - 0.5) * 14}px`, "--cy": `${(alea(i, 9) - 0.5) * 14}px` })} fill={oxonium ? "#fdd0b1" : "#c3cbf5"} stroke={oxonium ? COULEURS.oxonium : COULEURS.hydroxyde} strokeWidth={2.2} />
                 </g>
               );
             })}

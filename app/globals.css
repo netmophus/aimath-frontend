@@ -163,6 +163,58 @@ body {
   .hero-symbole { animation: hero-flotte var(--duree, 10s) ease-in-out var(--delai, 0s) infinite alternate; }
 }
 
+/* Laboratoire de maths, onglets Intégrale et Limites : l'étape 2 apparaît en douceur au clic (sans animation si l'utilisateur
+   a demandé moins de mouvement). */
+@keyframes apparition-etape {
+  0% { opacity: 0; transform: translateY(12px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .apparition-etape { animation: apparition-etape 0.5s ease-out both; }
+  .apparition-douce { animation: apparition-douce 0.6s ease-out both; }
+}
+@keyframes apparition-douce {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+/* Tableaux de valeurs des laboratoires (composant TableauValeurs, components/accueil/commun.tsx) : style « lignes
+   alternées ». La couleur de l'en-tête est celle de l'onglet, passée par la variable --tableau-couleur. Un seul endroit
+   à modifier pour tous les tableaux. */
+.tableau-moderne-cadre {
+  overflow-x: auto;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 2px 10px rgb(30 43 106 / 0.1);
+}
+.tableau-moderne {
+  width: 100%;
+  min-width: 220px;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.875rem;
+  text-align: left;
+}
+.tableau-moderne th {
+  padding: 0.6rem 0.85rem;
+  background: var(--tableau-couleur, var(--color-fh-bleu));
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 700;
+  text-align: left;
+  white-space: nowrap;
+}
+.tableau-moderne td {
+  padding: 0.55rem 0.85rem;
+  border-bottom: 1px solid #f0f1f4;
+  text-align: left;
+}
+.tableau-moderne tbody tr:nth-child(even) td { background: #fafafc; }
+.tableau-moderne tbody tr:last-child td { border-bottom: 0; }
+.tableau-moderne tbody tr[data-actif="true"] td { background: color-mix(in srgb, var(--tableau-couleur, var(--color-fh-bleu)) 14%, white); }
+.tableau-moderne td:first-child { color: #6b7280; }
+.tableau-moderne td:nth-child(2) { color: var(--color-fh-bleu); font-weight: 700; }
+
 /* NB : les anciennes rustines `.katex .overlay` et `.katex .stretchy` (et le cadre \boxed, le symbole \neq, etc.) ne
    sont plus nécessaires. Cause racine : rehype-katex embarquait son propre KaTeX 0.16.x, dont le HTML utilise des classes
    sans préfixe (stretchy, overlay, thinbox, strut, base…), alors que la feuille chargée (katex 0.18.7, app/layout.tsx)

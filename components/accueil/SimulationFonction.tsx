@@ -100,7 +100,59 @@ export default function SimulationFonction() {
           )}
         </>
       }
-      commentaire={<Tx>{commentaireFonction(a)}</Tx>}
+      commentaire={a > 0 ? <ResumeBranches /> : <Tx>{commentaireFonction(a)}</Tx>}
+      bas={a > 0 ? <Demonstration /> : undefined}
     />
+  );
+}
+
+/** Résumé court pour a > 0 (encadré à côté du graphique). */
+function ResumeBranches() {
+  return (
+    <>
+      <p>
+        <Tx>{"Pour $a > 0$, $f$ n'est pas définie en $x = 0$ : deux branches séparées."}</Tx>
+      </p>
+      <ul className="mt-2 list-disc space-y-1.5 pl-5">
+        <li>
+          <Tx>{"Asymptote verticale : $x = 0$"}</Tx>
+        </li>
+        <li>
+          <Tx>{"Asymptote oblique : $y = x$ (écart $= \\dfrac{a}{x} \\to 0$)"}</Tx>
+        </li>
+        <li>
+          <Tx>{"Minimum en $x = \\sqrt{a}$, valeur $2\\sqrt{a}$"}</Tx>
+        </li>
+        <li>
+          <Tx>{"Maximum en $x = -\\sqrt{a}$, valeur $-2\\sqrt{a}$"}</Tx>
+        </li>
+        <li>
+          <Tx>{"Fonction impaire : $f(-x) = -f(x)$"}</Tx>
+        </li>
+      </ul>
+    </>
+  );
+}
+
+/** Développement mathématique pour a > 0 (encadré pleine largeur sous le graphique). */
+function Demonstration() {
+  const titre = "font-semibold text-fh-bleu";
+  const para = "mt-1 leading-8";
+  return (
+    <>
+      <p className="text-base font-bold text-fh-bleu">Démonstration :</p>
+      <p className={`mt-2 ${titre}`}>Asymptotes :</p>
+      <p className={para}>
+        <Tx>{"Quand $x \\to 0^{+}$, $\\dfrac{a}{x} \\to +\\infty$ donc $f(x) \\to +\\infty$. Quand $x \\to 0^{-}$, $\\dfrac{a}{x} \\to -\\infty$ donc $f(x) \\to -\\infty$. L'axe $x = 0$ est asymptote verticale. Quand $|x| \\to \\infty$, $\\dfrac{a}{x} \\to 0$ donc $f(x) \\approx x$ : la droite $y = x$ est asymptote oblique."}</Tx>
+      </p>
+      <p className={`mt-3 ${titre}`}>Extrema :</p>
+      <p className={para}>
+        <Tx>{"$f'(x) = 1 - \\dfrac{a}{x^2}$. On résout $f'(x) = 0$ : $x^2 = a$, soit $x = \\sqrt{a}$ ou $x = -\\sqrt{a}$. La dérivée seconde $f''(x) = \\dfrac{2a}{x^3}$ donne $f''(\\sqrt{a}) > 0$ (minimum) et $f''(-\\sqrt{a}) < 0$ (maximum). Valeurs : $f(\\sqrt{a}) = 2\\sqrt{a}$ et $f(-\\sqrt{a}) = -2\\sqrt{a}$."}</Tx>
+      </p>
+      <p className={`mt-3 ${titre}`}>Symétrie :</p>
+      <p className={para}>
+        <Tx>{"$f(-x) = (-x) + \\dfrac{a}{-x} = -x - \\dfrac{a}{x} = -\\left(x + \\dfrac{a}{x}\\right) = -f(x)$. La fonction est impaire, la courbe est symétrique par rapport à l'origine."}</Tx>
+      </p>
+    </>
   );
 }

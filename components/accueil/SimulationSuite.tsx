@@ -1,157 +1,239 @@
 "use client";
 
-import { useEffect, useId, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 import { Choix } from "@/components/labo/commun";
 import { nombreFr } from "@/lib/accueil/mathsLabo";
-import { graduations, NB_MARCHES, pointFixe, RELATIONS, SUITE_Q, termes, toile, troncons, type IdRelation } from "@/lib/accueil/mathsLaboAvance";
-import { BoutonReinitialiser, CadreSimulation, chemin, Curseur, Formule, repere, Tx, Valeur } from "./commun";
-import { CadreGraphe, EncartConcept } from "./GrapheMaths";
+import { EXEMPLES_SUITE, graduations, NB_TERMES_AUTO, NB_TERMES_VERDICT, peutContinuer, termesSuite, type ExempleSuite, type IdSuite } from "@/lib/accueil/mathsLaboAvance";
+import { BoutonReinitialiser, CadreSimulation, Formule, Tx, Valeur } from "./commun";
 
-const T = 380; // dessin carré : la droite y = x est à 45 degrés
+const W = 320;
+const H = 168;
+const MARGE = 20;
+const Y_AXE = 112;
+const NB_NIVEAUX = 4;
+const ECART_NIVEAU = 15;
 const INDICES = "₀₁₂₃₄₅₆₇₈₉";
 const indice = (n: number) => String(n).replace(/\d/g, (d) => INDICES[Number(d)]);
 
 const bouton =
   "inline-flex min-h-11 items-center justify-center rounded-full px-5 text-sm font-semibold transition-colors motion-reduce:transition-none disabled:cursor-not-allowed disabled:opacity-50";
 
-/** Suite récurrente uₙ₊₁ = f(uₙ) construite en « toile d'araignée » : on monte vers la courbe, on se ramène sur y = x. */
+const VERDICTS = {
+  converge: { titre: "La suite CONVERGE", classe: "border-[#2a9d4a] bg-[#eaf7ef]" },
+  diverge: { titre: "La suite DIVERGE", classe: "border-fh-orange bg-white" },
+  "sans-limite": { titre: "La suite NE CONVERGE PAS", classe: "border-fh-orange bg-white" },
+} as const;
+
+/** « Converge ou diverge ? » : les termes u₀, u₁, u₂… se posent un par un sur une droite graduée. */
 export default function SimulationSuite() {
-  const [idRel, setIdRel] = useState<IdRelation>("racine");
-  const rel = RELATIONS.find((r) => r.id === idRel) ?? RELATIONS[0];
-  const [u0, setU0] = useState<number>(rel.u0.initial);
-  const [qCent, setQCent] = useState<number>(Math.round(SUITE_Q.initial * 100));
-  const [n, setN] = useState(0);
+  const [idEx, setIdEx] = useState<IdSuite>("geo-converge");
+  const ex = EXEMPLES_SUITE.find((e) => e.id === idEx) ?? EXEMPLES_SUITE[0];
+  const [nb, setNb] = useState(1);
   const [auto, setAuto] = useState(false);
-  const clip = useId();
 
-  const q = qCent / 100;
-  const L = pointFixe(rel, q);
-  const { lo, hi } = rel.fenetre(q);
-  const R = repere(lo, hi, lo, hi, T, T, 34);
-  const ts = termes(rel, q, u0, n);
-  const ligne = toile(rel, q, u0, n);
-  const courbe = troncons((x) => rel.f(x, q), lo, hi, lo - 1, hi + 1);
-  const g = graduations(lo, hi);
+  const termes = termesSuite(ex, nb);
+  const rang = termes.length - 1;
+  const dernier = termes[rang];
+  const continuer = peutContinuer(termes);
 
-  // Lecture automatique : une marche toutes les 650 ms, jusqu'à NB_MARCHES (puis elle s'arrête d'elle-même).
-  const enCours = auto && n < NB_MARCHES;
+  // Lecture automatique : un terme toutes les 700 ms, jusqu'à NB_TERMES_AUTO termes (puis elle s'arrête d'elle-même).
+  const enCours = auto && continuer && termes.length < NB_TERMES_AUTO;
   useEffect(() => {
     if (!enCours) return;
-    const minuteur = setInterval(() => setN((k) => Math.min(k + 1, NB_MARCHES)), 650);
+    const minuteur = setInterval(() => setNb((k) => k + 1), 700);
     return () => clearInterval(minuteur);
   }, [enCours]);
 
-  function remise(nouveau?: { u0?: number }) {
-    setN(0);
+  function recommencer() {
+    setNb(1);
     setAuto(false);
-    if (nouveau?.u0 !== undefined) setU0(nouveau.u0);
   }
-  function choisir(id: IdRelation) {
-    const r = RELATIONS.find((x) => x.id === id) ?? RELATIONS[0];
-    setIdRel(id);
-    remise({ u0: r.u0.initial });
+  function choisir(id: IdSuite) {
+    setIdEx(id);
+    recommencer();
   }
 
-  const un = ts[n];
-  const ecart = Math.abs(un - L);
-  const pt = (x: number, y: number) => `${R.X(x).toFixed(2)},${R.Y(y).toFixed(2)}`;
+  const ecartOuMax =
+    ex.limite !== null
+      ? { etiquette: <Formule tex={`\\left|u_{${rang}} - L\\right|`} />, valeur: nombreFr(Math.abs(dernier - ex.limite), 4) }
+      : { etiquette: "Plus grand terme", valeur: nombreFr(Math.max(...termes), 4) };
 
-  let commentaire: string;
-  if (n === 0) commentaire = `On part de u${indice(0)} = ${nombreFr(u0, 2)} sur l'axe. Appuie sur « Terme suivant » : on monte jusqu'à la courbe, puis on se ramène sur la droite y = x.`;
-  else if (n < NB_MARCHES) commentaire = `u${indice(n)} = ${nombreFr(un, 4)}. L'écart avec L est ${nombreFr(ecart, 4)} : les marches se resserrent autour du point d'intersection de la courbe et de la droite y = x.`;
-  else commentaire = `Après ${NB_MARCHES} marches, u${indice(NB_MARCHES)} = ${nombreFr(un, 5)} est à ${nombreFr(ecart, 5)} de L = ${nombreFr(L, 5)} : la suite converge vers ce point fixe.`;
+  const verdict = VERDICTS[ex.nature];
 
   return (
     <div className="flex flex-col gap-5">
-      <EncartConcept
-        concept={
-          <Tx>
-            {"Une suite définie par $u_{n+1} = f(u_n)$ se lit sur le graphe de $f$. On part de $u_0$ sur l'axe horizontal, on monte jusqu'à la courbe pour lire $u_1$, puis on se ramène sur la droite $y = x$ pour reporter $u_1$ sur l'axe, et on recommence. Si la suite converge, sa limite est un point fixe : $L = f(L)$, à l'intersection de la courbe et de la droite $y = x$."}
-          </Tx>
-        }
-        observer={<Tx>{"les marches se resserrent vers l'intersection de la courbe et de la droite $y = x$ : c'est la limite $L$. Change $u_0$ : le départ change, mais pas l'arrivée."}</Tx>}
-      />
+      <Encart titre="Objectif">
+        <p>
+          <Tx>{"Une suite est définie par son premier terme et une relation qui donne chaque terme à partir du précédent. La question est simple : quand on continue le calcul, les termes se rapprochent-ils d'un nombre (la suite converge) ou partent-ils vers l'infini (la suite diverge) ?"}</Tx>
+        </p>
+        <p className="mt-2">
+          <span className="font-semibold text-fh-bleu">À observer : </span>
+          <Tx>{"regarde les termes se poser sur la droite. S'ils se resserrent vers un point, la suite converge vers ce nombre."}</Tx>
+        </p>
+      </Encart>
       <CadreSimulation
-        titre="Construis la suite en toile d'araignée"
-        description="Choisis une relation, règle le terme de départ et avance marche après marche."
-        formule={<Formule tex={`${rel.tex(q)}, \\quad u_0 = ${nombreFr(u0, 2).replace(",", "{,}").replace("−", "-")} \\qquad L = f(L)`} />}
-        graphique={
-          <svg viewBox={`0 0 ${T} ${T}`} className="mx-auto h-auto w-full max-w-[440px]" role="img" aria-label={`Toile d'araignée de la suite ${rel.libelle} : u${n} = ${nombreFr(un, 4)}, limite ${nombreFr(L, 4)}`}>
-            <defs>
-              <clipPath id={clip}>
-                <rect x={R.X(lo)} y={R.Y(hi)} width={R.X(hi) - R.X(lo)} height={R.Y(lo) - R.Y(hi)} />
-              </clipPath>
-            </defs>
-            <CadreGraphe R={R} largeur={T} hauteur={T} xmin={lo} xmax={hi} ymin={lo} ymax={hi} gx={g} gy={g} nomX="u" />
-            <g clipPath={`url(#${clip})`}>
-              <line x1={R.X(lo)} y1={R.Y(lo)} x2={R.X(hi)} y2={R.Y(hi)} className="stroke-fh-ardoise" strokeWidth={1.4} strokeDasharray="5 4" />
-              {courbe.map((t, i) => (
-                <path key={i} d={chemin(t.map(([x, y]) => [R.X(x), R.Y(y)] as [number, number]))} fill="none" className="stroke-fh-bleu" strokeWidth={2.4} />
-              ))}
-              {ligne.length > 1 && <polyline points={ligne.map(([x, y]) => pt(x, y)).join(" ")} fill="none" className="stroke-fh-orange" strokeWidth={1.8} strokeLinejoin="round" />}
-            </g>
-            <text x={R.X(hi) - 4} y={R.Y(hi) + 14} textAnchor="end" className="fill-fh-ardoise text-[10px]">y = x</text>
-            <text x={R.X(lo) + 6} y={R.Y(hi) + 14} className="fill-fh-bleu text-[10px] font-semibold">y = f(x)</text>
-            {/* point fixe L = f(L) */}
-            <circle cx={R.X(L)} cy={R.Y(L)} r={5.5} className="fill-white stroke-fh-orange-fonce" strokeWidth={2} />
-            <text x={R.X(L) + 9} y={R.Y(L) + 16} className="fill-fh-orange-fonce text-[10px] font-semibold">L = {nombreFr(L, 3)}</text>
-            {/* départ et terme courant */}
-            <circle cx={R.X(u0)} cy={R.Y(0)} r={4} className="fill-fh-bleu stroke-white" strokeWidth={1.2} />
-            {n > 0 && <circle cx={R.X(un)} cy={R.Y(un)} r={4.5} className="fill-fh-orange stroke-white" strokeWidth={1.2} />}
-          </svg>
-        }
+        titre="Converge ou diverge ?"
+        description="Choisis une suite, puis pose ses termes un par un sur la droite graduée."
+        formule={<Formule tex={ex.definitionTex} />}
+        graphique={<DroiteGraduee ex={ex} termes={termes} />}
         commandes={
           <>
-            <Choix nom="Relation de récurrence" options={RELATIONS.map((r) => ({ cle: r.id, libelle: <Formule tex={r.libelleTex} />, aria: r.libelle }))} valeur={idRel} onChoisir={choisir} />
-            <Curseur
-              nom={<Formule tex="u_0" />}
-              valeurTexte={`u₀ = ${nombreFr(u0, 2)}`}
-              min={rel.u0.min}
-              max={rel.u0.max}
-              pas={rel.u0.pas}
-              valeur={u0}
-              onChange={(v) => remise({ u0: Math.round(v * 100) / 100 })}
-              ariaLabel="Terme initial u zéro"
-            />
-            {rel.id === "affine" && (
-              <Curseur
-                nom={<Formule tex="q" />}
-                valeurTexte={`q = ${nombreFr(q, 2)}`}
-                min={Math.round(SUITE_Q.min * 100)}
-                max={Math.round(SUITE_Q.max * 100)}
-                pas={Math.round(SUITE_Q.pas * 100)}
-                valeur={qCent}
-                onChange={(v) => { setQCent(v); remise(); }}
-                ariaLabel="Coefficient q de la récurrence"
-              />
-            )}
+            <Choix nom="Suite étudiée" options={EXEMPLES_SUITE.map((e) => ({ cle: e.id, libelle: <Formule tex={e.libelleTex} />, aria: e.libelle }))} valeur={idEx} onChoisir={choisir} />
             <div className="flex flex-wrap items-center gap-2">
-              <button type="button" onClick={() => { setAuto(false); setN((k) => Math.min(k + 1, NB_MARCHES)); }} disabled={n >= NB_MARCHES} className={`${bouton} bg-fh-orange text-white hover:bg-fh-orange-fonce`}>
+              <button
+                type="button"
+                onClick={() => {
+                  setAuto(false);
+                  setNb(termes.length + 1);
+                }}
+                disabled={!continuer}
+                className={`${bouton} bg-fh-orange text-white hover:bg-fh-orange-fonce`}
+              >
                 Terme suivant
               </button>
               <button
                 type="button"
-                onClick={() => { if (n >= NB_MARCHES) setN(0); setAuto((a) => !a || n >= NB_MARCHES); }}
+                onClick={() => {
+                  if (enCours) return setAuto(false);
+                  if (!continuer || termes.length >= NB_TERMES_AUTO) setNb(1);
+                  setAuto(true);
+                }}
                 aria-pressed={enCours}
                 className={`${bouton} border border-fh-bleu/40 text-fh-bleu hover:bg-fh-bleu/5`}
               >
                 {enCours ? "Pause" : "Automatique"}
               </button>
-              <BoutonReinitialiser onClick={() => { remise({ u0: rel.u0.initial }); setQCent(Math.round(SUITE_Q.initial * 100)); }} />
+              <BoutonReinitialiser onClick={recommencer} label="Recommencer" />
             </div>
           </>
         }
         valeurs={
           <>
-            <Valeur etiquette={`Terme courant u${indice(n)}`}>{nombreFr(un, 4)}</Valeur>
-            <Valeur etiquette="Point fixe L = f(L)">{nombreFr(L, 4)}</Valeur>
-            <Valeur etiquette={<>Écart <Formule tex={`\\left|u_{${n}} - L\\right|`} /></>}>{nombreFr(ecart, 4)}</Valeur>
-            <Valeur etiquette="Marches faites">{n}</Valeur>
+            <Valeur etiquette={<>Rang <Formule tex="n" /></>}>{rang}</Valeur>
+            <Valeur etiquette={<>Dernier terme <Formule tex={`u_{${rang}}`} /></>}>{nombreFr(dernier, 4)}</Valeur>
+            <Valeur etiquette="Termes posés">{termes.length}</Valeur>
+            <Valeur etiquette={ecartOuMax.etiquette}>{ecartOuMax.valeur}</Valeur>
           </>
         }
-        commentaire={commentaire}
+        commentaire={
+          termes.length >= NB_TERMES_VERDICT ? (
+            <div role="status" aria-live="polite" className={`rounded-lg border-l-4 p-3 leading-8 ${verdict.classe}`}>
+              <strong className="text-fh-bleu">{verdict.titre}</strong>
+              <span> — </span>
+              <Tx>{ex.verdict}</Tx>
+            </div>
+          ) : (
+            <p className="leading-8">
+              <Tx>{"Appuie sur « Terme suivant » : chaque terme calculé se pose sur la droite. Le verdict apparaît après quelques termes."}</Tx>
+            </p>
+          )
+        }
       />
+      <Encart titre="Démonstration">
+        <ol className="flex list-decimal flex-col gap-3 pl-5">
+          {ex.demo.etapes.map((e) => (
+            <li key={e.titre} className="pl-1">
+              <p className="font-semibold text-fh-bleu">{e.titre}</p>
+              <p className="leading-8">
+                <Tx>{e.texte}</Tx>
+              </p>
+            </li>
+          ))}
+        </ol>
+        <p className="mt-3 border-t border-fh-orange/30 pt-3 leading-8">
+          <span className="font-semibold text-fh-bleu">Conclusion : </span>
+          <strong>
+            <Tx>{ex.demo.conclusion}</Tx>
+          </strong>
+        </p>
+      </Encart>
+    </div>
+  );
+}
+
+/** Droite graduée horizontale (SVG) : un point par terme, étiquettes u₀, u₁…, repère vert à la limite L si elle existe. */
+function DroiteGraduee({ ex, termes }: { ex: ExempleSuite; termes: number[] }) {
+  const { lo, hi } = ex;
+  const X = (v: number) => MARGE + ((v - lo) / (hi - lo)) * (W - 2 * MARGE);
+  const g = graduations(lo, hi);
+  const dernier = termes.length - 1;
+  const horsFenetre = termes.findIndex((v) => v > hi || v < lo);
+
+  // Étiquettes réparties sur plusieurs niveaux ; une étiquette trop proche d'une autre du même niveau est omise.
+  const etiquettes: { k: number; x: number; niveau: number }[] = [];
+  termes.forEach((v, k) => {
+    if (v > hi || v < lo) return;
+    const niveau = k % NB_NIVEAUX;
+    const x = X(v);
+    const libre = !etiquettes.some((e) => e.niveau === niveau && Math.abs(e.x - x) < 24);
+    if (k === dernier || libre) etiquettes.push({ k, x, niveau });
+  });
+  const aff = etiquettes.filter((e) => e.k === dernier || !etiquettes.some((f) => f.k === dernier && f.niveau === e.niveau && Math.abs(f.x - e.x) < 24));
+
+  const description =
+    `Droite graduée de ${nombreFr(lo, 1)} à ${nombreFr(hi, 1)} avec les termes u0 à u${dernier} de la suite` +
+    (ex.limite !== null ? `, limite ${nombreFr(ex.limite, 3)}` : "");
+
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} className="mx-auto h-auto w-full max-w-[520px]" role="img" aria-label={description}>
+      {/* axe et graduations */}
+      <line x1={MARGE - 8} y1={Y_AXE} x2={W - MARGE + 8} y2={Y_AXE} className="stroke-fh-ardoise" strokeWidth={1.6} />
+      {g.map((v) => (
+        <g key={v}>
+          <line x1={X(v)} y1={Y_AXE - 4} x2={X(v)} y2={Y_AXE + 4} className="stroke-fh-ardoise" strokeWidth={1.2} />
+          <text x={X(v)} y={Y_AXE + 18} textAnchor="middle" className="fill-fh-ardoise text-[13px]">
+            {nombreFr(v, 2)}
+          </text>
+        </g>
+      ))}
+      {/* limite L */}
+      {ex.limite !== null && (
+        <g>
+          <line x1={X(ex.limite)} y1={22} x2={X(ex.limite)} y2={Y_AXE + 26} stroke="#2a9d4a" strokeWidth={2} strokeDasharray="5 3" />
+          <text x={X(ex.limite)} y={Y_AXE + 42} textAnchor="middle" fill="#1f7a38" className="text-[13px] font-semibold">
+            {ex.limiteTexte}
+          </text>
+        </g>
+      )}
+      {/* étiquettes des termes */}
+      {aff.map(({ k, x, niveau }) => {
+        const y = Y_AXE - 20 - niveau * ECART_NIVEAU;
+        const dernierTerme = k === dernier;
+        return (
+          <g key={k}>
+            <line x1={x} y1={y + 3} x2={x} y2={Y_AXE - 6} className={dernierTerme ? "stroke-fh-orange" : "stroke-fh-bleu/40"} strokeWidth={1} />
+            <text x={x} y={y} textAnchor="middle" className={`text-[13px] ${dernierTerme ? "fill-fh-orange-fonce font-bold" : "fill-fh-bleu"}`}>
+              u{indice(k)}
+            </text>
+          </g>
+        );
+      })}
+      {/* points */}
+      {termes.map((v, k) =>
+        v > hi || v < lo ? null : (
+          <circle key={k} cx={X(v)} cy={Y_AXE} r={k === dernier ? 6 : 4.5} className={k === dernier ? "fill-fh-orange stroke-white" : "fill-fh-bleu stroke-white"} strokeWidth={1.2} />
+        ),
+      )}
+      {/* termes sortis de la fenêtre */}
+      {horsFenetre >= 0 && (
+        <g>
+          <polygon points={`${W - MARGE + 2},${Y_AXE - 7} ${W - MARGE + 12},${Y_AXE} ${W - MARGE + 2},${Y_AXE + 7}`} className="fill-fh-orange" />
+          <text x={W - 6} y={Y_AXE - 14} textAnchor="end" className="fill-fh-orange-fonce text-[13px] font-semibold">
+            à partir de u{indice(horsFenetre)} →
+          </text>
+        </g>
+      )}
+    </svg>
+  );
+}
+
+/** Encadré pédagogique (bordure gauche orange, fond léger) : même style que « Le concept » des autres onglets. */
+function Encart({ titre, children }: { titre: string; children: ReactNode }) {
+  return (
+    <div className="rounded-xl border-l-4 border-fh-orange bg-fh-accent/60 p-4 sm:p-5">
+      <p className="text-xs font-bold uppercase tracking-wide text-fh-orange-fonce">{titre}</p>
+      <div className="mt-1.5 text-sm leading-relaxed text-fh-ardoise sm:text-base">{children}</div>
     </div>
   );
 }

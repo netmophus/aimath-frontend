@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, type ReactNode } from "react";
+import { useId, type CSSProperties, type ReactNode } from "react";
 import katex from "katex";
 
 /** Formule KaTeX courte (chaînes fixes écrites ici, jamais de texte saisi par le visiteur). Le CSS est global (app/layout.tsx). */
@@ -77,14 +77,14 @@ export function Curseur({ nom, valeurTexte, min, max, pas, valeur, onChange, ari
   );
 }
 
-export function BoutonReinitialiser({ onClick }: { onClick: () => void }) {
+export function BoutonReinitialiser({ onClick, label = "Réinitialiser" }: { onClick: () => void; label?: string }) {
   return (
     <button
       type="button"
       onClick={onClick}
       className="inline-flex min-h-11 items-center justify-center rounded-full border border-fh-bleu/40 px-5 text-sm font-semibold text-fh-bleu transition-colors hover:bg-fh-bleu/5 motion-reduce:transition-none"
     >
-      Réinitialiser
+      {label}
     </button>
   );
 }
@@ -98,6 +98,7 @@ export function CadreSimulation({
   commandes,
   valeurs,
   commentaire,
+  bas,
 }: {
   titre: string;
   description: string;
@@ -106,6 +107,8 @@ export function CadreSimulation({
   commandes: ReactNode;
   valeurs: ReactNode;
   commentaire: ReactNode;
+  /** Encadré optionnel pleine largeur sous le graphique et le panneau de droite. */
+  bas?: ReactNode;
 }) {
   return (
     <div className="flex flex-col gap-5">
@@ -119,9 +122,22 @@ export function CadreSimulation({
         <div className="flex min-w-0 flex-col gap-4">
           {commandes}
           <dl className="grid grid-cols-2 gap-2 text-sm">{valeurs}</dl>
-          <p className="rounded-xl bg-fh-accent/60 p-3 text-sm leading-relaxed text-fh-ardoise">{commentaire}</p>
+          <div className="rounded-xl bg-fh-accent/60 p-3 text-sm leading-relaxed text-fh-ardoise">{commentaire}</div>
         </div>
       </div>
+      {bas && <div className="rounded-xl bg-fh-accent/60 p-3 text-sm leading-relaxed text-fh-ardoise sm:p-4">{bas}</div>}
+    </div>
+  );
+}
+
+/**
+ * Tableau de valeurs d'un laboratoire (style « lignes alternées », classes .tableau-moderne de app/globals.css).
+ * `couleur` : couleur de l'onglet pour l'en-tête. Les <thead> et <tbody> sont fournis par l'appelant.
+ */
+export function TableauValeurs({ couleur, children }: { couleur: string; children: ReactNode }) {
+  return (
+    <div className="tableau-moderne-cadre" style={{ "--tableau-couleur": couleur } as CSSProperties}>
+      <table className="tableau-moderne">{children}</table>
     </div>
   );
 }

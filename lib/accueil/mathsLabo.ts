@@ -67,35 +67,6 @@ export function branche(a: number, signe: 1 | -1, xMax: number, n = 240): [numbe
   return pts;
 }
 
-/* ───────────────────────────── 2. Suite u₀ = 5, uₙ₊₁ = q·uₙ + 3 ───────────────────────────── */
-
-export const SUITE = { minCent: 20, maxCent: 85, pasCent: 5, initialCent: 50, u0: 5, b: 3, nbTermes: 11 } as const;
-
-export interface ResultatSuite {
-  q: number;
-  termes: number[]; // u0 … u10
-  limite: number; // L = 3 / (1 − q)
-}
-
-/** q est géré en centièmes entiers (50 → 0,50) pour éviter les erreurs d'arrondi sur le curseur. */
-export function suite(qCent: number): ResultatSuite {
-  const q = qCent / 100;
-  const termes = [SUITE.u0 as number];
-  for (let n = 1; n < SUITE.nbTermes; n += 1) termes.push((qCent * termes[n - 1]) / 100 + SUITE.b);
-  return { q, termes, limite: (SUITE.b * 100) / (100 - qCent) };
-}
-
-export function commentaireSuite(r: ResultatSuite): string {
-  const L = nombreFr(r.limite, 4);
-  const sens =
-    Math.abs(r.limite - SUITE.u0) < 1e-9
-      ? "Ici u₀ = L : la suite est constante."
-      : r.limite > SUITE.u0
-        ? "Comme u₀ < L, les termes augmentent vers L sans la dépasser."
-        : "Comme u₀ > L, les termes diminuent vers L sans descendre en dessous.";
-  return `Avec 0 < q < 1, les termes de ce modèle se rapprochent de L = 3/(1 − q) = ${L}. ${sens} Cette conclusion vaut pour cette récurrence, pas pour toutes les suites.`;
-}
-
 /* ───────────────────────────── 3. Nombres complexes ───────────────────────────── */
 
 export const COMPLEXE = { min: -4, max: 4, pas: 1, a: 3, b: 2 } as const;

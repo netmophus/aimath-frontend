@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 
 import { nombreFr } from "@/lib/accueil/mathsLabo";
-import { BoutonReinitialiser, CadreSimulation, Curseur, Formule, Valeur } from "./commun";
+import { BoutonReinitialiser, CadreSimulation, Curseur, Formule, TableauValeurs, Tx, Valeur } from "./commun";
 import { EncartConcept } from "./GrapheMaths";
 
 const W = 480;
@@ -15,6 +15,12 @@ const SY = 9; // pixels par centimètre (vertical, échelle distincte comme sur 
 const F = 10; // distance focale image f' (cm)
 const HAUTEUR_OBJET = 3; // cm
 const D0 = 25;
+const TURQUOISE = "#0f8a8a";
+
+/** Nombre pour KaTeX : virgule décimale protégée de l'espace TeX (« 16{,}7 »), au plus `d` décimales. */
+const tex = (v: number, d: number) => nombreFr(v, d).replace(",", "{,}");
+
+type Cas = "infini" | "loupe" | "projecteur" | "deuxF" | "photo";
 
 function Fleche({ x, y, pointille = false, classe }: { x: number; y: number; pointille?: boolean; classe: string }) {
   const s = y < AXE ? 1 : -1; // pointe vers le haut si y est au-dessus de l'axe
@@ -23,6 +29,16 @@ function Fleche({ x, y, pointille = false, classe }: { x: number; y: number; poi
       <line x1={x} y1={AXE} x2={x} y2={y} strokeWidth={3} />
       <path d={`M${x - 6} ${y + 9 * s} L${x} ${y} L${x + 6} ${y + 9 * s}`} fill="none" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" strokeDasharray="none" />
     </g>
+  );
+}
+
+/** Encadré pédagogique (bordure gauche turquoise, fond léger) : explications fixes ou dynamiques de l'onglet. */
+function Encart({ titre, children }: { titre: ReactNode; children: ReactNode }) {
+  return (
+    <div className="rounded-xl border-l-4 bg-white/70 p-4 sm:p-5" style={{ borderColor: TURQUOISE }}>
+      <p className="text-sm font-bold" style={{ color: "#0b6b6b" }}>{titre}</p>
+      <div className="mt-1.5 text-sm leading-relaxed text-fh-ardoise sm:text-base">{children}</div>
+    </div>
   );
 }
 
@@ -51,16 +67,39 @@ export default function SimulationLentille() {
   else if (reelle) nature = gamma < 0 ? "réelle, renversée" : "réelle";
   else nature = "virtuelle, droite";
 
-  let commentaire: string;
-  if (infini) commentaire = "L'objet est au foyer : les rayons ressortent parallèles et ne se coupent jamais. Il n'y a pas d'image, ou plutôt elle est rejetée à l'infini.";
-  else if (Math.abs(d - 2 * F) < 1e-9) commentaire = "L'objet est à 2f' : l'image est réelle, renversée, de même taille et à 2f' de l'autre côté. Elle est la symétrique de l'objet par rapport au centre O.";
-  else if (d < F) commentaire = `L'objet est plus près que le foyer (d = ${nombreFr(d, 1)} cm < f'). Les rayons ressortent en divergeant : on voit une image virtuelle, droite et agrandie (γ = ${nombreFr(gamma, 2)}) : c'est l'effet de loupe.`;
-  else commentaire = `L'objet est au-delà du foyer : l'image est réelle et renversée, à ${nombreFr(OAp, 1)} cm de la lentille, avec un grandissement γ = ${nombreFr(gamma, 2)}${Math.abs(gamma) > 1 ? " (agrandie)" : " (réduite)"}.`;
+  // Cas où l'on se trouve (sert au résumé, à l'encart dynamique et à la ligne surlignée du tableau).
+  let cas: Cas;
+  if (infini) cas = "infini";
+  else if (d < F) cas = "loupe";
+  else if (Math.abs(d - 2 * F) < 1e-9) cas = "deuxF";
+  else if (d < 2 * F) cas = "projecteur";
+  else cas = "photo";
+
+  const taille = Math.abs(gamma);
+  const valeurs = infini ? "" : `$\\overline{OA'} = ${tex(OAp, 1)}$ cm et $\\gamma = ${tex(gamma, 2)}$`;
+  const position = `$d = ${tex(d, 1)}$ cm`;
+
+  let explication: string;
+  if (cas === "infini") {
+    explication = `L'objet est au foyer $F$ (${position} $= f'$). Les rayons ressortent parallèles entre eux : ils ne se croisent jamais, donc il n'y a pas d'image. On dit qu'elle est rejetée à l'infini.`;
+  } else if (cas === "loupe") {
+    explication = `L'objet est entre le foyer $F$ et la lentille (${position} $< f'$). Les rayons ressortent en divergeant : ils ne se croisent pas, ce sont leurs prolongements (en pointillés) qui se coupent, du même côté que l'objet. Ici ${valeurs}. L'image est VIRTUELLE ($\\overline{OA'} < 0$ : on la voit à travers la lentille, on ne peut pas la recueillir sur un écran), DROITE ($\\gamma > 0$) et AGRANDIE car $|\\gamma| = ${tex(taille, 2)} > 1$. C'est la LOUPE.`;
+  } else if (cas === "deuxF") {
+    explication = `L'objet est à $2f'$ (${position} $= 2f'$). Les rayons se croisent de l'autre côté de la lentille, à $2f'$ aussi : ${valeurs}. L'image est RÉELLE, RENVERSÉE ($\\gamma < 0$) et de même taille que l'objet car $|\\gamma| = 1$.`;
+  } else if (cas === "projecteur") {
+    explication = `L'objet est entre $f'$ et $2f'$ (${position}, avec $10 < d < 20$ cm). Les rayons se croisent de l'autre côté de la lentille : ${valeurs}. L'image est RÉELLE (on peut la recueillir sur un écran), RENVERSÉE ($\\gamma < 0$) et AGRANDIE car $|\\gamma| = ${tex(taille, 2)} > 1$. C'est le principe du PROJECTEUR.`;
+  } else {
+    explication = `L'objet est au-delà de $2f'$ (${position}, avec $d > 20$ cm). Les rayons se croisent de l'autre côté de la lentille : ${valeurs}. L'image est RÉELLE (on peut la recueillir sur un écran), RENVERSÉE ($\\gamma < 0$) et RÉDUITE car $|\\gamma| = ${tex(taille, 2)} < 1$. C'est le principe de l'APPAREIL PHOTO.`;
+  }
+
+  const resume = infini
+    ? "Pas d'image : elle est rejetée à l'infini."
+    : `Image ${reelle ? "réelle" : "virtuelle"}, ${gamma < 0 ? "renversée" : "droite"}, ${taille > 1 + 1e-9 ? "agrandie" : taille < 1 - 1e-9 ? "réduite" : "de même taille"}.`;
 
   return (
     <div className="flex flex-col gap-5">
       <EncartConcept
-        concept="Une lentille convergente fait converger les rayons lumineux vers son foyer image. Un rayon parallèle à l'axe ressort en passant par le foyer F' ; un rayon passant par le centre optique O n'est pas dévié. Leur intersection donne la position de l'image de l'objet. Selon la distance de l'objet, l'image est réelle (on peut la recueillir sur un écran) ou virtuelle (on la voit à travers la lentille)."
+        concept="Une lentille convergente fait converger les rayons lumineux vers son foyer image. Selon la distance de l'objet, l'image est réelle (on peut la recueillir sur un écran) ou virtuelle (on la voit à travers la lentille)."
         observer="place l'objet à 2f' : l'image est de même taille et renversée. Rapproche-le du foyer, puis entre le foyer et la lentille : l'image devient virtuelle et agrandie, c'est une loupe."
       />
       <CadreSimulation
@@ -120,12 +159,85 @@ export default function SimulationLentille() {
           <>
             <Valeur etiquette={<>Objet <Formule tex={"\\overline{OA}"} /></>}>{nombreFr(OA, 1)} cm</Valeur>
             <Valeur etiquette={<>Image <Formule tex={"\\overline{OA'}"} /></>}>{infini ? "infini" : `${nombreFr(OAp, 1)} cm`}</Valeur>
-            <Valeur etiquette="Grandissement γ">{infini ? "infini" : nombreFr(gamma, 2)}</Valeur>
+            <Valeur etiquette={<>Grandissement <Formule tex="\gamma" /></>}>{infini ? "infini" : nombreFr(gamma, 2)}</Valeur>
             <Valeur etiquette="Nature de l'image">{nature}</Valeur>
           </>
         }
-        commentaire={commentaire}
+        commentaire={resume}
+        bas={
+          <div aria-live="polite">
+            <p className="font-bold" style={{ color: "#0b6b6b" }}>Ce qui se passe ici</p>
+            <p className="mt-1 leading-8 text-fh-ardoise">
+              <Tx>{explication}</Tx>
+            </p>
+          </div>
+        }
       />
+
+      <Encart titre="La règle des deux rayons">
+        <ol className="flex list-decimal flex-col gap-1.5 pl-5">
+          <li className="pl-1 leading-8">
+            <Tx>{"Le rayon issu de l'objet et parallèle à l'axe ressort en passant par le foyer image $F'$."}</Tx>
+          </li>
+          <li className="pl-1 leading-8">
+            <Tx>{"Le rayon passant par le centre optique $O$ n'est pas dévié."}</Tx>
+          </li>
+          <li className="pl-1 leading-8">
+            <Tx>{"L'intersection de ces deux rayons donne la position de l'image."}</Tx>
+          </li>
+        </ol>
+        <p className="mt-2 leading-8">
+          <Tx>{"Ces règles construisent géométriquement l'image : c'est pour cela qu'on trace ces deux rayons."}</Tx>
+        </p>
+      </Encart>
+
+      <Encart titre="Nature de l'image selon la position de l'objet">
+        <TableauValeurs couleur={TURQUOISE}>
+          <thead>
+            <tr>
+              <th scope="col">Objet</th>
+              <th scope="col">Image</th>
+              <th scope="col">Application</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr data-actif={cas === "photo"}>
+              <td><Tx>{"Au-delà de $2f'$ (loin de la lentille)"}</Tx></td>
+              <td><Tx>{"RÉELLE, RENVERSÉE, RÉDUITE ($|\\gamma| < 1$)"}</Tx></td>
+              <td>Appareil photo</td>
+            </tr>
+            <tr data-actif={cas === "projecteur" || cas === "deuxF"}>
+              <td><Tx>{"Entre $f'$ et $2f'$"}</Tx></td>
+              <td><Tx>{"RÉELLE, RENVERSÉE, AGRANDIE ($|\\gamma| > 1$)"}</Tx></td>
+              <td>Projecteur</td>
+            </tr>
+            <tr data-actif={cas === "loupe"}>
+              <td><Tx>{"Entre le foyer $F$ et la lentille (très près)"}</Tx></td>
+              <td><Tx>{"VIRTUELLE, DROITE, AGRANDIE"}</Tx></td>
+              <td>Loupe</td>
+            </tr>
+          </tbody>
+        </TableauValeurs>
+        <p className="mt-3 leading-8">
+          <Tx>{"Dans les deux premiers cas, l'image est réelle : on peut la recueillir sur un écran. Dans le cas de la loupe, elle est virtuelle : on la voit à travers la lentille, mais on ne peut pas la recueillir sur un écran."}</Tx>
+        </p>
+      </Encart>
+
+      <Encart titre="Que signifie le grandissement ?">
+        <Formule bloc tex={"\\gamma = \\dfrac{\\overline{OA'}}{\\overline{OA}}"} />
+        <ul className="mt-1 flex list-disc flex-col gap-1.5 pl-5">
+          <li className="pl-1 leading-8">
+            <Tx>{"$|\\gamma|$ donne la taille de l'image par rapport à l'objet : $|\\gamma| > 1$, l'image est agrandie ; $|\\gamma| < 1$, elle est réduite."}</Tx>
+          </li>
+          <li className="pl-1 leading-8">
+            <Tx>{"Le SIGNE de $\\gamma$ donne le sens : $\\gamma < 0$, l'image est renversée ; $\\gamma > 0$, l'image est droite."}</Tx>
+          </li>
+        </ul>
+        <p className="mt-2 leading-8">
+          <span className="font-semibold text-fh-bleu">Exemple : </span>
+          <Tx>{"$\\gamma = -0{,}67$ signifie que l'image fait $0{,}67$ fois la taille de l'objet (elle est réduite) et qu'elle est renversée (signe $-$)."}</Tx>
+        </p>
+      </Encart>
     </div>
   );
 }

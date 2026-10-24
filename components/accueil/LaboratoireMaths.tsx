@@ -42,7 +42,7 @@ export default function LaboratoireMaths() {
       <div className="mx-auto max-w-6xl">
         <div className="mx-auto mb-8 max-w-2xl text-center">
           <h2 id="titre-laboratoire" className="text-2xl font-bold text-fh-bleu sm:text-3xl">
-            Essaie FAHIMTA avant de t&apos;inscrire
+            FAHIMTA enrichit chaque cours de simulations interactives
           </h2>
           <p className="mt-2 text-sm text-fh-ardoise sm:text-base">
             Explore les fonctions, les suites, les nombres complexes, la trigonométrie, l&apos;intégrale et les limites. Fais varier les paramètres et découvre les mathématiques en mouvement.
