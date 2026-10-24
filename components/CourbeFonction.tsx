@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import functionPlot, { type Chart, type FunctionPlotOptions } from "function-plot";
 
-import { normaliserExpressionPourFunctionPlot, type CourbeAsymptote, type CourbeData } from "@/lib/courbe";
+import { evaluerExpressionScalaire, normaliserExpressionPourFunctionPlot, type CourbeAsymptote, type CourbeData } from "@/lib/courbe";
 import CourbeErreur from "./CourbeErreur";
 
 /**
@@ -82,6 +82,30 @@ function construireAnnotations(asymptotes: CourbeAsymptote[]): FunctionPlotOptio
   );
 }
 
+/** Sans `domaine-y`, function-plot garde une échelle 1:1 sur le seul domaine x et peut laisser la courbe hors
+ * cadre (ex. 2 + 5x sur [0 ; 5]) : la fenêtre verticale est déduite des valeurs de la fonction sur le domaine. */
+function domaineYAutomatique(data: CourbeData): [number, number] | undefined {
+  const [x0, x1] = data.domaineX;
+  const valeurs: number[] = data.points.map((p) => p.y);
+  const pas = 120;
+  for (const fonction of data.fonctions) {
+    for (let i = 0; i <= pas; i += 1) {
+      try {
+        valeurs.push(evaluerExpressionScalaire(fonction.expr, { x: x0 + ((x1 - x0) * i) / pas }));
+      } catch {
+        // point hors définition (asymptote…) : ignoré
+      }
+    }
+  }
+  if (valeurs.length === 0) return undefined;
+  // Écrête les valeurs aberrantes (approche d'une asymptote) pour garder une fenêtre lisible.
+  const triees = [...valeurs].sort((a, b) => a - b);
+  const bas = triees[Math.floor(triees.length * 0.02)];
+  const haut = triees[Math.ceil(triees.length * 0.98) - 1];
+  const marge = Math.max((haut - bas) * 0.1, 0.5);
+  return [bas - marge, haut + marge];
+}
+
 function hauteurPour(largeur: number): number {
   return Math.round(Math.min(320, Math.max(220, largeur * 0.65)));
 }
@@ -128,6 +152,7 @@ export default function CourbeFonction({ data }: CourbeFonctionProps) {
     // (`queueMicrotask`, résolu avant la prochaine peinture) pour ne jamais
     // appeler setState en cascade directement dans le corps de l'effet.
     let messageErreur: string | null = null;
+    const domaineY = data.domaineY ?? domaineYAutomatique(data);
     try {
       optionsRef.current = {
         target: conteneur,
@@ -135,8 +160,10 @@ export default function CourbeFonction({ data }: CourbeFonctionProps) {
         height: hauteurPour(largeur),
         grid: true,
         tip: { xLine: true, yLine: true },
-        xDomain: [...data.domaineX],
-        yDomain: data.domaineY ? [...data.domaineY] : undefined,
+        // function-plot lit `xAxis.domain` / `yAxis.domain` : les options `xDomain` / `yDomain` sont ignorées
+        // (le graphique restait alors sur la fenêtre par défaut [-6 ; 6]).
+        xAxis: { domain: [...data.domaineX] },
+        yAxis: domaineY ? { domain: [...domaineY] } : undefined,
         data: construireDonnees(data),
         annotations: construireAnnotations(data.asymptotes),
       };
@@ -154,25 +181,42 @@ export default function CourbeFonction({ data }: CourbeFonctionProps) {
     queueMicrotask(() => setErreurRendu(messageErreur));
   }, [data, largeur]);
 
+  /** Domaine réellement affiché (après un zoom à la molette ou un glissement, `options` n'est plus à jour). */
+  function domaineAffiche(): { x: [number, number]; y: [number, number] | undefined } | null {
+    const options = optionsRef.current;
+    const meta = chartRef.current?.meta;
+    const x = (meta?.xScale?.domain() ?? options?.xAxis?.domain) as number[] | undefined;
+    const y = (meta?.yScale?.domain() ?? options?.yAxis?.domain) as number[] | undefined;
+    if (!x || x.length < 2) return null;
+    return { x: [x[0], x[1]], y: y && y.length >= 2 ? [y[0], y[1]] : undefined };
+  }
+
+  /** Redessine avec de nouveaux domaines : conteneur vidé puis graphique recréé (la bibliothèque ne
+   * relit pas `options.xDomain` sur un graphique déjà construit — les boutons +/− n'avaient alors aucun effet). */
   function reconstruire(xDomain: [number, number], yDomain: [number, number] | undefined) {
     const options = optionsRef.current;
-    if (!options) return;
-    options.xDomain = xDomain;
-    options.yDomain = yDomain;
-    functionPlot(options); // même objet `options` → même instance de Chart (voir doc function-plot)
+    const conteneur = conteneurRef.current;
+    if (!options || !conteneur) return;
+    options.xAxis = { ...options.xAxis, domain: xDomain };
+    options.yAxis = yDomain ? { ...options.yAxis, domain: yDomain } : undefined;
+    conteneur.replaceChildren();
+    const chart = functionPlot(options);
+    chartRef.current = chart;
+    const zoom = chart.meta.zoomBehavior as ZoomBehaviorAvecFiltre | undefined;
+    zoom?.filter(filtrerEvenementZoom);
   }
 
   function zoomer(facteur: number) {
-    const options = optionsRef.current;
-    if (!options?.xDomain) return;
-    const [xMin, xMax] = options.xDomain;
+    const courant = domaineAffiche();
+    if (!courant) return;
+    const [xMin, xMax] = courant.x;
     const centreX = (xMin + xMax) / 2;
     const demiX = ((xMax - xMin) / 2) * facteur;
     const nouveauX: [number, number] = [centreX - demiX, centreX + demiX];
 
     let nouveauY: [number, number] | undefined;
-    if (options.yDomain) {
-      const [yMin, yMax] = options.yDomain;
+    if (courant.y) {
+      const [yMin, yMax] = courant.y;
       const centreY = (yMin + yMax) / 2;
       const demiY = ((yMax - yMin) / 2) * facteur;
       nouveauY = [centreY - demiY, centreY + demiY];
@@ -181,7 +225,8 @@ export default function CourbeFonction({ data }: CourbeFonctionProps) {
   }
 
   function reinitialiser() {
-    reconstruire([...data.domaineX], data.domaineY ? [...data.domaineY] : undefined);
+    const domaineY = data.domaineY ?? domaineYAutomatique(data);
+    reconstruire([...data.domaineX], domaineY ? [...domaineY] : undefined);
   }
 
   const legende = data.fonctions.filter((f) => f.nom);

@@ -48,7 +48,7 @@ export default function LoginForm() {
       // (donc déjà garanti par TypeScript) : une réponse API malformée ou un
       // rôle renvoyé sous une forme inattendue ne doit jamais planter la
       // redirection — "/" reste une destination sûre dans tous les cas.
-      router.push(REDIRECTION_PAR_ROLE[data.role] ?? "/");
+      router.push(data.doit_changer_mdp ? "/changer-mot-de-passe" : (REDIRECTION_PAR_ROLE[data.role] ?? "/"));
     } catch (error) {
       if (error instanceof ApiError) {
         if (error.status === 403) {

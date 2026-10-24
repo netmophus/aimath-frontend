@@ -39,6 +39,10 @@ export default function VendeurLayoutClient({ children, logo }: VendeurLayoutCli
       router.replace("/login");
       return;
     }
+    if (user?.doitChangerMdp) {
+      router.replace("/changer-mot-de-passe");
+      return;
+    }
     if (user && user.role !== "vendeur") {
       router.replace(REDIRECTION_AUTRE_ROLE[user.role] ?? "/login");
     }
@@ -49,7 +53,7 @@ export default function VendeurLayoutClient({ children, logo }: VendeurLayoutCli
     router.push("/login");
   }
 
-  if (isLoading || !estVendeur || !user) {
+  if (isLoading || !estVendeur || !user || user.doitChangerMdp) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-fh-creme">
         <p className="text-sm text-fh-ardoise">Chargement…</p>

@@ -56,6 +56,22 @@ body {
 .rendu-markdown h2 { font-size: 1.125em; }
 .rendu-markdown h3 { font-size: 1em; }
 .rendu-markdown p { margin-bottom: 0.6em; line-height: 1.7; }
+/* Court texte Markdown inséré dans une phrase (titre d'étape, question…) : son paragraphe reste en ligne. */
+.rendu-markdown.rendu-en-ligne p { display: inline; margin-bottom: 0; text-align: left; hyphens: manual; }
+/* Calculs et résultats : mélange de texte et de formules, ni justifié ni coupé (pas de « dé-croissante », pas de grands blancs). */
+.rendu-markdown.rendu-calcul p { text-align: left; hyphens: manual; -webkit-hyphens: manual; }
+/* Un mot dans 	ext{…} ne se coupe pas en fin de ligne (« dé-croissante ») ; la ligne se replie entre les blocs de texte. */
+.rendu-markdown.rendu-calcul .katex .text { white-space: nowrap; }
+/* Paragraphes de texte "façon livre" : justifiés + césure française (exige
+   lang="fr" sur le conteneur, posé par RenduMarkdown). Ni titres, ni formules
+   en display (centrées par KaTeX), ni blocs interactifs (figure/table). Les
+   formules inline restent insécables : pas de césure dans .katex. */
+.rendu-markdown p {
+  text-align: justify;
+  hyphens: auto;
+  -webkit-hyphens: auto;
+}
+.rendu-markdown .katex { hyphens: none; -webkit-hyphens: none; }
 .rendu-markdown ul,
 .rendu-markdown ol {
   margin: 0.4em 0 0.6em 1.25em;
@@ -86,28 +102,78 @@ body {
   padding: 0.1em 0.35em;
   font-size: 0.9em;
 }
+/* Tableaux Markdown (GFM) : bordures fines, en-tête bleu FAHIMTA, lignes alternées. */
+.rendu-markdown table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95em;
+}
+.rendu-markdown th,
+.rendu-markdown td {
+  border: 1px solid var(--color-fh-sable);
+  padding: 0.45em 0.75em;
+  text-align: left;
+  vertical-align: top;
+}
+.rendu-markdown th {
+  background: var(--color-fh-bleu);
+  color: #fff;
+  font-weight: 700;
+}
+.rendu-markdown tbody tr:nth-child(even) td {
+  background: var(--color-fh-creme);
+}
+.rendu-markdown td p,
+.rendu-markdown th p {
+  margin-bottom: 0;
+}
 .rendu-markdown .katex-display {
   overflow-x: auto;
   overflow-y: hidden;
   padding-block: 0.25em;
 }
 
-/* Correctif d'un bug du katex.min.css installé (paquet "katex" ^0.18.7,
-   node_modules/katex/dist/katex.min.css) : la feuille de style ne cible que
-   `.katex-overlay { display: block }`, mais le moteur JS de cette version
-   génère en réalité la classe `overlay` (SANS le préfixe "katex-") pour le
-   conteneur SVG des accents combinés (\vec{...}, \hat{...}, \dot{...}...).
-   Résultat sans ce correctif : ce <span class="overlay"> reste un <span>
-   inline par défaut, donc ses `width`/`height` inline (fixés par KaTeX en
-   em) sont ignorés par le navigateur (un élément inline non remplacé ne
-   respecte pas width/height) → la flèche du \vec est présente dans le DOM
-   (SVG correct, bon fill) mais son conteneur s'effondre à 0×0 : invisible.
-   \overrightarrow{...}, lui, utilise un tout autre mécanisme de rendu
-   (classes .katex-stretchy/.halfarrow-*, correctement ciblées par la
-   feuille de style) — d'où l'écart observé entre les deux notations.
-   Règle globale (pas limitée à .rendu-markdown) : KaTeX est utilisé
-   partout via RenduMarkdown (cours, exercices, glossaire, aperçu admin),
-   toutes ces surfaces ont besoin du même correctif. */
-.katex .overlay {
-  display: block;
+/* Animations du laboratoire de chimie (titrage, gaz parfaits, ions) : uniquement si l'utilisateur n'a pas demandé
+   moins d'animations. Goutte : tombe VERS LE BAS du bec de la burette jusqu'à la surface du liquide (--chute en px). */
+@keyframes goutte-chute {
+  0% { transform: translateY(0); opacity: 0; }
+  12% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { transform: translateY(var(--chute, 50px)); opacity: 0; }
+}
+@keyframes particule-agitation {
+  0% { transform: translate(0, 0); }
+  25% { transform: translate(var(--ax, 8px), var(--ay, -6px)); }
+  50% { transform: translate(var(--bx, -6px), var(--by, 9px)); }
+  75% { transform: translate(var(--cx, 7px), var(--cy, 5px)); }
+  100% { transform: translate(0, 0); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .goutte { animation: goutte-chute 0.75s ease-in infinite; }
+  .particule { animation: particule-agitation var(--duree, 4s) ease-in-out infinite; }
+}
+
+/* Hero d'accueil : symboles de maths, physique, chimie et SVT qui flottent doucement en arrière-plan (la page les suspend
+   hors écran via animation-play-state). */
+@keyframes hero-flotte {
+  0% { transform: translate3d(0, 0, 0) rotate(-4deg); }
+  100% { transform: translate3d(8px, -16px, 0) rotate(5deg); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .hero-symbole { animation: hero-flotte var(--duree, 10s) ease-in-out var(--delai, 0s) infinite alternate; }
+}
+
+/* NB : les anciennes rustines `.katex .overlay` et `.katex .stretchy` (et le cadre \boxed, le symbole \neq, etc.) ne
+   sont plus nécessaires. Cause racine : rehype-katex embarquait son propre KaTeX 0.16.x, dont le HTML utilise des classes
+   sans préfixe (stretchy, overlay, thinbox, strut, base…), alors que la feuille chargée (katex 0.18.7, app/layout.tsx)
+   ne stylise que les classes préfixées (katex-stretchy, katex-thinbox, katex-strut…). Le champ "overrides" de
+   package.json force désormais rehype-katex sur le katex de premier niveau : HTML et feuille de style sont de la
+   même version. */
+
+/* Ancres internes de la page d'accueil (« Essayer les simulations ») : défilement doux, sauf si l'utilisateur
+   demande moins d'animations. */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
 }

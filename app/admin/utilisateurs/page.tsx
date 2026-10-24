@@ -3,10 +3,12 @@
 import { useState, type FormEvent } from "react";
 
 import type { Role, Statut } from "@/lib/api";
-import { creerCompte, modifierCompte, type Compte } from "@/lib/adminApi";
+import { useAuth } from "@/lib/auth";
+import { creerCompte, modifierCompte, reinitialiserMotDePasseCompte, type Compte } from "@/lib/adminApi";
 import { useGestionComptes } from "@/lib/useGestionComptes";
 import CompteRow from "@/components/admin/CompteRow";
 import RejeterModal from "@/components/admin/RejeterModal";
+import ReinitialiserMdpModal from "@/components/admin/ReinitialiserMdpModal";
 import EntityFormModal, { type ChampFormulaire } from "@/components/admin/EntityFormModal";
 import Toast from "@/components/admin/Toast";
 
@@ -73,6 +75,8 @@ export default function UtilisateursPage() {
 
   const [modaleCreation, setModaleCreation] = useState(false);
   const [compteAModifier, setCompteAModifier] = useState<Compte | null>(null);
+  const [compteAReinitialiser, setCompteAReinitialiser] = useState<Compte | null>(null);
+  const { user: moi } = useAuth();
 
   const {
     data,
@@ -136,6 +140,21 @@ export default function UtilisateursPage() {
     });
     setCompteAModifier(null);
     setToast({ message: "Compte modifié.", tone: "succes" });
+    recharger();
+  }
+
+  async function handleReinitialiserMdp() {
+    if (!compteAReinitialiser) return;
+    const resultat = await reinitialiserMotDePasseCompte(compteAReinitialiser.id);
+    setCompteAReinitialiser(null);
+    setToast(
+      resultat.sms_envoye
+        ? { message: "Mot de passe réinitialisé : le SMS a été envoyé.", tone: "succes" }
+        : {
+            message: "Mot de passe réinitialisé, mais le SMS n'a PAS pu être envoyé. Relance la réinitialisation.",
+            tone: "erreur",
+          }
+    );
     recharger();
   }
 
@@ -232,6 +251,7 @@ export default function UtilisateursPage() {
               onSuspendre={suspendre}
               onReactiver={reactiver}
               onModifier={setCompteAModifier}
+              onReinitialiserMdp={compte.telephone === moi?.telephone ? undefined : setCompteAReinitialiser}
             />
           ))}
         </div>
@@ -265,6 +285,14 @@ export default function UtilisateursPage() {
           enCours={idEnCours === compteARejeter.id}
           onConfirm={confirmerRejet}
           onClose={annulerRejet}
+        />
+      )}
+
+      {compteAReinitialiser && (
+        <ReinitialiserMdpModal
+          compte={compteAReinitialiser}
+          onConfirm={handleReinitialiserMdp}
+          onClose={() => setCompteAReinitialiser(null)}
         />
       )}
 

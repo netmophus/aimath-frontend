@@ -9,6 +9,10 @@ import { useAuth } from "@/lib/auth";
 import { getProgrammeEleve, type ProgrammeDetailEleve } from "@/lib/eleveApi";
 import { listerIdsTelecharges } from "@/lib/offlineStore";
 import ThemeAccordion from "@/components/eleve/ThemeAccordion";
+import DrawerLateral from "@/components/eleve/DrawerLateral";
+import CarteResoudreMatiere from "@/components/eleve/CarteResoudreMatiere";
+import BoutonTesterSimulations from "@/components/labo/BoutonTesterSimulations";
+import RenduMarkdown from "@/components/RenduMarkdown";
 
 export default function ProgrammeEleveDetailPage() {
   const params = useParams<{ id: string }>();
@@ -21,6 +25,7 @@ export default function ProgrammeEleveDetailPage() {
   const [chargement, setChargement] = useState(true);
   const [erreur, setErreur] = useState<string | null>(null);
   const [themeOuvertId, setThemeOuvertId] = useState<number | null>(null);
+  const [presentationOuverte, setPresentationOuverte] = useState(false);
   const [idsTelecharges, setIdsTelecharges] = useState<Set<number>>(new Set());
 
   useEffect(() => {
@@ -102,6 +107,29 @@ export default function ProgrammeEleveDetailPage() {
         <h1 className="text-lg font-bold text-fh-bleu">{programme.matiere.nom}</h1>
         <p className="text-sm text-fh-ardoise">{classe}</p>
       </div>
+
+      {programme.presentation.trim() && (
+        <>
+          <button
+            type="button"
+            onClick={() => setPresentationOuverte(true)}
+            className="self-start rounded-full border border-fh-bleu/30 bg-fh-accent px-4 py-2 text-sm font-medium text-fh-bleu transition-colors hover:bg-fh-sable/70"
+          >
+            Présentation du programme
+          </button>
+          <DrawerLateral
+            ouvert={presentationOuverte}
+            onFermer={() => setPresentationOuverte(false)}
+            titre="Présentation du programme"
+          >
+            <RenduMarkdown contenu={programme.presentation} />
+          </DrawerLateral>
+        </>
+      )}
+
+      <CarteResoudreMatiere programmeId={programme.id} matiereNom={programme.matiere.nom} />
+
+      <BoutonTesterSimulations programmeId={programme.id} matiereNom={programme.matiere.nom} />
 
       {programme.themes.length === 0 ? (
         <div className="flex flex-col items-center gap-2 rounded-2xl bg-white py-12 text-center ring-1 ring-fh-sable">

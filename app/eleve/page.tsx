@@ -10,6 +10,7 @@ import SalutEleve from "@/components/eleve/SalutEleve";
 import AbonnementBadge from "@/components/eleve/AbonnementBadge";
 import CarteReprendre from "@/components/eleve/CarteReprendre";
 import CarteMatiere from "@/components/eleve/CarteMatiere";
+import CarteResoudre from "@/components/eleve/CarteResoudre";
 import InstallationPwaBouton from "@/components/eleve/InstallationPwaBouton";
 
 export default function EleveDashboardPage() {
@@ -99,11 +100,14 @@ export default function EleveDashboardPage() {
       </div>
 
       <div className="mt-6 flex flex-col gap-8 lg:grid lg:grid-cols-[2fr_3fr] lg:items-start lg:gap-8">
-        {chargementReprendre ? (
-          <div className="h-48 animate-pulse rounded-2xl bg-fh-sable/50" aria-busy="true" aria-label="Chargement" />
-        ) : (
-          <CarteReprendre lecon={leconAReprendre} hrefProgramme={hrefUniqueMatiere} />
-        )}
+        <div className="flex flex-col gap-4">
+          {chargementReprendre ? (
+            <div className="h-48 animate-pulse rounded-2xl bg-fh-sable/50" aria-busy="true" aria-label="Chargement" />
+          ) : (
+            <CarteReprendre lecon={leconAReprendre} hrefProgramme={hrefUniqueMatiere} />
+          )}
+          <CarteResoudre programmes={programmes} />
+        </div>
 
         <section id="mes-matieres" className="scroll-mt-6">
           <div className="flex items-center justify-between gap-2">

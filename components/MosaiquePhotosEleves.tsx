@@ -26,7 +26,7 @@ const DOSSIER = "eleves";
 
 /**
  * Mosaïque de 5 photos d'élèves sous le hero d'accueil (voir
- * components/HeroCarousel.tsx, qui la reçoit en prop `mosaique` — même
+ * components/accueil/HeroAccueil.tsx, qui la reçoit en prop `mosaique` — même
  * convention que Logo.tsx/MarqueEleve.tsx passés en prop `logo` aux layouts
  * admin/élève : un composant SERVEUR, qui lit le système de fichiers, ne
  * doit jamais être importé depuis un fichier "use client").

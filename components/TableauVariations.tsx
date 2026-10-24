@@ -26,7 +26,9 @@ import { ressembleLatex, type ColonneVariations, type PositionValeur, type Valeu
 
 const LARGEUR_LABEL = 68;
 const LARGEUR_INTERVALLE = 92;
-const MARGE_DROITE = 8;
+// Les valeurs de la dernière colonne sont centrées sur sa ligne verticale : il faut laisser à droite au moins
+// la demi-largeur d'un libellé (« +∞ », « 27/256 »…), sinon le cadre arrondi les rogne.
+const MARGE_DROITE = 40;
 const HAUTEUR_LIGNE_X = 34;
 const HAUTEUR_LIGNE_SIGNE = 40;
 const HAUTEUR_LIGNE_F = 104;

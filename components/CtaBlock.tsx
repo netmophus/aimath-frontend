@@ -5,7 +5,7 @@ import { IconRocket } from "@tabler/icons-react";
 import { useAuth } from "@/lib/auth";
 
 export default function CtaBlock() {
-  // Même règle que le hero (voir HeroCarousel.tsx) : connecté → /eleve ;
+  // Même règle que le hero (voir components/accueil/HeroAccueil.tsx) : connecté → /eleve ;
   // sinon, "Découvrir une leçon" → /login mais "Créer un compte" → /register
   // (seule exception à la règle générale). isAuthenticated vaut false tant
   // que la session n'est pas confirmée (lib/auth.tsx) : pas de flash vers

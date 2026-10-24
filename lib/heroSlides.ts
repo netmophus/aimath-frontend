@@ -1,29 +1,26 @@
 /**
- * Contenu des diapositives du hero d'accueil (components/HeroCarousel.tsx).
- * Codé en dur pour l'instant ; sera remplacé par un appel API plus tard si
- * besoin.
+ * Textes du bandeau d'accueil (components/accueil/HeroAccueil.tsx) et des avantages de FAHIMTA
+ * (components/accueil/AvantagesFahimta.tsx). Codé en dur.
  *
- * Le badge et les deux boutons sont IDENTIQUES sur toutes les diapositives
- * (voir la maquette validée) : seuls le titre et le sous-texte changent —
- * d'où leur absence de HeroSlide, HERO_BADGE étant une constante séparée.
+ * Les anciennes diapositives du carrousel (« Apprends même sans connexion », etc.) sont conservées ici, comme
+ * avantages : le bandeau d'accueil ne porte plus qu'un seul message, sur les simulations interactives.
  */
 
-export interface HeroSlide {
+export interface Avantage {
   title: string;
   subtitle: string;
 }
 
 /**
- * Badge bicolore en deux segments accolés (voir le rendu dans
- * HeroCarousel.tsx) : "segment1" sur fond fh-orange plein, "segment2" sur
- * fond fh-accent clair.
+ * Badge bicolore en deux segments accolés : "segment1" sur fond fh-orange plein, "segment2" sur fond fh-accent
+ * clair.
  */
 export const HERO_BADGE = {
   segment1: "Programme officiel",
   segment2: "1ᵉ & 2ⁿᵈ cycles du Niger",
 } as const;
 
-export const HERO_SLIDES: readonly HeroSlide[] = [
+export const AVANTAGES: readonly Avantage[] = [
   {
     title: "Des élèves qui progressent",
     subtitle:

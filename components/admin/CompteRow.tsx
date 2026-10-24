@@ -27,6 +27,7 @@ interface CompteRowProps {
   onSuspendre?: (id: number) => void;
   onReactiver?: (id: number) => void;
   onModifier?: (compte: Compte) => void;
+  onReinitialiserMdp?: (compte: Compte) => void;
 }
 
 function formatClasse(compte: Compte): string | null {
@@ -50,6 +51,7 @@ export default function CompteRow({
   onSuspendre,
   onReactiver,
   onModifier,
+  onReinitialiserMdp,
 }: CompteRowProps) {
   const classe = formatClasse(compte);
 
@@ -125,6 +127,16 @@ export default function CompteRow({
             className="rounded-full border border-fh-bleu/20 px-4 py-2 text-sm font-medium text-fh-bleu transition-colors hover:bg-fh-sable/60 disabled:cursor-not-allowed disabled:opacity-60"
           >
             Modifier
+          </button>
+        )}
+        {compte.statut === "actif" && onReinitialiserMdp && (
+          <button
+            type="button"
+            disabled={enCours}
+            onClick={() => onReinitialiserMdp(compte)}
+            className="rounded-full border border-fh-orange px-4 py-2 text-sm font-medium text-fh-orange transition-colors hover:bg-fh-accent disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            Réinitialiser le mot de passe
           </button>
         )}
       </div>

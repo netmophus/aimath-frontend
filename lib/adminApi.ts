@@ -73,6 +73,18 @@ export function reactiverCompte(id: number): Promise<Compte> {
   return apiRequest<Compte>(`/api/admin/comptes/${id}/reactiver/`, { method: "POST" });
 }
 
+export interface ReinitialisationMdpResultat {
+  detail: string;
+  /** false = le mot de passe a bien été changé mais le SMS n'est pas parti : relancer. */
+  sms_envoye: boolean;
+}
+
+export function reinitialiserMotDePasseCompte(id: number): Promise<ReinitialisationMdpResultat> {
+  return apiRequest<ReinitialisationMdpResultat>(`/api/admin/comptes/${id}/reinitialiser-mot-de-passe/`, {
+    method: "POST",
+  });
+}
+
 export interface CreerCompteInput {
   prenom: string;
   nom: string;

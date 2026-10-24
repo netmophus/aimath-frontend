@@ -106,6 +106,10 @@ export default function EleveLayoutClient({ children, logo }: EleveLayoutClientP
       router.replace("/login");
       return;
     }
+    if (user?.doitChangerMdp) {
+      router.replace("/changer-mot-de-passe");
+      return;
+    }
     if (user && user.role !== "eleve") {
       router.replace(REDIRECTION_AUTRE_ROLE[user.role] ?? "/login");
     }
@@ -116,7 +120,7 @@ export default function EleveLayoutClient({ children, logo }: EleveLayoutClientP
     router.push("/login");
   }
 
-  if (isLoading || !estEleve || !user) {
+  if (isLoading || !estEleve || !user || user.doitChangerMdp) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-fh-creme">
         <p className="text-sm text-fh-ardoise">Chargement…</p>

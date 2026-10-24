@@ -33,12 +33,15 @@ export default function AdminLayoutClient({ children, logo }: AdminLayoutClientP
   const autorise = isAuthenticated && user?.role === "admin";
 
   useEffect(() => {
-    if (!isLoading && !autorise) {
+    if (isLoading) return;
+    if (!autorise) {
       router.replace("/login");
+    } else if (user?.doitChangerMdp) {
+      router.replace("/changer-mot-de-passe");
     }
-  }, [isLoading, autorise, router]);
+  }, [isLoading, autorise, user, router]);
 
-  if (isLoading || !autorise) {
+  if (isLoading || !autorise || user?.doitChangerMdp) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-fh-creme">
         <p className="text-sm text-fh-ardoise">Chargement…</p>

@@ -70,6 +70,10 @@ export interface AuthUser {
    * /eleve/abonnement. Même remarque que ci-dessus : `null` par défaut
    * juste après un login frais. */
   abonnementActifJusquAu: string | null;
+  /** true après une réinitialisation par un admin : toute la zone connectée
+   * redirige vers /changer-mot-de-passe tant que ce n'est pas fait. Confort
+   * d'UI : le mot de passe temporaire reste seul valable côté API. */
+  doitChangerMdp: boolean;
 }
 
 interface AuthContextValue {
@@ -100,6 +104,7 @@ function meToUser(me: MeResponse): AuthUser {
     photoUrl: me.photo_url,
     aUnAbonnementActif: me.a_un_abonnement_actif,
     abonnementActifJusquAu: me.abonnement_actif_jusqu_au,
+    doitChangerMdp: me.doit_changer_mdp,
   };
 }
 
@@ -167,6 +172,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // cosmétique, sans conséquence sur le verrou réel (server-side).
       aUnAbonnementActif: false,
       abonnementActifJusquAu: null,
+      doitChangerMdp: data.doit_changer_mdp,
     };
     setUser(utilisateur);
     cacherUser(utilisateur);

@@ -69,6 +69,7 @@ export interface ProgrammeDetail {
   niveau: NiveauInfo;
   serie: SerieInfo | null;
   libelle: string;
+  presentation: string;
   themes: ThemeNoeud[];
 }
 
@@ -84,6 +85,13 @@ export function listerProgrammes(): Promise<ReponsePaginee<ProgrammeListe>> {
 
 export function getProgramme(id: number): Promise<ProgrammeDetail> {
   return apiRequest<ProgrammeDetail>(`/api/admin/programmes/${id}/`);
+}
+
+export function modifierPresentationProgramme(id: number, presentation: string): Promise<ProgrammeListe> {
+  return apiRequest<ProgrammeListe>(`/api/admin/programmes/${id}/`, {
+    method: "PATCH",
+    body: { presentation },
+  });
 }
 
 export function creerProgramme(data: ProgrammeInput): Promise<ProgrammeListe> {

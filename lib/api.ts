@@ -290,6 +290,7 @@ export interface LoginResponse {
   statut: Statut;
   niveau: NiveauInfo | null;
   serie: SerieInfo | null;
+  doit_changer_mdp: boolean;
 }
 
 export interface MeResponse {
@@ -307,6 +308,8 @@ export interface MeResponse {
   a_un_abonnement_actif: boolean;
   /** Date ISO ("2026-10-25") de fin d'abonnement, ou null si jamais abonné. */
   abonnement_actif_jusqu_au: string | null;
+  /** true après une réinitialisation par un admin : changement obligatoire. */
+  doit_changer_mdp: boolean;
 }
 
 // --- Cascade Cycle → Niveau → Série (formulaire d'inscription, public) ---
@@ -358,6 +361,13 @@ export function login(telephone: string, password: string): Promise<LoginRespons
     method: "POST",
     body: { telephone, password },
     auth: false,
+  });
+}
+
+export function changerMotDePasse(nouveauMotDePasse: string): Promise<{ message: string }> {
+  return apiRequest<{ message: string }>("/api/auth/changer-mot-de-passe/", {
+    method: "POST",
+    body: { nouveau_mot_de_passe: nouveauMotDePasse },
   });
 }
 

@@ -28,6 +28,7 @@ import {
   type ThemeNoeud,
 } from "@/lib/programmeApi";
 import ThemeNode from "@/components/admin/programmes/ThemeNode";
+import PresentationProgramme from "@/components/admin/programmes/PresentationProgramme";
 import EntityFormModal, { type ChampFormulaire } from "@/components/admin/EntityFormModal";
 import DeleteConfirmModal from "@/components/admin/DeleteConfirmModal";
 import Toast from "@/components/admin/Toast";
@@ -339,6 +340,12 @@ export default function ProgrammeDetailPage() {
           </button>
         </div>
       </div>
+
+      <PresentationProgramme
+        programmeId={programmeId}
+        valeurInitiale={programme.presentation}
+        onSauvegarde={(texte) => setProgramme((courant) => (courant ? { ...courant, presentation: texte } : courant))}
+      />
 
       {programme.themes.length === 0 ? (
         <div className="flex flex-col items-center gap-2 rounded-2xl bg-white py-12 text-center ring-1 ring-fh-sable">

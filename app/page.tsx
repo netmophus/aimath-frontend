@@ -1,5 +1,7 @@
 import Navbar from "@/components/Navbar";
-import HeroCarousel from "@/components/HeroCarousel";
+import HeroAccueil from "@/components/accueil/HeroAccueil";
+import LaboratoireMaths from "@/components/accueil/LaboratoireMaths";
+import AvantagesFahimta from "@/components/accueil/AvantagesFahimta";
 import MosaiquePhotosEleves from "@/components/MosaiquePhotosEleves";
 import ClassesBand from "@/components/ClassesBand";
 import Features from "@/components/Features";
@@ -14,9 +16,11 @@ export default function Home() {
       <InstallationPwaBanniere />
       <Navbar />
       <main className="flex-1">
-        <HeroCarousel mosaique={<MosaiquePhotosEleves />} />
+        <HeroAccueil mosaique={<MosaiquePhotosEleves />} />
+        <LaboratoireMaths />
         <ClassesBand />
         <Features />
+        <AvantagesFahimta />
         <StatsStrip />
         <CtaBlock />
       </main>
