@@ -3,6 +3,8 @@
 import { useId, type CSSProperties, type ReactNode } from "react";
 import katex from "katex";
 
+import TableauResponsive from "@/components/ui/TableauResponsive";
+
 /** Formule KaTeX courte (chaînes fixes écrites ici, jamais de texte saisi par le visiteur). Le CSS est global (app/layout.tsx). */
 export function Formule({ tex, bloc = false }: { tex: string; bloc?: boolean }) {
   const html = katex.renderToString(tex, { throwOnError: false, displayMode: bloc });
@@ -137,7 +139,7 @@ export function CadreSimulation({
 export function TableauValeurs({ couleur, children }: { couleur: string; children: ReactNode }) {
   return (
     <div className="tableau-moderne-cadre" style={{ "--tableau-couleur": couleur } as CSSProperties}>
-      <table className="tableau-moderne">{children}</table>
+      <TableauResponsive className="tableau-moderne">{children}</TableauResponsive>
     </div>
   );
 }

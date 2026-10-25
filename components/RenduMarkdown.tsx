@@ -1,6 +1,7 @@
 "use client";
 
 import ReactMarkdown from "react-markdown";
+import TableauResponsive from "@/components/ui/TableauResponsive";
 import remarkMath from "remark-math";
 import remarkGfm from "remark-gfm";
 import rehypeKatex from "rehype-katex";
@@ -124,7 +125,7 @@ export default function RenduMarkdown({ contenu, className = "", onTermeClick }:
             if (source === undefined) {
               return (
                 <div className="my-3 max-w-full overflow-x-auto [contain:inline-size]">
-                  <table>{props.children}</table>
+                  <TableauResponsive>{props.children}</TableauResponsive>
                 </div>
               );
             }

@@ -215,6 +215,46 @@ body {
 .tableau-moderne td:first-child { color: #6b7280; }
 .tableau-moderne td:nth-child(2) { color: var(--color-fh-bleu); font-weight: 700; }
 
+/* Tableaux responsives (components/ui/TableauResponsive.tsx) : sous 640 px chaque ligne devient une carte « Intitulé :
+   valeur » (l'intitulé vient de data-label, posé par le composant). L'en-tête reste dans le DOM pour les lecteurs
+   d'écran. Placé après .rendu-markdown et .tableau-moderne : mêmes spécificités, ce bloc l'emporte. */
+@media (max-width: 639px) {
+  .tableau-moderne-cadre:has(.tableau-responsive) { overflow: visible; background: transparent; box-shadow: none; }
+  .tableau-responsive,
+  .tableau-responsive tbody,
+  .tableau-responsive tr,
+  .tableau-responsive td { display: block; width: 100%; min-width: 0; }
+  .tableau-responsive thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .tableau-responsive tr {
+    margin-bottom: 0.75rem;
+    overflow: hidden;
+    border: 1px solid var(--color-fh-sable);
+    border-left: 4px solid var(--tableau-couleur, var(--color-fh-bleu));
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: 0 1px 4px rgb(30 43 106 / 0.08);
+  }
+  .tableau-responsive td {
+    padding: 0.5rem 0.75rem;
+    border: 0;
+    border-bottom: 1px solid #f0f1f4;
+    overflow-wrap: anywhere;
+  }
+  .tableau-responsive tr td:last-child { border-bottom: 0; }
+  .tableau-responsive td[data-label]::before {
+    content: attr(data-label) " : ";
+    font-weight: 700;
+    color: var(--tableau-couleur, var(--color-fh-bleu));
+  }
+}
+
 /* NB : les anciennes rustines `.katex .overlay` et `.katex .stretchy` (et le cadre \boxed, le symbole \neq, etc.) ne
    sont plus nécessaires. Cause racine : rehype-katex embarquait son propre KaTeX 0.16.x, dont le HTML utilise des classes
    sans préfixe (stretchy, overlay, thinbox, strut, base…), alors que la feuille chargée (katex 0.18.7, app/layout.tsx)
