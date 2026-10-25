@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ComponentType, type ReactNode } from "react";
+import { useState, type ComponentType, type CSSProperties, type ReactNode } from "react";
 
 import OngletsCartes, { PanneauOnglets } from "@/components/ui/OngletsCartes";
 
@@ -31,7 +31,7 @@ export default function LaboOnglets({ etiquette, base, onglets }: { etiquette: s
         idPanneau={() => `${base}-panneau`}
       />
       <PanneauOnglets onglet={o}>
-        <div role="tabpanel" id={`${base}-panneau`} aria-labelledby={`${base}-onglet-${o.id}`}>
+        <div role="tabpanel" id={`${base}-panneau`} aria-labelledby={`${base}-onglet-${o.id}`} style={{ "--couleur-onglet": o.couleur } as CSSProperties}>
           <o.Composant key={o.id} />
         </div>
       </PanneauOnglets>

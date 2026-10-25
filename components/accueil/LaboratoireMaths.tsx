@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 
 import SimulationComplexes from "./SimulationComplexes";
 import SimulationFonction from "./SimulationFonction";
@@ -105,18 +104,6 @@ export default function LaboratoireMaths() {
             <p className="mt-2 text-sm text-fh-ardoise sm:text-base">Éclaire une feuille, fais respirer des poumons et croise des parents pour prévoir leurs descendants.</p>
           </div>
           <LaboSVT />
-        </div>
-
-        <div className="mx-auto mt-8 flex max-w-2xl flex-col items-center gap-4 text-center">
-          <p className="text-base text-fh-ardoise">
-            Ce n&apos;est qu&apos;un aperçu ! Avec FAHIMTA, retrouve des exercices corrigés, des simulations adaptées et un Professeur particulier IA qui t&apos;accompagne pas à pas.
-          </p>
-          <Link
-            href="/programme/lycee"
-            className="inline-flex min-h-11 items-center justify-center rounded-full bg-fh-orange px-7 py-3 text-sm font-semibold text-white transition-colors hover:bg-fh-orange-fonce motion-reduce:transition-none sm:text-base"
-          >
-            Découvrir FAHIMTA
-          </Link>
         </div>
       </div>
     </section>

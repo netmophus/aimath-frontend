@@ -24,7 +24,7 @@ export const AVANTAGES: readonly Avantage[] = [
   {
     title: "Des élèves qui progressent",
     subtitle:
-      "Cours rédigés, démonstrations, exercices corrigés et simulations — du collège au lycée, dans toutes les matières.",
+      "Cours rédigés, démonstrations, exercices corrigés et simulations — du collège au lycée, dans les matières scientifiques.",
   },
   {
     title: "Apprends même sans connexion",

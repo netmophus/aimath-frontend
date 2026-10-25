@@ -34,11 +34,11 @@ export const f = (a: number, x: number): number => x + a / x;
 export interface ExtremaFonction {
   /** x = ±√a */
   racine: number;
-  /** f(√a) = 2√a (minimum local) ; le maximum local vaut −2√a en x = −√a. */
+  /** f(√a) = 2√a (minimum sur ]0 ; +∞[) ; le maximum sur ]−∞ ; 0[ vaut −2√a en x = −√a. */
   valeur: number;
 }
 
-/** Extrema locaux de f_a pour a > 0 (f'(x) = 1 − a/x² s'annule en x = ±√a) ; aucun sinon. */
+/** Minimum (sur ]0 ; +∞[) et maximum (sur ]−∞ ; 0[) de f_a pour a > 0(f'(x) = 1 − a/x² s'annule en x = ±√a) ; aucun sinon. */
 export function extremaFonction(a: number): ExtremaFonction | null {
   if (!(a > 0)) return null;
   const racine = Math.sqrt(a);
@@ -51,9 +51,9 @@ export function commentaireFonction(a: number): string {
     return "Pour $a = 0$, $f(x) = x$ pour tout $x \\neq 0$ : la courbe est la droite $y = x$ privée de l'origine (le point $(0\\,;\\,0)$ est exclu). Il n'y a plus d'asymptote verticale.";
   }
   if (a > 0) {
-    return "Pour $a > 0$, les deux branches sont dans les quadrants 1 et 3. La droite $y = x$ est asymptote oblique ($f(x) - x = \\dfrac{a}{x}$ tend vers $0$ quand $|x|$ grandit) et l'axe des ordonnées est asymptote verticale. Chaque branche a un extremum : un minimum local en $x = \\sqrt{a}$ et un maximum local en $x = -\\sqrt{a}$.";
+    return "Pour $a > 0$, les deux branches sont dans les quadrants 1 et 3. La droite $y = x$ est asymptote oblique ($f(x) - x = \\dfrac{a}{x}$ tend vers $0$ quand $|x|$ grandit) et l'axe des ordonnées est asymptote verticale. $f$ admet un minimum sur $]0\\,;+\\infty[$, atteint en $x = \\sqrt{a}$, et un maximum sur $]-\\infty\\,;0[$, atteint en $x = -\\sqrt{a}$.";
   }
-  return "Pour $a < 0$, les deux branches sont de part et d'autre de l'axe des ordonnées, dans les quadrants 2 et 4 près de $x = 0$. La droite $y = x$ reste asymptote oblique et $x = 0$ asymptote verticale. Ici $f'(x) = 1 - \\dfrac{a}{x^2} > 0$ : $f$ est strictement croissante sur chaque branche, sans extremum.";
+  return "Pour $a < 0$, les deux branches sont de part et d'autre de l'axe des ordonnées, dans les quadrants 2 et 4 près de $x = 0$. La droite $y = x$ reste asymptote oblique et $x = 0$ asymptote verticale. Ici $f'(x) = 1 - \\dfrac{a}{x^2} > 0$ : $f$ est strictement croissante sur chaque branche, sans minimum ni maximum.";
 }
 
 /** Points d'une branche (x > 0 ou x < 0), échantillonnage géométrique pour bien suivre la remontée près de 0. */

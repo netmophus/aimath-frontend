@@ -108,9 +108,13 @@ function TexteMath({ texte, x, y, couleur, poids = "normal" }: TexteMathProps) {
 
 interface TableauVariationsProps {
   data: VariationsData;
+  /** Raccourcit les flèches aux deux bouts pour qu'elles ne touchent pas les valeurs de la ligne f (défaut : non). */
+  espace?: boolean;
 }
 
-export default function TableauVariations({ data }: TableauVariationsProps) {
+const DEGAGEMENT_FLECHE = 26;
+
+export default function TableauVariations({ data, espace = false }: TableauVariationsProps) {
   const idClip = useId();
   const { colonnes, signes, fonction } = data;
   const n = colonnes.length;
@@ -246,13 +250,16 @@ export default function TableauVariations({ data }: TableauVariationsProps) {
             const y1 = yPourPosition(valeurPourCote(colonnes[i], "droite").position, yHautF, yBasF);
             const y2 = yPourPosition(valeurPourCote(colonnes[i + 1], "gauche").position, yHautF, yBasF);
             const couleur = signe === "+" ? COULEUR_POSITIF : signe === "-" ? COULEUR_NEGATIF : COULEUR_NEUTRE;
+            const dx = xPos(i + 1) - xPos(i);
+            const dy = y2 - y1;
+            const k = espace ? Math.min(DEGAGEMENT_FLECHE / Math.hypot(dx, dy), 0.4) : 0;
             return (
               <line
                 key={`fleche-${i}`}
-                x1={xPos(i)}
-                y1={y1}
-                x2={xPos(i + 1)}
-                y2={y2}
+                x1={xPos(i) + dx * k}
+                y1={y1 + dy * k}
+                x2={xPos(i + 1) - dx * k}
+                y2={y2 - dy * k}
                 stroke={couleur}
                 strokeWidth={2}
                 strokeDasharray={signe === "0" ? "4,3" : undefined}

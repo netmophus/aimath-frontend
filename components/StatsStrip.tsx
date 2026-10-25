@@ -5,7 +5,7 @@ interface Stat {
 
 const STATS: readonly Stat[] = [
   { value: "7", label: "niveaux, du collège au lycée" },
-  { value: "Toutes", label: "les matières couvertes" },
+  { value: "4", label: "matières scientifiques couvertes" },
   { value: "100%", label: "programme officiel du Niger" },
   { value: "24/7", label: "accès depuis n'importe où" },
 ];
