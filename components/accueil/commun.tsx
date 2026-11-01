@@ -1,7 +1,9 @@
 "use client";
 
-import { useId, type CSSProperties, type ReactNode } from "react";
+import { useContext, useId, type CSSProperties, type ReactNode } from "react";
 import katex from "katex";
+
+import { StyleLaboModerne } from "@/components/labo/styleLabo";
 
 import TableauResponsive from "@/components/ui/TableauResponsive";
 
@@ -56,6 +58,21 @@ interface CurseurProps {
 /** Curseur natif (clavier, toucher) avec sa valeur affichée ; zone de saisie haute pour le pouce. */
 export function Curseur({ nom, valeurTexte, min, max, pas, valeur, onChange, ariaLabel }: CurseurProps) {
   const id = useId();
+  const moderne = useContext(StyleLaboModerne);
+  if (moderne) {
+    // Habillage bleu-violet (laboratoire de chimie de l'accueil uniquement) : carte « paramètre ».
+    return (
+      <div className="flex flex-col gap-1.5 rounded-2xl border border-violet-200 bg-violet-50/50 p-3.5 shadow-sm">
+        <label htmlFor={id} className="flex items-center justify-between gap-3 text-sm font-semibold text-fh-bleu">
+          <span>{nom}</span>
+          <output htmlFor={id} className="rounded-full bg-violet-600 px-3.5 py-1 text-sm font-bold text-white">
+            {valeurTexte}
+          </output>
+        </label>
+        <input id={id} type="range" min={min} max={max} step={pas} value={valeur} aria-label={ariaLabel} onChange={(e) => onChange(Number(e.target.value))} className="h-11 w-full cursor-pointer accent-violet-600" />
+      </div>
+    );
+  }
   return (
     <div className="flex flex-col gap-1">
       <label htmlFor={id} className="flex items-baseline justify-between gap-3 text-sm font-semibold text-fh-bleu">
@@ -146,6 +163,15 @@ export function TableauValeurs({ couleur, children }: { couleur: string; childre
 
 /** Une valeur affichée (étiquette + valeur) dans la grille de résultats. */
 export function Valeur({ etiquette, children, large = false }: { etiquette: ReactNode; children: ReactNode; large?: boolean }) {
+  const moderne = useContext(StyleLaboModerne);
+  if (moderne) {
+    return (
+      <div className={`min-w-0 rounded-xl border border-indigo-100 bg-white px-3.5 py-2.5 shadow-sm ${large ? "col-span-2" : ""}`}>
+        <dt className="text-xs font-semibold text-slate-500">{etiquette}</dt>
+        <dd className="mt-0.5 break-words text-base font-semibold text-fh-bleu">{children}</dd>
+      </div>
+    );
+  }
   return (
     <div className={`min-w-0 rounded-lg border border-fh-sable bg-white px-3 py-2 ${large ? "col-span-2" : ""}`}>
       <dt className="text-xs font-medium text-fh-ardoise/80">{etiquette}</dt>

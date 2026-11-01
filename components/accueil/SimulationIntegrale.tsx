@@ -5,7 +5,8 @@ import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { Choix } from "@/components/labo/commun";
 import { nombreFr } from "@/lib/accueil/mathsLabo";
 import { aire, FONCTIONS_INTEGRALE, graduations, troncons, type IdIntegrale } from "@/lib/accueil/mathsLaboAvance";
-import { BoutonReinitialiser, CadreSimulation, chemin, Curseur, Formule, repere, Tx, Valeur } from "./commun";
+import { chemin, Formule, repere, Tx } from "./commun";
+import { BoutonDiscret, CadreSimulationMaths, CarteParam, CurseurMaths, ICONES_MATHS, ValeurMaths } from "./CadreMaths";
 import { CadreGraphe } from "./GrapheMaths";
 
 const W = 440;
@@ -68,7 +69,7 @@ export default function SimulationIntegrale() {
   }
 
   const curseur = (
-    <Curseur
+    <CurseurMaths
       nom={<Formule tex="x" />}
       valeurTexte={`x = ${nombreFr(x, 1)}`}
       min={0}
@@ -82,13 +83,10 @@ export default function SimulationIntegrale() {
 
   return (
     <div className="flex flex-col gap-5">
-      <Encart titre="Étape 1">
-        <Tx>
-          {"Intégrer $f$ de $0$ à $x$, noté $\\int_0^x f(t)\\,\\mathrm{d}t$, c'est mesurer l'AIRE entre la courbe de $f$, l'axe horizontal et la verticale en $x$. Plus $x$ avance, plus l'aire grandit."}
-        </Tx>
-      </Encart>
 
-      <CadreSimulation
+      <CadreSimulationMaths
+        icone={ICONES_MATHS.integrale}
+        action={<BoutonDiscret onClick={() => setX(fo.initial)}>Réinitialiser</BoutonDiscret>}
         titre="L'intégrale, c'est une aire"
         description="Déplace la borne avec le curseur : l'aire sous la courbe se remplit depuis 0 jusqu'à cette borne."
         formule={<Formule bloc tex={`\\int_0^x ${fo.fTex}\\,\\mathrm{d}t = ${fo.FTex}`} />}
@@ -112,15 +110,16 @@ export default function SimulationIntegrale() {
         }
         commandes={
           <>
-            <Choix nom="Fonction f" options={FONCTIONS_INTEGRALE.map((f) => ({ cle: f.id, libelle: <Formule tex={f.libelleTex} />, aria: f.libelle }))} valeur={idF} onChoisir={choisir} />
+            <CarteParam titre="Fonction étudiée">
+              <Choix nom="Fonction f" options={FONCTIONS_INTEGRALE.map((f) => ({ cle: f.id, libelle: <Formule tex={f.libelleTex} />, aria: f.libelle }))} valeur={idF} onChoisir={choisir} />
+            </CarteParam>
             {curseur}
-            <BoutonReinitialiser onClick={() => setX(fo.initial)} />
           </>
         }
         valeurs={
           <>
-            <Valeur etiquette={<>Borne <Formule tex="x" /></>}>{nombreFr(x, 1)}</Valeur>
-            <Valeur etiquette={<Tx>{"Aire sous $f$ de $0$ à $x$"}</Tx>}>{n3(air)}</Valeur>
+            <ValeurMaths etiquette={<>Borne <Formule tex="x" /></>} ton="violet">{nombreFr(x, 1)}</ValeurMaths>
+            <ValeurMaths etiquette={<Tx>{"Aire sous $f$ de $0$ à $x$"}</Tx>} ton="bleu">{n3(air)}</ValeurMaths>
           </>
         }
         commentaire={
@@ -130,6 +129,12 @@ export default function SimulationIntegrale() {
           </div>
         }
       />
+
+      <Encart titre="Étape 1">
+        <Tx>
+          {"Intégrer $f$ de $0$ à $x$, noté $\\int_0^x f(t)\\,\\mathrm{d}t$, c'est mesurer l'AIRE entre la courbe de $f$, l'axe horizontal et la verticale en $x$. Plus $x$ avance, plus l'aire grandit."}
+        </Tx>
+      </Encart>
 
       {!revele && (
         <button
@@ -145,7 +150,9 @@ export default function SimulationIntegrale() {
 
       {revele && (
         <div ref={etapeB} className="apparition-etape flex flex-col gap-5">
-          <CadreSimulation
+          <CadreSimulationMaths
+            icone={ICONES_MATHS.integrale}
+            action={<BoutonDiscret onClick={() => setX(fo.initial)}>Réinitialiser</BoutonDiscret>}
             titre="L'aire devient une fonction F"
             description="L'aire dépend de la borne : c'est donc une fonction de cette borne. Voici sa courbe, avec sa tangente au point courant."
             formule={<Formule bloc tex={`F(x) = \\int_0^x f(t)\\,\\mathrm{d}t = ${fo.FTex}`} />}
@@ -173,14 +180,13 @@ export default function SimulationIntegrale() {
             commandes={
               <>
                 {curseur}
-                <BoutonReinitialiser onClick={() => setX(fo.initial)} />
               </>
             }
             valeurs={
               <>
-                <Valeur etiquette={<Tx>{"Aire sous $f$ de $0$ à $x$"}</Tx>}>{n3(air)}</Valeur>
-                <Valeur etiquette={<Formule tex="F(x)" />}>{n3(val)}</Valeur>
-                <Valeur etiquette={<>Pente de la tangente <Formule tex="= f(x)" /></>} large>{n3(pente)}</Valeur>
+                <ValeurMaths etiquette={<Tx>{"Aire sous $f$ de $0$ à $x$"}</Tx>} ton="bleu">{n3(air)}</ValeurMaths>
+                <ValeurMaths etiquette={<Formule tex="F(x)" />} ton="bleu">{n3(val)}</ValeurMaths>
+                <ValeurMaths etiquette={<>Pente de la tangente <Formule tex="= f(x)" /></>} large ton="orange">{n3(pente)}</ValeurMaths>
               </>
             }
             commentaire={
@@ -213,8 +219,8 @@ export default function SimulationIntegrale() {
 /** Encadré pédagogique (bordure gauche orange, fond léger) : même style que « Le concept » des autres onglets. */
 function Encart({ titre, children }: { titre: ReactNode; children: ReactNode }) {
   return (
-    <div className="rounded-xl border-l-4 border-fh-orange bg-fh-accent/60 p-4 sm:p-5">
-      <p className="text-sm font-bold text-fh-orange-fonce">{titre}</p>
+    <div className="rounded-2xl border border-l-4 border-slate-200 border-l-indigo-500 bg-white p-4 shadow-sm sm:p-5">
+      <p className="text-sm font-bold text-indigo-700">{titre}</p>
       <div className="mt-1.5 text-sm leading-relaxed text-fh-ardoise sm:text-base">{children}</div>
     </div>
   );

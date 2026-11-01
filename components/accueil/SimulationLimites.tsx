@@ -5,7 +5,8 @@ import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { Choix } from "@/components/labo/commun";
 import { nombreFr } from "@/lib/accueil/mathsLabo";
 import { FONCTIONS_LIMITE, graduations, troncons, type IdLimite } from "@/lib/accueil/mathsLaboAvance";
-import { BoutonReinitialiser, CadreSimulation, chemin, Curseur, Formule, repere, TableauValeurs, Tx, Valeur } from "./commun";
+import { chemin, Formule, repere, TableauValeurs, Tx } from "./commun";
+import { BoutonDiscret, CadreSimulationMaths, CarteParam, CurseurMaths, ICONES_MATHS, ValeurMaths } from "./CadreMaths";
 import { CadreGraphe } from "./GrapheMaths";
 
 const W = 440;
@@ -66,17 +67,10 @@ export default function SimulationLimites() {
 
   return (
     <div className="flex flex-col gap-5">
-      <Encart titre="Qu'est-ce qu'une limite ?">
-        <p className="leading-8">
-          <Tx>{"Dire que $f(x)$ a pour limite $L$, c'est dire que l'écart $|f(x) - L|$ devient aussi petit qu'on veut (proche de $0$) quand $x$ s'approche de la valeur visée ou devient très grand."}</Tx>
-        </p>
-        <p className="mt-2 leading-8">
-          <span className="font-bold text-fh-orange-fonce">À observer : </span>
-          <Tx>{"déplace $x$ et regarde la barre : plus $x$ s'approche de la valeur visée, plus l'écart $|f(x) - L|$ rétrécit vers $0$."}</Tx>
-        </p>
-      </Encart>
 
-      <CadreSimulation
+      <CadreSimulationMaths
+        icone={ICONES_MATHS.limites}
+        action={<BoutonDiscret onClick={() => setX(fo.curseur.initial)}>Réinitialiser</BoutonDiscret>}
         titre="Rapproche x et regarde l'écart fondre"
         description="Choisis une fonction, déplace x : le point suit la courbe et l'écart avec la limite visée diminue."
         formule={
@@ -136,8 +130,10 @@ export default function SimulationLimites() {
         }
         commandes={
           <>
-            <Choix nom="Fonction f" options={FONCTIONS_LIMITE.map((f) => ({ cle: f.id, libelle: <Formule tex={f.libelleTex} />, aria: f.libelle }))} valeur={id} onChoisir={choisir} />
-            <Curseur
+            <CarteParam titre="Fonction étudiée">
+              <Choix nom="Fonction f" options={FONCTIONS_LIMITE.map((f) => ({ cle: f.id, libelle: <Formule tex={f.libelleTex} />, aria: f.libelle }))} valeur={id} onChoisir={choisir} />
+            </CarteParam>
+            <CurseurMaths
               nom={<Formule tex="x" />}
               valeurTexte={`x = ${nombreFr(x, 1)}`}
               min={fo.curseur.min}
@@ -147,7 +143,6 @@ export default function SimulationLimites() {
               onChange={(v) => setX(Math.round(v * 10) / 10)}
               ariaLabel="Valeur de x"
             />
-            <BoutonReinitialiser onClick={() => setX(fo.curseur.initial)} />
             {!revele && (
               <button
                 type="button"
@@ -163,23 +158,33 @@ export default function SimulationLimites() {
         }
         valeurs={
           <>
-            <Valeur etiquette={<Formule tex="x" />}>{nombreFr(x, 1)}</Valeur>
-            <Valeur etiquette={<Formule tex="f(x)" />}>{interdit ? "non définie" : n4(y)}</Valeur>
-            <Valeur etiquette={<Tx>{"Limite visée $L$"}</Tx>}>{n4(L)}</Valeur>
-            <Valeur etiquette={<Formule tex="|f(x) - L|" />}>{interdit ? "—" : n4(ecart)}</Valeur>
-            <Valeur etiquette={<Tx>{"Écart : la barre rétrécit vers $0$"}</Tx>} large>
+            <ValeurMaths etiquette={<Formule tex="x" />} ton="violet">{nombreFr(x, 1)}</ValeurMaths>
+            <ValeurMaths etiquette={<Formule tex="f(x)" />} ton="bleu">{interdit ? "non définie" : n4(y)}</ValeurMaths>
+            <ValeurMaths etiquette={<Tx>{"Limite visée $L$"}</Tx>} ton="orange">{n4(L)}</ValeurMaths>
+            <ValeurMaths etiquette={<Formule tex="|f(x) - L|" />} ton="orange">{interdit ? "—" : n4(ecart)}</ValeurMaths>
+            <ValeurMaths etiquette={<Tx>{"Écart : la barre rétrécit vers $0$"}</Tx>} large>
               <div
                 role="img"
                 aria-label={`Écart avec la limite visée : ${interdit ? "non défini" : n4(ecart)}`}
-                className="mt-1.5 h-3 w-full overflow-hidden rounded-full bg-fh-sable/50"
+                className="mt-1.5 h-3 w-full overflow-hidden rounded-full bg-slate-200"
               >
                 <div className="h-full rounded-full transition-[width] duration-200 motion-reduce:transition-none" style={{ width: `${pct}%`, backgroundColor: FRAMBOISE }} />
               </div>
-            </Valeur>
+            </ValeurMaths>
           </>
         }
         commentaire={<p className="leading-8">{commentaire}</p>}
       />
+
+      <Encart titre="Qu'est-ce qu'une limite ?">
+        <p className="leading-8">
+          <Tx>{"Dire que $f(x)$ a pour limite $L$, c'est dire que l'écart $|f(x) - L|$ devient aussi petit qu'on veut (proche de $0$) quand $x$ s'approche de la valeur visée ou devient très grand."}</Tx>
+        </p>
+        <p className="mt-2 leading-8">
+          <span className="font-bold text-fh-orange-fonce">À observer : </span>
+          <Tx>{"déplace $x$ et regarde la barre : plus $x$ s'approche de la valeur visée, plus l'écart $|f(x) - L|$ rétrécit vers $0$."}</Tx>
+        </p>
+      </Encart>
 
       {revele && (
         <div ref={etapeB} className="apparition-etape flex flex-col gap-5">
@@ -253,8 +258,8 @@ export default function SimulationLimites() {
 /** Encadré pédagogique (bordure gauche orange, fond léger) : même style que « Le concept » des autres onglets. */
 function Encart({ titre, children }: { titre: string; children: ReactNode }) {
   return (
-    <div className="rounded-xl border-l-4 border-fh-orange bg-fh-accent/60 p-4 sm:p-5">
-      <p className="text-sm font-bold text-fh-orange-fonce">{titre}</p>
+    <div className="rounded-2xl border border-l-4 border-slate-200 border-l-indigo-500 bg-white p-4 shadow-sm sm:p-5">
+      <p className="text-sm font-bold text-indigo-700">{titre}</p>
       <div className="mt-1.5 text-sm leading-relaxed text-fh-ardoise sm:text-base">{children}</div>
     </div>
   );

@@ -5,7 +5,8 @@ import { useId, useMemo, useState, type ReactNode } from "react";
 import { variationsFonction } from "@/lib/accueil/variationsFonction";
 import TableauVariations from "@/components/TableauVariations";
 import { branche, commentaireFonction, extremaFonction, FONCTION, nombreFr } from "@/lib/accueil/mathsLabo";
-import { BoutonReinitialiser, CadreSimulation, chemin, Curseur, Formule, grad, repere, Tx, Valeur } from "./commun";
+import { chemin, Formule, grad, repere, Tx } from "./commun";
+import { BoutonDiscret, CadreSimulationMaths, CurseurNumerique, ICONES_MATHS, ValeurMaths } from "./CadreMaths";
 
 const L = 400;
 const BORNE = 6;
@@ -25,7 +26,9 @@ export default function SimulationFonction() {
   const extrema = extremaFonction(a);
 
   return (
-    <CadreSimulation
+    <CadreSimulationMaths
+      icone={ICONES_MATHS.fonctions}
+      action={<BoutonDiscret onClick={() => setA(FONCTION.initial)}>Réinitialiser</BoutonDiscret>}
       titre="Explore les asymptotes d'une fonction"
       description="Fais varier le paramètre et observe comment évoluent les deux branches de la courbe."
       formule={<Formule tex={"f_a(x) = x + \\dfrac{a}{x}, \\quad x \\neq 0"} />}
@@ -36,45 +39,45 @@ export default function SimulationFonction() {
               <rect x={R.marge} y={R.marge} width={L - 2 * R.marge} height={L - 2 * R.marge} />
             </clipPath>
           </defs>
-          <rect x={R.marge} y={R.marge} width={L - 2 * R.marge} height={L - 2 * R.marge} className="fill-white stroke-fh-sable" />
+          <rect x={R.marge} y={R.marge} width={L - 2 * R.marge} height={L - 2 * R.marge} className="fill-white stroke-slate-300" />
           {GRADUATIONS.map((g) => (
             <g key={g}>
-              <line x1={R.X(g)} y1={R.marge} x2={R.X(g)} y2={L - R.marge} className="stroke-fh-sable/70" strokeWidth={0.7} />
-              <line x1={R.marge} y1={R.Y(g)} x2={L - R.marge} y2={R.Y(g)} className="stroke-fh-sable/70" strokeWidth={0.7} />
-              <text x={R.X(g)} y={R.Y(0) + 13} textAnchor="middle" className="fill-fh-ardoise text-[9px]">{grad(g)}</text>
-              <text x={R.X(0) - 5} y={R.Y(g) + 3} textAnchor="end" className="fill-fh-ardoise text-[9px]">{grad(g)}</text>
+              <line x1={R.X(g)} y1={R.marge} x2={R.X(g)} y2={L - R.marge} className="stroke-slate-200" strokeWidth={0.7} />
+              <line x1={R.marge} y1={R.Y(g)} x2={L - R.marge} y2={R.Y(g)} className="stroke-slate-200" strokeWidth={0.7} />
+              <text x={R.X(g)} y={R.Y(0) + 13} textAnchor="middle" className="fill-slate-600 text-[11px]">{grad(g)}</text>
+              <text x={R.X(0) - 5} y={R.Y(g) + 3} textAnchor="end" className="fill-slate-600 text-[11px]">{grad(g)}</text>
             </g>
           ))}
-          <line x1={R.marge} y1={R.Y(0)} x2={L - R.marge} y2={R.Y(0)} className="stroke-fh-ardoise" strokeWidth={1} />
-          <line x1={R.X(0)} y1={R.marge} x2={R.X(0)} y2={L - R.marge} className="stroke-fh-ardoise" strokeWidth={1} />
+          <line x1={R.marge} y1={R.Y(0)} x2={L - R.marge} y2={R.Y(0)} className="stroke-slate-700" strokeWidth={1} />
+          <line x1={R.X(0)} y1={R.marge} x2={R.X(0)} y2={L - R.marge} className="stroke-slate-700" strokeWidth={1} />
 
           <g clipPath={`url(#${idClip})`}>
             {/* asymptote oblique y = x */}
-            <line x1={R.X(-BORNE)} y1={R.Y(-BORNE)} x2={R.X(BORNE)} y2={R.Y(BORNE)} className="stroke-fh-orange" strokeWidth={1.4} strokeDasharray="6 4" />
+            <line x1={R.X(-BORNE)} y1={R.Y(-BORNE)} x2={R.X(BORNE)} y2={R.Y(BORNE)} className="stroke-fh-orange" strokeWidth={1.8} strokeDasharray="7 5" />
             {/* asymptote verticale x = 0 (seulement si a ≠ 0) */}
-            {a !== 0 && <line x1={R.X(0)} y1={R.marge} x2={R.X(0)} y2={L - R.marge} className="stroke-fh-bleu-vif" strokeWidth={1.4} strokeDasharray="6 4" />}
-            <path d={cheminPositif} fill="none" className="stroke-fh-bleu" strokeWidth={2.4} strokeLinejoin="round" />
-            <path d={cheminNegatif} fill="none" className="stroke-fh-bleu" strokeWidth={2.4} strokeLinejoin="round" />
+            {a !== 0 && <line x1={R.X(0)} y1={R.marge} x2={R.X(0)} y2={L - R.marge} className="stroke-violet-600" strokeWidth={1.8} strokeDasharray="7 5" />}
+            <path d={cheminPositif} fill="none" className="stroke-fh-bleu" strokeWidth={3} strokeLinejoin="round" />
+            <path d={cheminNegatif} fill="none" className="stroke-fh-bleu" strokeWidth={3} strokeLinejoin="round" />
           </g>
 
           {a === 0 && <circle cx={R.X(0)} cy={R.Y(0)} r={4.5} className="fill-white stroke-fh-bleu" strokeWidth={2} data-testid="point-exclu" />}
           {extrema && (
             <g data-testid="extrema">
-              <circle cx={R.X(extrema.racine)} cy={R.Y(extrema.valeur)} r={4.5} className="fill-fh-orange stroke-white" strokeWidth={1.5} />
-              <circle cx={R.X(-extrema.racine)} cy={R.Y(-extrema.valeur)} r={4.5} className="fill-fh-orange stroke-white" strokeWidth={1.5} />
-              <text x={R.X(extrema.racine) + 6} y={R.Y(extrema.valeur) + 16} className="fill-fh-orange-fonce text-[10px] font-semibold [paint-order:stroke] stroke-white stroke-[3px]">min</text>
-              <text x={R.X(-extrema.racine) - 6} y={R.Y(-extrema.valeur) - 10} textAnchor="end" className="fill-fh-orange-fonce text-[10px] font-semibold [paint-order:stroke] stroke-white stroke-[3px]">max</text>
+              <circle cx={R.X(extrema.racine)} cy={R.Y(extrema.valeur)} r={6} className="fill-fh-orange stroke-white" strokeWidth={2} />
+              <circle cx={R.X(-extrema.racine)} cy={R.Y(-extrema.valeur)} r={6} className="fill-fh-orange stroke-white" strokeWidth={2} />
+              <text x={R.X(extrema.racine) + 6} y={R.Y(extrema.valeur) + 16} className="fill-fh-orange-fonce text-[12px] font-semibold [paint-order:stroke] stroke-white stroke-[3px]">min</text>
+              <text x={R.X(-extrema.racine) - 6} y={R.Y(-extrema.valeur) - 10} textAnchor="end" className="fill-fh-orange-fonce text-[12px] font-semibold [paint-order:stroke] stroke-white stroke-[3px]">max</text>
             </g>
           )}
-          <text x={R.X(BORNE) - 4} y={R.Y(BORNE) + 26} textAnchor="end" className="fill-fh-orange-fonce text-[10px] font-semibold [paint-order:stroke] stroke-white stroke-[3px]">y = x</text>
-          {a !== 0 && <text x={R.X(0) - 5} y={R.marge + 28} textAnchor="end" className="fill-fh-bleu-vif text-[10px] font-semibold [paint-order:stroke] stroke-white stroke-[3px]">x = 0</text>}
+          <text x={R.X(BORNE) - 4} y={R.Y(4.1)} textAnchor="end" className="fill-fh-orange-fonce text-[12px] font-semibold [paint-order:stroke] stroke-white stroke-[3px]">y = x</text>
+          {a !== 0 && <text x={R.X(0) - 5} y={R.marge + 28} textAnchor="end" className="fill-violet-700 text-[12px] font-semibold [paint-order:stroke] stroke-white stroke-[3px]">x = 0</text>}
         </svg>
       }
       commandes={
         <>
-          <Curseur
+          <CurseurNumerique
             nom={<Formule tex="a" />}
-            valeurTexte={`a = ${nombreFr(a, 1)}`}
+            symbole="a"
             min={FONCTION.min}
             max={FONCTION.max}
             pas={FONCTION.pas}
@@ -82,23 +85,24 @@ export default function SimulationFonction() {
             onChange={setA}
             ariaLabel="Paramètre a de la fonction"
           />
-          <BoutonReinitialiser onClick={() => setA(FONCTION.initial)} />
         </>
       }
       valeurs={
         <>
-          <Valeur etiquette="Fonction" large>
+          <ValeurMaths etiquette="Fonction" large ton="bleu">
             <Formule tex={a === 0 ? "f(x) = x \\quad (x \\neq 0)" : `f(x) = x ${a < 0 ? "-" : "+"} \\dfrac{${nombreFr(Math.abs(a), 1).replace(",", "{,}")}}{x}`} />
-          </Valeur>
-          <Valeur etiquette="Asymptote oblique">y = x</Valeur>
-          <Valeur etiquette="Asymptote verticale">{a !== 0 ? "x = 0" : "aucune"}</Valeur>
-          <Valeur etiquette={extrema ? "Minimum sur ]0 ; +∞[" : "Minimum et maximum"} large>
-            {extrema ? `x ${egalOuApprox(extrema.racine)} ; f(x) ${egalOuApprox(extrema.valeur)}` : "aucun minimum ni maximum"}
-          </Valeur>
+          </ValeurMaths>
+          <ValeurMaths etiquette="Asymptote oblique" ton="orange">y = x</ValeurMaths>
+          {a !== 0 && <ValeurMaths etiquette="Asymptote verticale" ton="orange">x = 0</ValeurMaths>}
           {extrema && (
-            <Valeur etiquette="Maximum sur ]−∞ ; 0[" large>
-              {`x ${egalOuApprox(-extrema.racine)} ; f(x) ${egalOuApprox(-extrema.valeur)}`}
-            </Valeur>
+            <>
+              <ValeurMaths etiquette="Minimum sur ]0 ; +∞[" large ton="orange">
+                {`x ${egalOuApprox(extrema.racine)} ; f(x) ${egalOuApprox(extrema.valeur)}`}
+              </ValeurMaths>
+              <ValeurMaths etiquette="Maximum sur ]−∞ ; 0[" large ton="orange">
+                {`x ${egalOuApprox(-extrema.racine)} ; f(x) ${egalOuApprox(-extrema.valeur)}`}
+              </ValeurMaths>
+            </>
           )}
         </>
       }
@@ -140,27 +144,27 @@ function ResumeBranches() {
 function Etape({ numero, titre, ouverte, onBascule, children }: { numero: number; titre: string; ouverte: boolean; onBascule: () => void; children: ReactNode }) {
   const idContenu = useId();
   return (
-    <section className="overflow-hidden rounded-lg bg-white/70">
+    <section className={`overflow-hidden rounded-2xl border transition-colors motion-reduce:transition-none ${ouverte ? "border-indigo-300 bg-white shadow-md" : "border-slate-200 bg-white shadow-sm hover:border-indigo-200"}`}>
       <h4>
         <button
           type="button"
           onClick={onBascule}
           aria-expanded={ouverte}
           aria-controls={idContenu}
-          className="flex w-full items-center gap-3 p-3 text-left font-bold text-fh-bleu transition-colors hover:bg-fh-accent/60 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-fh-orange sm:px-4"
+          className="flex min-h-12 w-full items-center gap-3 p-3 text-left font-bold text-fh-bleu transition-colors hover:bg-indigo-50/70 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-indigo-500 sm:px-4"
         >
-          <span aria-hidden="true" className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-fh-bleu text-sm text-white">
+          <span aria-hidden="true" className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-sm text-white">
             {numero}
           </span>
           <span className="sr-only">{numero}. </span>
           <span className="flex-1">{titre}</span>
-          <svg aria-hidden="true" viewBox="0 0 20 20" className={`h-5 w-5 shrink-0 fill-none stroke-fh-orange stroke-2 transition-transform ${ouverte ? "rotate-180" : ""}`}>
+          <svg aria-hidden="true" viewBox="0 0 20 20" className={`h-5 w-5 shrink-0 fill-none stroke-indigo-600 stroke-2 transition-transform ${ouverte ? "rotate-180" : ""}`}>
             <path d="M5 8l5 5 5-5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </button>
       </h4>
       {ouverte && (
-        <div id={idContenu} className="px-3 pb-4 pt-1 leading-8 sm:px-4 sm:pl-14">
+        <div id={idContenu} className="border-t border-slate-100 px-3 pb-4 pt-3 leading-8 sm:px-4 sm:pl-14">
           {children}
         </div>
       )}
@@ -183,11 +187,17 @@ function EtudeFonction({ a }: { a: number }) {
   const r = Math.sqrt(a);
   const aTex = nombreFr(a, 1).replace(",", "{,}");
   return (
-    <div className="flex flex-col gap-2">
-      <p className="text-base font-bold text-fh-bleu">
+    <div className="flex flex-col gap-2.5 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:p-5">
+      <p className="text-base font-bold text-fh-bleu sm:text-lg">
         <Tx>{"Étude de la fonction $f(x) = x + \\dfrac{a}{x}$ pour $a > 0$"}</Tx>
       </p>
-      <p className="mb-1 text-sm text-fh-ardoise">Clique sur une étape pour l&apos;ouvrir ou la fermer.</p>
+      <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
+        <p className="text-sm text-fh-ardoise">Clique sur une étape pour l&apos;ouvrir ou la fermer.</p>
+        <div className="flex gap-2">
+          <BoutonDiscret onClick={() => setOuvertes([1, 2, 3, 4, 5, 6])}>Tout ouvrir</BoutonDiscret>
+          <BoutonDiscret onClick={() => setOuvertes([])}>Tout fermer</BoutonDiscret>
+        </div>
+      </div>
 
       {etape(
         1,
@@ -250,7 +260,7 @@ function EtudeFonction({ a }: { a: number }) {
               <Formule bloc tex={"f(-\\sqrt{a}) = -f(\\sqrt{a}) = -2\\sqrt{a}"} />
             </li>
           </ul>
-          <div className="mt-2 rounded-lg border-l-4 border-fh-orange bg-fh-accent p-3" role="note">
+          <div className="mt-2 rounded-xl border-l-4 border-fh-orange bg-fh-accent p-3" role="note">
             <p className="font-bold text-fh-orange-fonce">À noter</p>
             <p className="mt-1">
               <Tx>{"Sur l'intervalle $]0\\,;+\\infty[$, $f$ admet un minimum égal à $2\\sqrt{a}$. Sur l'intervalle $]-\\infty\\,;0[$, $f$ admet un maximum égal à $-2\\sqrt{a}$. Sur l'ensemble de définition tout entier, $f$ n'admet ni maximum ni minimum, car $\\lim_{x \\to +\\infty} f(x) = +\\infty$ et $\\lim_{x \\to -\\infty} f(x) = -\\infty$."}</Tx>
@@ -276,7 +286,7 @@ function EtudeFonction({ a }: { a: number }) {
 /** Note affichée quand l'étude détaillée ne s'applique pas (a ≤ 0). */
 function NoteEtude() {
   return (
-    <p className="leading-8">
+    <p className="rounded-2xl border border-slate-200 bg-white p-4 leading-8 shadow-sm sm:p-5">
       <span className="font-bold text-fh-bleu">Étude détaillée pour a &gt; 0. </span>
       <Tx>{"Choisis une valeur de $a$ strictement positive avec le curseur pour afficher l'étude de fonction en 6 étapes et son tableau de variations."}</Tx>
     </p>

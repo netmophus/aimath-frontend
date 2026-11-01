@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore, type CSSProperties } from "react";
 
+import { CarteResultat, MessageChimie } from "./CadreChimie";
 import { chemin, Curseur, Valeur } from "./commun";
 
 /**
@@ -223,97 +224,209 @@ function TitrageSimulation({ mode }: { mode: Mode }) {
       ? auto && !reduit ? "Démo en attente (hors de l'écran)" : "Mode manuel : la démo est en pause"
       : "Verse avec le curseur ou lance le versement automatique";
 
+  // Message pédagogique : texte et couleur suivent l'état réellement calculé.
+  const avant = v < V_EQ - 0.0005;
+  const pendant = !avant && v <= V_EQ + 0.0005;
+  const message = avant
+    ? "L'acide est en excès : le pH est bas et le bleu de bromothymol est jaune. Il monte lentement tant qu'on verse peu de soude."
+    : pendant
+      ? "À l'équivalence, l'acide et la base sont en quantités égales : le pH vaut 7 et l'indicateur est vert. Quelques gouttes suffisent à faire basculer le pH."
+      : "La soude est en excès : le pH est élevé et l'indicateur est bleu.";
+
+  // Habillage : en `vitrine` (page d'accueil) couleurs et finitions modernes ; sinon rendu d'origine des cours.
+  const fs = vitrine ? 11 : 9;
+  const grille = vitrine ? "stroke-slate-200" : "stroke-fh-sable/70";
+  const cadre = vitrine ? "fill-white stroke-slate-300" : "fill-white stroke-fh-sable";
+  const texte = vitrine ? "fill-slate-600" : "fill-fh-ardoise";
+  const halo = vitrine ? " [paint-order:stroke] stroke-white stroke-[3px]" : "";
+
+  const scene = (
+    <svg viewBox="0 0 240 400" className={`mx-auto h-auto w-full ${vitrine ? "max-w-[340px]" : "max-w-[300px]"}`} role="img" aria-label={`Dosage de l'acide chlorhydrique par la soude : ${virgule(v, 1)} millilitres versés, pH ${virgule(ph, 1)}, solution ${nat.toLowerCase()}`}>
+      {/* potence */}
+      <rect x={20} y={360} width={200} height={10} rx={3} fill={vitrine ? "#334155" : "#475569"} />
+      <rect x={44} y={40} width={7} height={322} fill={vitrine ? "#64748b" : "#94a3b8"} />
+      <rect x={44} y={70} width={90} height={6} fill={vitrine ? "#64748b" : "#94a3b8"} />
+      <rect x={118} y={62} width={34} height={20} rx={4} fill={vitrine ? "#475569" : "#64748b"} />
+      {/* burette : 0 mL en haut ; elle se vide, la surface descend quand on verse */}
+      <rect x={120} y={Y_BURETTE} width={30} height={200} rx={3} fill={vitrine ? "#f8fafc" : "#fff"} stroke={vitrine ? "#334155" : "#0f172a"} strokeWidth={2} />
+      <rect x={121} y={niveauBurette} width={28} height={230 - niveauBurette} fill={vitrine ? "#3b82f6" : "#60a5fa"} opacity={vitrine ? 0.9 : 0.85} />
+      {vitrine && <rect x={124} y={Y_BURETTE + 2} width={3} height={196} rx={1.5} fill="#fff" opacity={0.45} />}
+      {vitrine &&
+        Array.from({ length: 41 }, (_, ml) => ml)
+          .filter((ml) => ml % 5 !== 0)
+          .map((ml) => <line key={`m${ml}`} x1={120} y1={Y_BURETTE + PX_PAR_ML * ml} x2={124} y2={Y_BURETTE + PX_PAR_ML * ml} stroke="#64748b" strokeWidth={0.6} />)}
+      {Array.from({ length: 9 }, (_, k) => k * 5).map((ml) => (
+        <g key={ml}>
+          <line x1={120} y1={Y_BURETTE + PX_PAR_ML * ml} x2={ml % 10 === 0 ? 132 : 127} y2={Y_BURETTE + PX_PAR_ML * ml} stroke={vitrine ? "#334155" : "#0f172a"} strokeWidth={vitrine ? 1.2 : 1} />
+          {ml % 10 === 0 && (
+            <text x={vitrine ? 162 : 115} y={Y_BURETTE + PX_PAR_ML * ml + 3} textAnchor={vitrine ? "start" : "end"} fontSize={vitrine ? 10.5 : 9} fontWeight={vitrine ? 600 : 400} className={texte}>
+              {ml}
+            </text>
+          )}
+        </g>
+      ))}
+      <text x={vitrine ? 180 : 158} y={44} fontSize={vitrine ? 11 : 10} fontWeight={700} className="fill-fh-bleu">
+        NaOH
+      </text>
+      <text x={vitrine ? 180 : 158} y={56} fontSize={vitrine ? 10 : 9} className={vitrine ? "fill-slate-600" : "fill-fh-ardoise"}>
+        0,1 mol/L
+      </text>
+      {/* robinet et pointe */}
+      <rect x={112} y={232} width={46} height={8} rx={3} className={vitrine ? "fill-violet-600" : "fill-fh-orange"} />
+      <path d="M131 240 H139 L136 262 H134 Z" fill="#fff" stroke={vitrine ? "#334155" : "#0f172a"} strokeWidth={1.5} />
+      {/* bécher */}
+      <rect x={61} y={surfaceBecher} width={118} height={358 - surfaceBecher} fill={couleur} opacity={0.95} />
+      {vitrine && <rect x={66} y={surfaceBecher + 2} width={5} height={358 - surfaceBecher - 8} rx={2.5} fill="#fff" opacity={0.3} />}
+      {vitrine && <line x1={61} y1={surfaceBecher} x2={179} y2={surfaceBecher} stroke="#fff" strokeOpacity={0.65} strokeWidth={1.6} />}
+      <path d="M60 296 V355 a5 5 0 0 0 5 5 H175 a5 5 0 0 0 5 -5 V296" fill="none" stroke={vitrine ? "#334155" : "#0f172a"} strokeWidth={2.5} />
+      {/* gouttes : elles TOMBENT de la pointe vers le liquide du bécher */}
+      {versant &&
+        [0, 0.37].map((retard) => (
+          <circle key={retard} cx={135} cy={Y_BEC} r={3.4} fill="#3b82f6" stroke="#fff" strokeWidth={1} className="goutte" style={{ "--chute": `${chute}px`, animationDelay: `${retard}s` } as CSSProperties} />
+        ))}
+      <text x={120} y={390} textAnchor="middle" fontSize={vitrine ? 11 : 10} className={texte}>
+        HCl 0,1 mol/L, 20 mL + BBT
+      </text>
+    </svg>
+  );
+
+  const courbe = (
+    <svg viewBox={`0 0 ${LC} ${HC}`} className="h-auto w-full" role="img" aria-label="Courbe du pH en fonction du volume de soude versé, avec un saut de pH à l'équivalence, pour 20 millilitres">
+      <rect x={ML} y={MT} width={LC - ML - MR} height={HC - MT - MB} className={cadre} />
+      {[0, 10, 20, 30, 40].map((g) => (
+        <g key={g}>
+          <line x1={X(g)} y1={MT} x2={X(g)} y2={HC - MB} className={grille} strokeWidth={0.7} />
+          <text x={X(g)} y={HC - MB + 13} textAnchor="middle" fontSize={fs} className={texte}>
+            {g}
+          </text>
+        </g>
+      ))}
+      {[0, 2, 4, 6, 7, 8, 10, 12, 14].map((g) => (
+        <g key={g}>
+          <line x1={ML} y1={Y(g)} x2={LC - MR} y2={Y(g)} className={grille} strokeWidth={0.7} />
+          <text x={ML - 5} y={Y(g) + 3} textAnchor="end" fontSize={fs} className={texte}>
+            {g}
+          </text>
+        </g>
+      ))}
+      <text x={(ML + LC - MR) / 2} y={HC - 4} textAnchor="middle" fontSize={vitrine ? 11 : 10} className={texte}>
+        Volume de soude versé (mL)
+      </text>
+      {vitrine ? (
+        <text transform={`rotate(-90 11 ${(MT + HC - MB) / 2})`} x={11} y={(MT + HC - MB) / 2} textAnchor="middle" fontSize={11} fontWeight={600} className={texte}>
+          pH
+        </text>
+      ) : (
+        <text x={10} y={MT + 4} fontSize={10} className={texte}>
+          pH
+        </text>
+      )}
+      {/* repères d'équivalence : V = 20 mL, pH = 7 */}
+      <g style={{ opacity: eq, transition: "opacity 400ms" }} className="motion-reduce:transition-none">
+        <line x1={X(V_EQ)} y1={MT} x2={X(V_EQ)} y2={HC - MB} className="stroke-fh-orange" strokeWidth={vitrine ? 1.5 : 1.2} strokeDasharray="4 3" />
+        <line x1={ML} y1={Y(7)} x2={LC - MR} y2={Y(7)} className="stroke-fh-orange" strokeWidth={vitrine ? 1.5 : 1.2} strokeDasharray="4 3" />
+        {vitrine && <circle cx={X(V_EQ)} cy={Y(7)} r={5.5} fill="#fff" className="stroke-fh-orange" strokeWidth={2.2} />}
+        <text x={X(V_EQ) + 5} y={MT + 12} fontSize={vitrine ? 11.5 : 10} fontWeight={700} className={`fill-fh-orange-fonce${halo}`}>
+          V = 20 mL
+        </text>
+        <text x={LC - MR - 4} y={Y(7) + 13} textAnchor="end" fontSize={vitrine ? 11.5 : 10} fontWeight={700} className={`fill-fh-orange-fonce${halo}`}>
+          pH = 7
+        </text>
+      </g>
+      <path d={COURBE_COMPLETE} fill="none" className={vitrine ? "stroke-indigo-200" : "stroke-fh-bleu/25"} strokeWidth={vitrine ? 2.5 : 2} strokeLinejoin="round" />
+      <path d={trace} fill="none" className="stroke-fh-bleu" strokeWidth={vitrine ? 3.6 : 3} strokeLinejoin="round" strokeLinecap="round" />
+      <circle cx={X(v)} cy={Y(ph)} r={vitrine ? 7 : 6} fill={couleur} className="stroke-fh-bleu" strokeWidth={2} />
+    </svg>
+  );
+
+  const curseur = (
+    <Curseur
+      nom="Volume de soude versé"
+      valeurTexte={`${virgule(v, 1)} mL`}
+      min={0}
+      max={V_MAX}
+      pas={0.1}
+      valeur={Math.round(v * 10) / 10}
+      onChange={manuel}
+      ariaLabel="Volume de soude versé en millilitres"
+    />
+  );
+
+  if (vitrine) {
+    // Page d'accueil : montage à gauche (≈ 35 %), courbe + résultats + commandes à droite (≈ 65 %) dès que la largeur
+    // disponible le permet (container query) ; sinon tout s'empile : montage, courbe, résultats, commandes.
+    const tonNature = nat === "Acide" ? "rose" : nat === "Basique" ? "bleu" : "vert";
+    return (
+      <div ref={racine} className="@container">
+        <div className="grid gap-4 sm:gap-6 @3xl:grid-cols-[minmax(0,7fr)_minmax(0,13fr)] @3xl:items-start">
+          <div className="min-w-0 rounded-2xl border border-indigo-100 bg-white p-2 shadow-sm sm:p-3">
+            {scene}
+            <p className="px-2 pb-1 text-center! text-xs text-slate-500">HCl + NaOH → NaCl + H₂O</p>
+          </div>
+
+          <div className="flex min-w-0 flex-col gap-4">
+            <div className="rounded-2xl border border-indigo-100 bg-white p-2 shadow-sm sm:p-3">
+              <h4 className="px-1 pb-1 text-sm font-bold text-fh-bleu sm:text-base">Courbe de titrage : pH = f(V)</h4>
+              {courbe}
+            </div>
+
+            <dl className="grid grid-cols-2 gap-2.5 @xl:grid-cols-4">
+              <CarteResultat etiquette="Volume versé" ton="bleu">
+                {virgule(v, Math.abs(v - V_EQ) < 0.1 ? 3 : 2)} mL
+              </CarteResultat>
+              <CarteResultat etiquette="pH" ton={tonNature}>
+                <span className={COULEUR_NATURE[nat]}>{virgule(ph, 2)}</span>
+              </CarteResultat>
+              <CarteResultat etiquette="Nature de la solution" ton={tonNature}>
+                <span className={COULEUR_NATURE[nat]}>{nat}</span>
+              </CarteResultat>
+              <CarteResultat etiquette="Étape du dosage" ton="violet">
+                {etat}
+              </CarteResultat>
+            </dl>
+
+            {curseur}
+
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={lancer}
+                className="inline-flex min-h-11 items-center justify-center rounded-full bg-gradient-to-r from-violet-600 to-indigo-600 px-5 text-sm font-semibold text-white shadow-sm transition-colors hover:from-violet-700 hover:to-indigo-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-500 motion-reduce:transition-none"
+              >
+                Rejouer la démo
+              </button>
+              <button
+                type="button"
+                onClick={reinitialiser}
+                className="inline-flex min-h-11 items-center justify-center rounded-full border border-indigo-200 bg-white px-5 text-sm font-semibold text-indigo-700 shadow-sm transition-colors hover:bg-indigo-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-500 motion-reduce:transition-none"
+              >
+                Réinitialiser
+              </button>
+              <span className="text-xs text-slate-500" aria-live="polite">
+                {statut}
+              </span>
+            </div>
+
+            <MessageChimie ton={avant ? "ambre" : pendant ? "vert" : "bleu"}>{message}</MessageChimie>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Cours (fence labochimie) : rendu d'origine.
   return (
     <div ref={racine} className="rounded-2xl border border-fh-sable bg-fh-creme p-3 shadow-sm sm:p-6 lg:p-8">
       <div className="grid gap-6 min-[760px]:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] min-[760px]:items-start">
         {/* paillasse */}
         <div className="min-w-0 rounded-xl border border-fh-sable bg-white p-2 sm:p-3">
-          <svg viewBox="0 0 240 400" className="mx-auto h-auto w-full max-w-[300px]" role="img" aria-label={`Dosage de l'acide chlorhydrique par la soude : ${virgule(v, 1)} millilitres versés, pH ${virgule(ph, 1)}, solution ${nat.toLowerCase()}`}>
-            {/* potence */}
-            <rect x={20} y={360} width={200} height={10} rx={3} fill="#475569" />
-            <rect x={44} y={40} width={7} height={322} fill="#94a3b8" />
-            <rect x={44} y={70} width={90} height={6} fill="#94a3b8" />
-            <rect x={118} y={62} width={34} height={20} rx={4} fill="#64748b" />
-            {/* burette : 0 mL en haut ; elle se vide, la surface descend quand on verse */}
-            <rect x={120} y={Y_BURETTE} width={30} height={200} rx={3} fill="#fff" stroke="#0f172a" strokeWidth={2} />
-            <rect x={121} y={niveauBurette} width={28} height={230 - niveauBurette} fill="#60a5fa" opacity={0.85} />
-            {Array.from({ length: 9 }, (_, k) => k * 5).map((ml) => (
-              <g key={ml}>
-                <line x1={120} y1={Y_BURETTE + PX_PAR_ML * ml} x2={ml % 10 === 0 ? 132 : 127} y2={Y_BURETTE + PX_PAR_ML * ml} stroke="#0f172a" strokeWidth={1} />
-                {ml % 10 === 0 && (
-                  <text x={115} y={Y_BURETTE + PX_PAR_ML * ml + 3} textAnchor="end" fontSize={9} className="fill-fh-ardoise">
-                    {ml}
-                  </text>
-                )}
-              </g>
-            ))}
-            <text x={158} y={44} fontSize={10} fontWeight={700} className="fill-fh-bleu">
-              NaOH
-            </text>
-            <text x={158} y={56} fontSize={9} className="fill-fh-ardoise">
-              0,1 mol/L
-            </text>
-            {/* robinet et pointe */}
-            <rect x={112} y={232} width={46} height={8} rx={3} className="fill-fh-orange" />
-            <path d="M131 240 H139 L136 262 H134 Z" fill="#fff" stroke="#0f172a" strokeWidth={1.5} />
-            {/* bécher */}
-            <rect x={61} y={surfaceBecher} width={118} height={358 - surfaceBecher} fill={couleur} opacity={0.95} />
-            <path d="M60 296 V355 a5 5 0 0 0 5 5 H175 a5 5 0 0 0 5 -5 V296" fill="none" stroke="#0f172a" strokeWidth={2.5} />
-            {/* gouttes : elles TOMBENT de la pointe vers le liquide du bécher */}
-            {versant &&
-              [0, 0.37].map((retard) => (
-                <circle key={retard} cx={135} cy={Y_BEC} r={3.4} fill="#3b82f6" stroke="#fff" strokeWidth={1} className="goutte" style={{ "--chute": `${chute}px`, animationDelay: `${retard}s` } as CSSProperties} />
-              ))}
-            <text x={120} y={390} textAnchor="middle" fontSize={10} className="fill-fh-ardoise">
-              HCl 0,1 mol/L, 20 mL + BBT
-            </text>
-          </svg>
+          {scene}
           <p className="px-2 pb-1 text-center text-xs text-fh-ardoise">HCl + NaOH → NaCl + H₂O</p>
         </div>
 
         {/* courbe + lectures */}
         <div className="flex min-w-0 flex-col gap-4">
-          <div className="rounded-xl border border-fh-sable bg-white p-2 sm:p-3">
-            <svg viewBox={`0 0 ${LC} ${HC}`} className="h-auto w-full" role="img" aria-label="Courbe du pH en fonction du volume de soude versé, avec un saut de pH à l'équivalence, pour 20 millilitres">
-              <rect x={ML} y={MT} width={LC - ML - MR} height={HC - MT - MB} className="fill-white stroke-fh-sable" />
-              {[0, 10, 20, 30, 40].map((g) => (
-                <g key={g}>
-                  <line x1={X(g)} y1={MT} x2={X(g)} y2={HC - MB} className="stroke-fh-sable/70" strokeWidth={0.7} />
-                  <text x={X(g)} y={HC - MB + 13} textAnchor="middle" fontSize={9} className="fill-fh-ardoise">
-                    {g}
-                  </text>
-                </g>
-              ))}
-              {[0, 2, 4, 6, 7, 8, 10, 12, 14].map((g) => (
-                <g key={g}>
-                  <line x1={ML} y1={Y(g)} x2={LC - MR} y2={Y(g)} className="stroke-fh-sable/70" strokeWidth={0.7} />
-                  <text x={ML - 5} y={Y(g) + 3} textAnchor="end" fontSize={9} className="fill-fh-ardoise">
-                    {g}
-                  </text>
-                </g>
-              ))}
-              <text x={(ML + LC - MR) / 2} y={HC - 4} textAnchor="middle" fontSize={10} className="fill-fh-ardoise">
-                Volume de soude versé (mL)
-              </text>
-              <text x={10} y={MT + 4} fontSize={10} className="fill-fh-ardoise">
-                pH
-              </text>
-              {/* repères d'équivalence : V = 20 mL, pH = 7 */}
-              <g style={{ opacity: eq, transition: "opacity 400ms" }} className="motion-reduce:transition-none">
-                <line x1={X(V_EQ)} y1={MT} x2={X(V_EQ)} y2={HC - MB} className="stroke-fh-orange" strokeWidth={1.2} strokeDasharray="4 3" />
-                <line x1={ML} y1={Y(7)} x2={LC - MR} y2={Y(7)} className="stroke-fh-orange" strokeWidth={1.2} strokeDasharray="4 3" />
-                <text x={X(V_EQ) + 5} y={MT + 12} fontSize={10} fontWeight={700} className="fill-fh-orange-fonce">
-                  V = 20 mL
-                </text>
-                <text x={LC - MR - 4} y={Y(7) + 13} textAnchor="end" fontSize={10} fontWeight={700} className="fill-fh-orange-fonce">
-                  pH = 7
-                </text>
-              </g>
-              <path d={COURBE_COMPLETE} fill="none" className="stroke-fh-bleu/25" strokeWidth={2} strokeLinejoin="round" />
-              <path d={trace} fill="none" className="stroke-fh-bleu" strokeWidth={3} strokeLinejoin="round" strokeLinecap="round" />
-              <circle cx={X(v)} cy={Y(ph)} r={6} fill={couleur} className="stroke-fh-bleu" strokeWidth={2} />
-            </svg>
-          </div>
+          <div className="rounded-xl border border-fh-sable bg-white p-2 sm:p-3">{courbe}</div>
 
           <dl className="grid grid-cols-2 gap-2 text-sm">
             <Valeur etiquette="Volume versé">{virgule(v, Math.abs(v - V_EQ) < 0.1 ? 3 : 2)} mL</Valeur>
@@ -326,16 +439,7 @@ function TitrageSimulation({ mode }: { mode: Mode }) {
             <Valeur etiquette="Étape du dosage">{etat}</Valeur>
           </dl>
 
-          <Curseur
-            nom="Volume de soude versé"
-            valeurTexte={`${virgule(v, 1)} mL`}
-            min={0}
-            max={V_MAX}
-            pas={0.1}
-            valeur={Math.round(v * 10) / 10}
-            onChange={manuel}
-            ariaLabel="Volume de soude versé en millilitres"
-          />
+          {curseur}
 
           <div className="flex flex-wrap items-center gap-2">
             <button
@@ -343,27 +447,21 @@ function TitrageSimulation({ mode }: { mode: Mode }) {
               onClick={lancer}
               className="inline-flex min-h-11 items-center justify-center rounded-full bg-fh-orange px-5 text-sm font-semibold text-white transition-colors hover:bg-fh-orange-fonce motion-reduce:transition-none"
             >
-              {vitrine ? "Rejouer la démo" : "Verser automatiquement"}
+              Verser automatiquement
             </button>
             <button
               type="button"
               onClick={reinitialiser}
               className="inline-flex min-h-11 items-center justify-center rounded-full border border-fh-bleu/40 px-5 text-sm font-semibold text-fh-bleu transition-colors hover:bg-fh-bleu/5 motion-reduce:transition-none"
             >
-              {vitrine ? "Réinitialiser" : "Recommencer"}
+              Recommencer
             </button>
             <span className="text-xs text-fh-ardoise" aria-live="polite">
               {statut}
             </span>
           </div>
 
-          <p className="rounded-xl bg-fh-accent/60 p-3 text-sm leading-relaxed text-fh-ardoise">
-            {v < V_EQ - 0.0005
-              ? "L'acide est en excès : le pH est bas et le bleu de bromothymol est jaune. Il monte lentement tant qu'on verse peu de soude."
-              : v <= V_EQ + 0.0005
-                ? "À l'équivalence, l'acide et la base sont en quantités égales : le pH vaut 7 et l'indicateur est vert. Quelques gouttes suffisent à faire basculer le pH."
-                : "La soude est en excès : le pH est élevé et l'indicateur est bleu."}
-          </p>
+          <p className="rounded-xl bg-fh-accent/60 p-3 text-sm leading-relaxed text-fh-ardoise">{message}</p>
         </div>
       </div>
     </div>

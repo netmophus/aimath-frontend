@@ -2,8 +2,11 @@
 
 import { useState, type ReactNode } from "react";
 
+import { EnteteChimie } from "@/components/accueil/CadreChimie";
+import OngletsChimie from "@/components/accueil/OngletsChimie";
 import { TitrageLabo } from "@/components/accueil/TitrageDemo";
 import { OngletLabo } from "@/components/labo/commun";
+import { StyleLaboModerne } from "@/components/labo/styleLabo";
 import OngletsCartes, { PanneauOnglets } from "@/components/ui/OngletsCartes";
 import { SimulationAvancement, SimulationConductivite, SimulationDilution, SimulationGaz, SimulationPh, SimulationPredominance } from "@/components/labo/Simulations";
 
@@ -21,6 +24,9 @@ interface Onglet {
   couleurSoft: string;
   concept: ReactNode;
   formules: string[];
+  /** Page d'accueil : titre et sous-titre de l'en-tête (le titre est le libellé de l'onglet par défaut). */
+  titreVitrine?: string;
+  sousTitreVitrine?: string;
   Simulation: (vitrine: boolean) => ReactNode;
 }
 
@@ -34,6 +40,8 @@ const ONGLETS: Onglet[] = [
     concept:
       "Doser une espèce, c'est la faire réagir complètement avec un réactif de concentration connue. À l'équivalence, les réactifs ont été introduits dans les proportions de l'équation : ici, une mole d'ions oxonium pour une mole d'ions hydroxyde. Le saut de pH et le virage de l'indicateur coloré repèrent le volume équivalent, qui donne la concentration de l'acide.",
     formules: ["\\mathrm{H_3O^+} + \\mathrm{HO^-} \\longrightarrow 2\\,\\mathrm{H_2O}", "C_a V_a = C_b V_{\\text{éq}}"],
+    titreVitrine: "Titrage acido-basique",
+    sousTitreVitrine: "Suivi du pH lors de l'ajout d'une base forte (NaOH) à un acide fort (HCl).",
     Simulation: (vitrine) => <TitrageLabo vitrine={vitrine} />,
   },
   {
@@ -108,6 +116,39 @@ const ONGLETS: Onglet[] = [
 export default function LaboChimie({ vitrine = false }: { vitrine?: boolean }) {
   const [actif, setActif] = useState(0);
   const o = ONGLETS[actif];
+
+  if (vitrine) {
+    // Page d'accueil : onglets horizontaux modernes + grand espace de simulation. Habillage activé par le contexte
+    // StyleLaboModerne, donc limité à ce sous-arbre (les cours gardent le rendu ci-dessous).
+    return (
+      <StyleLaboModerne.Provider value={true}>
+        <div className="my-6 [&_p]:mb-0! [&_p]:text-left! [&_p]:hyphens-manual! [&_p[class*=bg-fh-accent]]:rounded-2xl [&_p[class*=bg-fh-accent]]:border [&_p[class*=bg-fh-accent]]:border-violet-200 [&_p[class*=bg-fh-accent]]:bg-violet-50 [&_p[class*=bg-fh-accent]]:text-slate-700">
+          <OngletsChimie
+            ariaLabel="Laboratoire de chimie"
+            onglets={ONGLETS.map((t) => ({ id: t.id, label: t.libelle, icone: t.icone }))}
+            actif={actif}
+            onChoisir={setActif}
+            idOnglet={(id) => `labo-onglet-${id}`}
+            idPanneau={() => "labo-panneau"}
+          />
+          <div
+            role="tabpanel"
+            id="labo-panneau"
+            aria-labelledby={`labo-onglet-${o.id}`}
+            className="rounded-3xl border border-indigo-100 bg-gradient-to-b from-white to-indigo-50/40 p-3 text-left shadow-[0_10px_30px_-12px_rgba(30,43,106,0.18)] sm:p-6"
+          >
+            <div className="flex flex-col gap-4">
+              <EnteteChimie titre={o.titreVitrine ?? o.libelle} sousTitre={o.sousTitreVitrine} />
+              <OngletLabo key={o.id} concept={o.concept} formules={o.formules}>
+                {o.Simulation(vitrine)}
+              </OngletLabo>
+            </div>
+          </div>
+        </div>
+      </StyleLaboModerne.Provider>
+    );
+  }
+
   return (
     // Les paragraphes des leçons sont justifiés avec une marge basse (.rendu-markdown p) : ici, texte aligné à gauche, sans marge.
     <div className="my-6 rounded-2xl border border-fh-sable bg-fh-creme p-3 shadow-sm sm:p-5 lg:p-6 [&_p]:mb-0! [&_p]:text-left! [&_p]:hyphens-manual!">

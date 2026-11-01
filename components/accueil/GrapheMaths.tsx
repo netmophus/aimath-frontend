@@ -36,22 +36,22 @@ export function CadreGraphe({ R, largeur, hauteur, xmin, xmax, ymin, ymax, gx, g
   const g = R.marge;
   return (
     <>
-      <rect x={g} y={R.Y(ymax)} width={largeur - 2 * g} height={R.Y(ymin) - R.Y(ymax)} className="fill-white stroke-fh-sable" />
+      <rect x={g} y={R.Y(ymax)} width={largeur - 2 * g} height={R.Y(ymin) - R.Y(ymax)} className="fill-white stroke-slate-300" />
       {gx.map((v) => (
         <g key={`x${v}`}>
-          <line x1={R.X(v)} y1={R.Y(ymax)} x2={R.X(v)} y2={R.Y(ymin)} className="stroke-fh-sable/70" strokeWidth={0.7} />
-          <text x={R.X(v)} y={R.Y(ymin) + 13} textAnchor="middle" className="fill-fh-ardoise text-[9px]">{nombreFr(v, 2)}</text>
+          <line x1={R.X(v)} y1={R.Y(ymax)} x2={R.X(v)} y2={R.Y(ymin)} className="stroke-slate-200" strokeWidth={0.7} />
+          <text x={R.X(v)} y={R.Y(ymin) + 13} textAnchor="middle" className="fill-slate-600 text-[11px]">{nombreFr(v, 2)}</text>
         </g>
       ))}
       {gy.map((v) => (
         <g key={`y${v}`}>
-          <line x1={R.X(xmin)} y1={R.Y(v)} x2={R.X(xmax)} y2={R.Y(v)} className="stroke-fh-sable/70" strokeWidth={0.7} />
-          <text x={g - 5} y={R.Y(v) + 3} textAnchor="end" className="fill-fh-ardoise text-[9px]">{nombreFr(v, 2)}</text>
+          <line x1={R.X(xmin)} y1={R.Y(v)} x2={R.X(xmax)} y2={R.Y(v)} className="stroke-slate-200" strokeWidth={0.7} />
+          <text x={g - 5} y={R.Y(v) + 3} textAnchor="end" className="fill-slate-600 text-[11px]">{nombreFr(v, 2)}</text>
         </g>
       ))}
-      {ymin < 0 && ymax > 0 && <line x1={R.X(xmin)} y1={R.Y(0)} x2={R.X(xmax)} y2={R.Y(0)} className="stroke-fh-ardoise" strokeWidth={1.1} />}
-      {xmin < 0 && xmax > 0 && <line x1={R.X(0)} y1={R.Y(ymax)} x2={R.X(0)} y2={R.Y(ymin)} className="stroke-fh-ardoise" strokeWidth={1.1} />}
-      {nomX && <text x={largeur - g} y={hauteur - 3} textAnchor="end" className="fill-fh-ardoise text-[10px] italic">{nomX}</text>}
+      {ymin < 0 && ymax > 0 && <line x1={R.X(xmin)} y1={R.Y(0)} x2={R.X(xmax)} y2={R.Y(0)} className="stroke-slate-700" strokeWidth={1.1} />}
+      {xmin < 0 && xmax > 0 && <line x1={R.X(0)} y1={R.Y(ymax)} x2={R.X(0)} y2={R.Y(ymin)} className="stroke-slate-700" strokeWidth={1.1} />}
+      {nomX && <text x={largeur - g} y={hauteur - 3} textAnchor="end" className="fill-slate-600 text-[11px] italic">{nomX}</text>}
     </>
   );
 }

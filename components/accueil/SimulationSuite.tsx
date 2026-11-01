@@ -5,7 +5,8 @@ import { useEffect, useState, type ReactNode } from "react";
 import { Choix } from "@/components/labo/commun";
 import { nombreFr } from "@/lib/accueil/mathsLabo";
 import { EXEMPLES_SUITE, graduations, NB_TERMES_AUTO, NB_TERMES_VERDICT, peutContinuer, termesSuite, type ExempleSuite, type IdSuite } from "@/lib/accueil/mathsLaboAvance";
-import { BoutonReinitialiser, CadreSimulation, Formule, Tx, Valeur } from "./commun";
+import { Formule, Tx } from "./commun";
+import { BoutonDiscret, CadreSimulationMaths, CarteParam, ICONES_MATHS, ValeurMaths } from "./CadreMaths";
 
 const W = 320;
 const H = 168;
@@ -63,23 +64,19 @@ export default function SimulationSuite() {
 
   return (
     <div className="flex flex-col gap-5">
-      <Encart titre="Objectif">
-        <p>
-          <Tx>{"Une suite est définie par son premier terme et une relation qui donne chaque terme à partir du précédent. La question est simple : quand on continue le calcul, les termes se rapprochent-ils d'un nombre (la suite converge) ou partent-ils vers l'infini (la suite diverge) ?"}</Tx>
-        </p>
-        <p className="mt-2">
-          <span className="font-semibold text-fh-bleu">À observer : </span>
-          <Tx>{"regarde les termes se poser sur la droite. S'ils se resserrent vers un point, la suite converge vers ce nombre."}</Tx>
-        </p>
-      </Encart>
-      <CadreSimulation
+      <CadreSimulationMaths
+        icone={ICONES_MATHS.suites}
+        action={<BoutonDiscret onClick={recommencer}>Recommencer</BoutonDiscret>}
         titre="Converge ou diverge ?"
         description="Choisis une suite, puis pose ses termes un par un sur la droite graduée."
         formule={<Formule tex={ex.definitionTex} />}
         graphique={<DroiteGraduee ex={ex} termes={termes} />}
         commandes={
           <>
-            <Choix nom="Suite étudiée" options={EXEMPLES_SUITE.map((e) => ({ cle: e.id, libelle: <Formule tex={e.libelleTex} />, aria: e.libelle }))} valeur={idEx} onChoisir={choisir} />
+            <CarteParam titre="Suite étudiée">
+              <Choix nom="Suite étudiée" options={EXEMPLES_SUITE.map((e) => ({ cle: e.id, libelle: <Formule tex={e.libelleTex} />, aria: e.libelle }))} valeur={idEx} onChoisir={choisir} />
+            </CarteParam>
+            <CarteParam titre="Lecture des termes">
             <div className="flex flex-wrap items-center gap-2">
               <button
                 type="button"
@@ -104,16 +101,16 @@ export default function SimulationSuite() {
               >
                 {enCours ? "Pause" : "Automatique"}
               </button>
-              <BoutonReinitialiser onClick={recommencer} label="Recommencer" />
             </div>
+            </CarteParam>
           </>
         }
         valeurs={
           <>
-            <Valeur etiquette={<>Rang <Formule tex="n" /></>}>{rang}</Valeur>
-            <Valeur etiquette={<>Dernier terme <Formule tex={`u_{${rang}}`} /></>}>{nombreFr(dernier, 4)}</Valeur>
-            <Valeur etiquette="Termes posés">{termes.length}</Valeur>
-            <Valeur etiquette={ecartOuMax.etiquette}>{ecartOuMax.valeur}</Valeur>
+            <ValeurMaths etiquette={<>Rang <Formule tex="n" /></>} ton="violet">{rang}</ValeurMaths>
+            <ValeurMaths etiquette={<>Dernier terme <Formule tex={`u_{${rang}}`} /></>} ton="bleu">{nombreFr(dernier, 4)}</ValeurMaths>
+            <ValeurMaths etiquette="Termes posés" ton="violet">{termes.length}</ValeurMaths>
+            <ValeurMaths etiquette={ecartOuMax.etiquette} ton="orange">{ecartOuMax.valeur}</ValeurMaths>
           </>
         }
         commentaire={
@@ -130,6 +127,15 @@ export default function SimulationSuite() {
           )
         }
       />
+      <Encart titre="Objectif">
+        <p>
+          <Tx>{"Une suite est définie par son premier terme et une relation qui donne chaque terme à partir du précédent. La question est simple : quand on continue le calcul, les termes se rapprochent-ils d'un nombre (la suite converge) ou partent-ils vers l'infini (la suite diverge) ?"}</Tx>
+        </p>
+        <p className="mt-2">
+          <span className="font-semibold text-fh-bleu">À observer : </span>
+          <Tx>{"regarde les termes se poser sur la droite. S'ils se resserrent vers un point, la suite converge vers ce nombre."}</Tx>
+        </p>
+      </Encart>
       <Encart titre="Démonstration">
         <ol className="flex list-decimal flex-col gap-3 pl-5">
           {ex.demo.etapes.map((e) => (
@@ -178,10 +184,10 @@ function DroiteGraduee({ ex, termes }: { ex: ExempleSuite; termes: number[] }) {
   return (
     <svg viewBox={`0 0 ${W} ${H}`} className="mx-auto h-auto w-full max-w-[520px]" role="img" aria-label={description}>
       {/* axe et graduations */}
-      <line x1={MARGE - 8} y1={Y_AXE} x2={W - MARGE + 8} y2={Y_AXE} className="stroke-fh-ardoise" strokeWidth={1.6} />
+      <line x1={MARGE - 8} y1={Y_AXE} x2={W - MARGE + 8} y2={Y_AXE} className="stroke-slate-700" strokeWidth={1.6} />
       {g.map((v) => (
         <g key={v}>
-          <line x1={X(v)} y1={Y_AXE - 4} x2={X(v)} y2={Y_AXE + 4} className="stroke-fh-ardoise" strokeWidth={1.2} />
+          <line x1={X(v)} y1={Y_AXE - 4} x2={X(v)} y2={Y_AXE + 4} className="stroke-slate-700" strokeWidth={1.2} />
           <text x={X(v)} y={Y_AXE + 18} textAnchor="middle" className="fill-fh-ardoise text-[13px]">
             {nombreFr(v, 2)}
           </text>
@@ -231,8 +237,8 @@ function DroiteGraduee({ ex, termes }: { ex: ExempleSuite; termes: number[] }) {
 /** Encadré pédagogique (bordure gauche orange, fond léger) : même style que « Le concept » des autres onglets. */
 function Encart({ titre, children }: { titre: string; children: ReactNode }) {
   return (
-    <div className="rounded-xl border-l-4 border-fh-orange bg-fh-accent/60 p-4 sm:p-5">
-      <p className="text-xs font-bold uppercase tracking-wide text-fh-orange-fonce">{titre}</p>
+    <div className="rounded-2xl border border-l-4 border-slate-200 border-l-indigo-500 bg-white p-4 shadow-sm sm:p-5">
+      <p className="text-xs font-bold uppercase tracking-wider text-indigo-700">{titre}</p>
       <div className="mt-1.5 text-sm leading-relaxed text-fh-ardoise sm:text-base">{children}</div>
     </div>
   );

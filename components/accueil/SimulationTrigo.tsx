@@ -3,7 +3,8 @@
 import { useMemo, useState } from "react";
 
 import { nombreFr, TRIGO, trigo, valeurTrigoTex, type ValeurTrigo } from "@/lib/accueil/mathsLabo";
-import { BoutonReinitialiser, CadreSimulation, chemin, Curseur, Formule, grad, repere, Tx, Valeur } from "./commun";
+import { chemin, Formule, grad, repere, Tx } from "./commun";
+import { BoutonDiscret, CadreSimulationMaths, CurseurMaths, ICONES_MATHS, ValeurMaths } from "./CadreMaths";
 
 /** Valeur exacte et approchée en notation usuelle (fraction, racine), ou « non définie ». */
 const valeur = (v: ValeurTrigo) => {
@@ -42,21 +43,23 @@ export default function SimulationTrigo() {
         : `M${ox + arcR} ${oy} A${arcR} ${arcR} 0 ${theta > 180 ? 1 : 0} 0 ${ox + arcR * Math.cos(rad(theta))} ${oy - arcR * Math.sin(rad(theta))}`;
 
   return (
-    <CadreSimulation
+    <CadreSimulationMaths
+      icone={ICONES_MATHS.trigo}
+      action={<BoutonDiscret onClick={() => setTheta(TRIGO.initial)}>Réinitialiser</BoutonDiscret>}
       titre="Explore le cercle trigonométrique"
       description="Tourne le rayon et observe simultanément le sinus, le cosinus et leurs courbes."
       formule={<Formule tex={"M(\\cos\\theta\\,;\\,\\sin\\theta), \\quad \\tan\\theta = \\dfrac{\\sin\\theta}{\\cos\\theta}"} />}
       graphique={
         <div className="flex flex-col gap-3">
-          <svg viewBox={`0 0 ${C} ${C}`} className="mx-auto h-auto w-full max-w-[320px]" role="img" aria-label={`Cercle trigonométrique, angle ${theta} degrés : cosinus ${nombreFr(cos, 3)}, sinus ${nombreFr(sin, 3)}`}>
-            <rect x={0} y={0} width={C} height={C} className="fill-white" />
-            <line x1={RC.X(-1.3)} y1={oy} x2={RC.X(1.3)} y2={oy} className="stroke-fh-ardoise" strokeWidth={1} />
-            <line x1={ox} y1={RC.Y(-1.3)} x2={ox} y2={RC.Y(1.3)} className="stroke-fh-ardoise" strokeWidth={1} />
+          <svg viewBox={`0 0 ${C} ${C}`} className="mx-auto h-auto w-full max-w-[420px]" role="img" aria-label={`Cercle trigonométrique, angle ${theta} degrés : cosinus ${nombreFr(cos, 3)}, sinus ${nombreFr(sin, 3)}`}>
+            <rect x={0} y={0} width={C} height={C} className="fill-transparent" />
+            <line x1={RC.X(-1.3)} y1={oy} x2={RC.X(1.3)} y2={oy} className="stroke-slate-700" strokeWidth={1} />
+            <line x1={ox} y1={RC.Y(-1.3)} x2={ox} y2={RC.Y(1.3)} className="stroke-slate-700" strokeWidth={1} />
             <circle cx={ox} cy={oy} r={rayon} fill="none" className="stroke-fh-bleu/50" strokeWidth={1.5} />
             {[-1, 1].map((g) => (
               <g key={g}>
-                <text x={RC.X(g)} y={oy + 13} textAnchor="middle" className="fill-fh-ardoise text-[9px]">{grad(g)}</text>
-                <text x={ox - 5} y={RC.Y(g) + 3} textAnchor="end" className="fill-fh-ardoise text-[9px]">{grad(g)}</text>
+                <text x={RC.X(g)} y={oy + 13} textAnchor="middle" className="fill-slate-600 text-[11px]">{grad(g)}</text>
+                <text x={ox - 5} y={RC.Y(g) + 3} textAnchor="end" className="fill-slate-600 text-[11px]">{grad(g)}</text>
               </g>
             ))}
             {arc && <path d={arc} fill="none" className="stroke-fh-orange" strokeWidth={1.8} />}
@@ -70,17 +73,17 @@ export default function SimulationTrigo() {
           </svg>
 
           <svg viewBox={`0 0 ${WC} ${HC}`} className="h-auto w-full" role="img" aria-label="Courbes du sinus et du cosinus sur une période, avec un repère à l'angle choisi">
-            <rect x={RK.marge} y={RK.marge - 10} width={WC - 2 * RK.marge} height={HC - 2 * RK.marge + 20} className="fill-white stroke-fh-sable" />
+            <rect x={RK.marge} y={RK.marge - 10} width={WC - 2 * RK.marge} height={HC - 2 * RK.marge + 20} className="fill-white stroke-slate-300" />
             {DEGRES.map((d) => (
               <g key={d}>
-                <line x1={RK.X(d)} y1={RK.marge - 10} x2={RK.X(d)} y2={HC - RK.marge + 10} className="stroke-fh-sable/70" strokeWidth={0.7} />
-                <text x={RK.X(d)} y={HC - 8} textAnchor="middle" className="fill-fh-ardoise text-[9px]">{d}°</text>
+                <line x1={RK.X(d)} y1={RK.marge - 10} x2={RK.X(d)} y2={HC - RK.marge + 10} className="stroke-slate-200" strokeWidth={0.7} />
+                <text x={RK.X(d)} y={HC - 8} textAnchor="middle" className="fill-slate-600 text-[11px]">{d}°</text>
               </g>
             ))}
             {[-1, 0, 1].map((g) => (
               <g key={g}>
-                <line x1={RK.marge} y1={RK.Y(g)} x2={WC - RK.marge} y2={RK.Y(g)} className={g === 0 ? "stroke-fh-ardoise" : "stroke-fh-sable/70"} strokeWidth={g === 0 ? 1 : 0.7} />
-                <text x={RK.marge - 5} y={RK.Y(g) + 3} textAnchor="end" className="fill-fh-ardoise text-[9px]">{grad(g)}</text>
+                <line x1={RK.marge} y1={RK.Y(g)} x2={WC - RK.marge} y2={RK.Y(g)} className={g === 0 ? "stroke-slate-700" : "stroke-slate-200"} strokeWidth={g === 0 ? 1 : 0.7} />
+                <text x={RK.marge - 5} y={RK.Y(g) + 3} textAnchor="end" className="fill-slate-600 text-[11px]">{grad(g)}</text>
               </g>
             ))}
             <path d={courbeCos} fill="none" className="stroke-fh-orange" strokeWidth={2} />
@@ -95,7 +98,7 @@ export default function SimulationTrigo() {
       }
       commandes={
         <>
-          <Curseur
+          <CurseurMaths
             nom={<Formule tex="\theta" />}
             valeurTexte={`θ = ${theta}°`}
             min={TRIGO.min}
@@ -105,14 +108,13 @@ export default function SimulationTrigo() {
             onChange={setTheta}
             ariaLabel="Angle thêta en degrés"
           />
-          <BoutonReinitialiser onClick={() => setTheta(TRIGO.initial)} />
         </>
       }
       valeurs={
         <>
-          <Valeur etiquette={<Formule tex="\cos\theta" />} large>{valeur(r.cos)}</Valeur>
-          <Valeur etiquette={<Formule tex="\sin\theta" />} large>{valeur(r.sin)}</Valeur>
-          <Valeur etiquette={<Formule tex="\tan\theta" />} large>{valeur(r.tan)}</Valeur>
+          <ValeurMaths etiquette={<Formule tex="\cos\theta" />} large ton="bleu">{valeur(r.cos)}</ValeurMaths>
+          <ValeurMaths etiquette={<Formule tex="\sin\theta" />} large ton="bleu">{valeur(r.sin)}</ValeurMaths>
+          <ValeurMaths etiquette={<Formule tex="\tan\theta" />} large ton="orange">{valeur(r.tan)}</ValeurMaths>
         </>
       }
       commentaire={

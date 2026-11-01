@@ -46,4 +46,9 @@ export const AVANTAGES: readonly Avantage[] = [
     subtitle:
       "Mathématiques, physique, chimie, SVT… le programme officiel des deux cycles, expliqué clairement.",
   },
+  {
+    title: "Révise à ton rythme",
+    subtitle:
+      "Reviens sur les leçons autant que nécessaire, avance à ton rythme et consolide chaque notion avant de passer à la suivante.",
+  },
 ];

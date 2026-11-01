@@ -3,7 +3,8 @@
 import { useId, useState } from "react";
 
 import { argumentTexte, COMPLEXE, complexe, nombreFr } from "@/lib/accueil/mathsLabo";
-import { BoutonReinitialiser, CadreSimulation, Curseur, Formule, grad, repere, Tx, Valeur } from "./commun";
+import { Formule, grad, repere, Tx } from "./commun";
+import { BoutonDiscret, CadreSimulationMaths, CurseurMaths, ICONES_MATHS, ValeurMaths } from "./CadreMaths";
 
 const L = 400;
 const BORNE = 5;
@@ -19,7 +20,18 @@ export default function SimulationComplexes() {
   const nul = a === 0 && b === 0;
 
   return (
-    <CadreSimulation
+    <CadreSimulationMaths
+      icone={ICONES_MATHS.complexes}
+      action={
+        <BoutonDiscret
+          onClick={() => {
+            setA(COMPLEXE.a);
+            setB(COMPLEXE.b);
+          }}
+        >
+          Réinitialiser
+        </BoutonDiscret>
+      }
       titre="Découvre le plan complexe"
       description="Déplace le point M et observe son affixe, son module, son argument et son conjugué."
       formule={<Formule tex={"z = a + b\\,i"} />}
@@ -30,19 +42,19 @@ export default function SimulationComplexes() {
               <path d="M0 0 L10 5 L0 10 z" className="fill-fh-bleu" />
             </marker>
           </defs>
-          <rect x={R.marge} y={R.marge} width={L - 2 * R.marge} height={L - 2 * R.marge} className="fill-white stroke-fh-sable" />
+          <rect x={R.marge} y={R.marge} width={L - 2 * R.marge} height={L - 2 * R.marge} className="fill-white stroke-slate-300" />
           {ENTIERS.map((g) => (
             <g key={g}>
-              <line x1={R.X(g)} y1={R.marge} x2={R.X(g)} y2={L - R.marge} className="stroke-fh-sable/70" strokeWidth={0.7} />
-              <line x1={R.marge} y1={R.Y(g)} x2={L - R.marge} y2={R.Y(g)} className="stroke-fh-sable/70" strokeWidth={0.7} />
-              <text x={R.X(g)} y={R.Y(0) + 13} textAnchor="middle" className="fill-fh-ardoise text-[9px]">{grad(g)}</text>
-              <text x={R.X(0) - 5} y={R.Y(g) + 3} textAnchor="end" className="fill-fh-ardoise text-[9px]">{grad(g)}</text>
+              <line x1={R.X(g)} y1={R.marge} x2={R.X(g)} y2={L - R.marge} className="stroke-slate-200" strokeWidth={0.7} />
+              <line x1={R.marge} y1={R.Y(g)} x2={L - R.marge} y2={R.Y(g)} className="stroke-slate-200" strokeWidth={0.7} />
+              <text x={R.X(g)} y={R.Y(0) + 13} textAnchor="middle" className="fill-slate-600 text-[11px]">{grad(g)}</text>
+              <text x={R.X(0) - 5} y={R.Y(g) + 3} textAnchor="end" className="fill-slate-600 text-[11px]">{grad(g)}</text>
             </g>
           ))}
-          <line x1={R.marge} y1={R.Y(0)} x2={L - R.marge} y2={R.Y(0)} className="stroke-fh-ardoise" strokeWidth={1.2} />
-          <line x1={R.X(0)} y1={R.marge} x2={R.X(0)} y2={L - R.marge} className="stroke-fh-ardoise" strokeWidth={1.2} />
-          <text x={L - R.marge - 2} y={R.Y(0) - 6} textAnchor="end" className="fill-fh-ardoise text-[10px] font-semibold">Re</text>
-          <text x={R.X(0) + 6} y={R.marge + 10} className="fill-fh-ardoise text-[10px] font-semibold">Im</text>
+          <line x1={R.marge} y1={R.Y(0)} x2={L - R.marge} y2={R.Y(0)} className="stroke-slate-700" strokeWidth={1.2} />
+          <line x1={R.X(0)} y1={R.marge} x2={R.X(0)} y2={L - R.marge} className="stroke-slate-700" strokeWidth={1.2} />
+          <text x={L - R.marge - 2} y={R.Y(0) - 6} textAnchor="end" className="fill-slate-600 text-[11px] font-semibold">Re</text>
+          <text x={R.X(0) + 6} y={R.marge + 10} className="fill-slate-600 text-[11px] font-semibold">Im</text>
 
           {/* symétrie par rapport à l'axe réel */}
           {b !== 0 && <line x1={R.X(a)} y1={R.Y(b)} x2={R.X(a)} y2={R.Y(-b)} className="stroke-fh-orange" strokeWidth={1.4} strokeDasharray="5 4" data-testid="symetrie" />}
@@ -57,7 +69,7 @@ export default function SimulationComplexes() {
       }
       commandes={
         <>
-          <Curseur
+          <CurseurMaths
             nom="Partie réelle a"
             valeurTexte={`a = ${nombreFr(a, 0)}`}
             min={COMPLEXE.min}
@@ -67,7 +79,7 @@ export default function SimulationComplexes() {
             onChange={setA}
             ariaLabel="Partie réelle a de z"
           />
-          <Curseur
+          <CurseurMaths
             nom="Partie imaginaire b"
             valeurTexte={`b = ${nombreFr(b, 0)}`}
             min={COMPLEXE.min}
@@ -77,23 +89,17 @@ export default function SimulationComplexes() {
             onChange={setB}
             ariaLabel="Partie imaginaire b de z"
           />
-          <BoutonReinitialiser
-            onClick={() => {
-              setA(COMPLEXE.a);
-              setB(COMPLEXE.b);
-            }}
-          />
         </>
       }
       valeurs={
         <>
-          <Valeur etiquette="Affixe z">{r.z}</Valeur>
-          <Valeur etiquette="Conjugué">{r.conjugue}</Valeur>
-          <Valeur etiquette={<>Module <Formule tex="|z|" /></>}>
+          <ValeurMaths etiquette="Affixe z" ton="bleu">{r.z}</ValeurMaths>
+          <ValeurMaths etiquette="Conjugué" ton="orange">{r.conjugue}</ValeurMaths>
+          <ValeurMaths etiquette={<>Module <Formule tex="|z|" /></>} ton="bleu">
             {r.module.exact}
             {r.module.approx !== null && ` ≈ ${r.module.approx}`}
-          </Valeur>
-          <Valeur etiquette="Argument principal">{argumentTexte(r)}</Valeur>
+          </ValeurMaths>
+          <ValeurMaths etiquette="Argument principal" ton="bleu">{argumentTexte(r)}</ValeurMaths>
         </>
       }
       commentaire={

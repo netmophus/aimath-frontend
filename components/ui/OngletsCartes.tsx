@@ -10,6 +10,8 @@ export interface OngletCarte {
   /** Couleur vive de l'onglet (--c) et sa version très claire (--c-soft, fond de la page de l'onglet). */
   couleur: string;
   couleurSoft: string;
+  /** Optionnel : carte entièrement colorée en permanence (dégradé de → vers, bordure claire). Absent : style clair par défaut. */
+  degrade?: { de: string; vers: string; bordure: string };
 }
 
 interface OngletsCartesProps {
@@ -54,6 +56,36 @@ export default function OngletsCartes({ onglets, actif, onChoisir, ariaLabel, id
     >
       {onglets.map((o, i) => {
         const estActif = i === actif;
+        const dg = o.degrade;
+        if (dg) {
+          return (
+            <button
+              key={o.id}
+              ref={(el) => { boutons.current[i] = el; }}
+              type="button"
+              role="tab"
+              id={idOnglet(o.id)}
+              aria-selected={estActif}
+              aria-controls={idPanneau(o.id)}
+              tabIndex={estActif ? 0 : -1}
+              onClick={() => onChoisir(i)}
+              style={{ "--c": o.couleur, "--c-soft": o.couleurSoft, "--dg-de": dg.de, "--dg-vers": dg.vers, "--dg-bord": dg.bordure, backgroundImage: `linear-gradient(135deg, ${dg.de}, ${dg.vers})` } as CSSProperties}
+              className={`relative flex min-h-[88px] flex-col items-center justify-start gap-1.5 rounded-[14px] border-2 px-2 py-2.5 text-center text-white transition duration-150 hover:-translate-y-0.5 hover:shadow-[0_10px_22px_-6px_color-mix(in_srgb,var(--dg-vers)_70%,transparent)] focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-fh-bleu motion-reduce:transition-none motion-reduce:hover:transform-none ${
+                estActif
+                  ? "-translate-y-0.5 border-white shadow-[0_0_0_1px_var(--dg-vers),0_10px_22px_-6px_color-mix(in_srgb,var(--dg-vers)_75%,transparent)]"
+                  : "border-[var(--dg-bord)] shadow-[0_4px_10px_-6px_color-mix(in_srgb,var(--dg-vers)_60%,transparent)]"
+              }`}
+            >
+              <span aria-hidden="true" className="flex h-9 min-w-9 items-center justify-center rounded-[10px] bg-white/20 px-1.5 text-[17px] font-bold leading-none text-white [font-variant-emoji:text]">
+                {o.icone}
+              </span>
+              <span className="text-sm font-bold leading-tight text-white [text-shadow:0_1px_2px_rgba(0,0,0,0.25)]">{o.label}</span>
+              {estActif && (
+                <span aria-hidden="true" className="absolute -bottom-[11px] left-1/2 h-0 w-0 -translate-x-1/2 border-x-[10px] border-t-[10px] border-x-transparent border-t-[var(--dg-vers)]" />
+              )}
+            </button>
+          );
+        }
         return (
           <button
             key={o.id}

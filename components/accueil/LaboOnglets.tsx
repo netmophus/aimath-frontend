@@ -11,6 +11,7 @@ export interface OngletLaboMatiere {
   couleur: string;
   couleurSoft: string;
   Composant: ComponentType;
+  degrade?: { de: string; vers: string; bordure: string };
 }
 
 /**
@@ -24,7 +25,7 @@ export default function LaboOnglets({ etiquette, base, onglets }: { etiquette: s
     <div className="rounded-2xl border border-fh-sable bg-fh-creme p-3 shadow-sm sm:p-6 lg:p-8">
       <OngletsCartes
         ariaLabel={etiquette}
-        onglets={onglets.map((t) => ({ id: t.id, label: t.libelle, icone: t.icone, couleur: t.couleur, couleurSoft: t.couleurSoft }))}
+        onglets={onglets.map((t) => ({ id: t.id, label: t.libelle, icone: t.icone, couleur: t.couleur, couleurSoft: t.couleurSoft, degrade: t.degrade }))}
         actif={actif}
         onChoisir={setActif}
         idOnglet={(id) => `${base}-onglet-${id}`}
