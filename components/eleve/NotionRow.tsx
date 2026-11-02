@@ -1,9 +1,18 @@
 "use client";
 
 import Link from "next/link";
+import { IconBook2, IconChevronRight } from "@tabler/icons-react";
 
 import type { NotionEleve } from "@/lib/eleveApi";
 import { IconeCadenas } from "./icones";
+
+/** Classes de couleur d'un chapitre, transmises par ThemeAccordion pour teinter légèrement ses lignes de leçons. */
+export interface TeinteNotion {
+  /** fond très léger de la ligne + survol */
+  fond: string;
+  /** pastille d'icône (livre) */
+  pastille: string;
+}
 
 interface NotionRowProps {
   notion: NotionEleve;
@@ -14,25 +23,31 @@ interface NotionRowProps {
    * cadenas ci-dessous (indication visuelle) — le verrou réel se rejoue
    * toujours côté serveur à l'ouverture de la leçon, voir lib/auth.tsx. */
   abonnementActif?: boolean;
+  teinte: TeinteNotion;
 }
 
 /** Une notion : cliquable si une leçon est publiée, grisée sinon ("à venir").
  * Un petit cadenas marque les cours premium tant que l'élève n'a pas
  * d'abonnement actif — pour qu'il sache avant de cliquer, sans empêcher le
- * clic (l'ouverture affichera un aperçu + le mur de déblocage). */
-export default function NotionRow({ notion, telechargee = false, abonnementActif = false }: NotionRowProps) {
+ * clic (l'ouverture affichera un aperçu + le mur de déblocage). « Leçon
+ * disponible » signale seulement qu'une leçon est publiée : aucune notion de
+ * leçon terminée (on ne suit pas la progression de l'élève). */
+export default function NotionRow({ notion, telechargee = false, abonnementActif = false, teinte }: NotionRowProps) {
   if (notion.a_lecon_publiee && notion.lecon_id) {
     const estPremiumVerrouille = notion.lecon_est_gratuite === false && !abonnementActif;
     return (
       <Link
         href={`/eleve/lecons/${notion.lecon_id}`}
-        className="flex items-center justify-between gap-3 rounded-lg bg-fh-accent/40 px-3 py-2.5 transition-colors hover:bg-fh-accent"
+        className={`flex min-h-12 items-center gap-3 rounded-xl px-3 py-2.5 transition-colors focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[#102A66] ${teinte.fond}`}
       >
-        <span className="flex min-w-0 items-center gap-1.5">
-          <span className="truncate text-sm font-medium text-fh-bleu">{notion.titre}</span>
+        <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-white ${teinte.pastille}`} aria-hidden="true">
+          <IconBook2 size={20} stroke={1.75} />
+        </span>
+        <span className="flex min-w-0 flex-1 flex-col gap-1.5 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-2 sm:gap-y-1">
+          <span className="min-w-0 break-words text-sm font-semibold text-[#102A66] sm:text-base">{notion.titre}</span>
           {estPremiumVerrouille && (
             <span className="shrink-0" aria-label="Cours premium" title="Cours premium">
-              <IconeCadenas className="h-3.5 w-3.5 text-fh-orange-fonce" />
+              <IconeCadenas className="h-4 w-4 text-[#C2410C]" />
             </span>
           )}
           {telechargee && (
@@ -40,20 +55,25 @@ export default function NotionRow({ notion, telechargee = false, abonnementActif
               📥
             </span>
           )}
+          {/* petit écran : la pastille passe sous le titre pour lui laisser toute la largeur */}
+          <span className="w-fit rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-bold text-emerald-800 sm:hidden">Leçon disponible</span>
         </span>
-        <span className="shrink-0 rounded-full bg-fh-orange px-2 py-0.5 text-xs font-semibold text-white">
-          Leçon disponible
-        </span>
+        <span className="hidden shrink-0 rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-bold text-emerald-800 sm:inline-block">Leçon disponible</span>
+        <IconChevronRight size={20} stroke={2} className="shrink-0 text-[#102A66]/60" aria-hidden="true" />
       </Link>
     );
   }
 
   return (
-    <div className="flex items-center justify-between gap-3 rounded-lg bg-fh-creme px-3 py-2.5">
-      <span className="text-sm text-fh-ardoise/70">{notion.titre}</span>
-      <span className="shrink-0 rounded-full bg-fh-sable px-2 py-0.5 text-xs font-medium text-fh-ardoise">
-        Leçon à venir
+    <div className="flex min-h-12 items-center gap-3 rounded-xl bg-slate-50 px-3 py-2.5">
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-200 text-slate-500" aria-hidden="true">
+        <IconBook2 size={20} stroke={1.75} />
       </span>
+      <span className="flex min-w-0 flex-1 flex-col gap-1.5 sm:block">
+        <span className="min-w-0 break-words text-sm text-slate-600 sm:text-base">{notion.titre}</span>
+        <span className="w-fit rounded-full bg-slate-200 px-2.5 py-1 text-xs font-semibold text-slate-700 sm:hidden">Leçon à venir</span>
+      </span>
+      <span className="hidden shrink-0 rounded-full bg-slate-200 px-2.5 py-1 text-xs font-semibold text-slate-700 sm:inline-block">Leçon à venir</span>
     </div>
   );
 }

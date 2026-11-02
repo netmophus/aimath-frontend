@@ -22,24 +22,24 @@ export default function CarteResoudreMatiere({ programmeId, matiereNom }: CarteR
   return (
     <section
       aria-label="Résoudre mon exercice"
-      className="flex flex-col gap-3 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-fh-sable sm:flex-row sm:items-center sm:justify-between"
+      className="flex flex-col gap-4 rounded-3xl border border-violet-200 bg-gradient-to-br from-violet-50 to-blue-50 p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:p-6"
     >
-      <div className="flex items-start gap-3">
+      <div className="flex items-center gap-4">
         <span
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-fh-accent text-fh-orange-fonce"
+          className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-[#7C3AED] text-white shadow-sm sm:h-[72px] sm:w-[72px]"
           aria-hidden="true"
         >
-          <IconCamera size={22} stroke={1.75} />
+          <IconCamera size={40} stroke={1.6} />
         </span>
         <div className="min-w-0">
-          <h2 className="text-base font-bold text-fh-bleu">Résoudre mon exercice</h2>
-          <p className="mt-0.5 text-sm text-fh-ardoise">{ACCROCHE_MATIERE_RESOLVABLE[matiere]}</p>
+          <h2 className="text-xl font-extrabold text-[#102A66] sm:text-2xl">Résoudre mon exercice</h2>
+          <p className="mt-0.5 text-sm text-slate-600 sm:text-base">{ACCROCHE_MATIERE_RESOLVABLE[matiere]}</p>
         </div>
       </div>
 
       <Link
         href={hrefResoudre(programmeId)}
-        className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-full bg-fh-orange px-5 text-sm font-semibold text-white transition-colors hover:bg-fh-orange-fonce"
+        className="inline-flex min-h-12 shrink-0 items-center justify-center rounded-xl bg-[#C2410C] px-8 text-base font-bold text-white shadow-sm transition-colors hover:bg-[#9A3412] focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[#102A66]"
       >
         Commencer
       </Link>
