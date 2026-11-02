@@ -1,17 +1,32 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import {
+  IconArrowLeft,
+  IconBook2,
+  IconBulb,
+  IconListCheck,
+  IconLock,
+  IconPaperclip,
+  IconSchool,
+  IconTarget,
+  IconVideo,
+  IconWifiOff,
+} from "@tabler/icons-react";
 
 import { ApiError } from "@/lib/api";
 import { getLeconEleve, type LeconEleve, type TermeGlossaireEleve } from "@/lib/eleveApi";
 import { getLeconLocale, listerIdsTelecharges } from "@/lib/offlineStore";
 import { extraireMatiere } from "@/lib/contexteLecon";
 import { decouperSections } from "@/lib/decouperSections";
+import { extraireClasseDuLibelle, rubriqueEffective, rubriquesDisponibles, type RubriqueId } from "@/lib/lecon/rubriques";
 import RenduMarkdown from "@/components/RenduMarkdown";
 import SectionLecon from "@/components/eleve/SectionLecon";
-import OngletsLecon, { type CouleurOnglet, type Onglet } from "@/components/eleve/OngletsLecon";
+import EncadreLecon from "@/components/eleve/EncadreLecon";
+import OngletsLecon, { idOnglet, idPanneau, type Onglet } from "@/components/eleve/OngletsLecon";
+import { IDENTITES_RUBRIQUES } from "@/components/eleve/teintesLecon";
 import CarteSection from "@/components/eleve/CarteSection";
 import CarteExercice from "@/components/eleve/CarteExercice";
 import SujetExamenLecture from "@/components/eleve/SujetExamenLecture";
@@ -20,17 +35,12 @@ import ModaleTerme from "@/components/eleve/ModaleTerme";
 import BoutonTelecharger from "@/components/eleve/BoutonTelecharger";
 import MurDeblocage from "@/components/eleve/MurDeblocage";
 
-type OngletId = "pourquoi" | "cours" | "demonstrations" | "exercices" | "examen";
+import "./lecon.css";
 
-/** Une couleur douce par TYPE d'onglet (son identité, pas sa position) —
- * l'actif repasse toujours en fh-orange plein, voir OngletsLecon.tsx. */
-const COULEURS_ONGLET: Record<OngletId, CouleurOnglet> = {
-  pourquoi: { fond: "#EAF0FB", texte: "#2A4A9E", bordure: "#D5E0F5" },
-  cours: { fond: "#FCE9DE", texte: "#A52D0E", bordure: "#F0D8BF" },
-  demonstrations: { fond: "#FBEEE7", texte: "#A8481F", bordure: "#F3D9CB" },
-  exercices: { fond: "#EAF5EF", texte: "#1F7A55", bordure: "#CDE9DB" },
-  examen: { fond: "#F3EAFB", texte: "#6B2FA0", bordure: "#E4D3F5" },
-};
+type OngletId = RubriqueId;
+
+/** Préfixe des identifiants ARIA (onglets / panneaux) de cette page. */
+const PREFIXE_ARIA = "lecon";
 
 function estVide(texte: string): boolean {
   return texte.trim().length === 0;
@@ -140,11 +150,12 @@ export default function LeconEleveDetailPage() {
 
   if (chargement) {
     return (
-      <div className="mx-auto flex w-full max-w-[720px] flex-col gap-3" aria-busy="true" aria-label="Chargement de la leçon">
-        <div className="h-4 w-40 animate-pulse rounded bg-fh-sable/50" />
-        <div className="h-7 w-64 animate-pulse rounded bg-fh-sable/50" />
-        <div className="h-10 animate-pulse rounded-2xl bg-fh-sable/50" />
-        <div className="h-40 animate-pulse rounded-2xl bg-fh-sable/50" />
+      <div className="mx-auto flex w-full max-w-[1214px] flex-col gap-5" aria-busy="true" aria-label="Chargement de la leçon">
+        <div className="h-40 animate-pulse rounded-3xl bg-fh-sable/50" />
+        <div className="flex flex-col gap-5 lg:grid lg:grid-cols-[240px_minmax(0,1fr)] lg:gap-6">
+          <div className="h-16 animate-pulse rounded-2xl bg-fh-sable/50 lg:h-72" />
+          <div className="h-64 animate-pulse rounded-3xl bg-fh-sable/50" />
+        </div>
       </div>
     );
   }
@@ -164,201 +175,211 @@ export default function LeconEleveDetailPage() {
     );
   }
 
-  const matiere = extraireMatiere(lecon.notion.programme.libelle);
+  const libelleProgramme = lecon.notion.programme.libelle;
+  const matiere = extraireMatiere(libelleProgramme);
+  const classe = extraireClasseDuLibelle(libelleProgramme);
   const aVideosOuRessources = lecon.videos.length > 0 || lecon.ressources.length > 0;
 
   // Un onglet ne s'affiche que si son contenu existe (pas d'onglet vide) —
   // "Cours" reste toujours présent : c'est l'ancre principale, même quand son
   // propre texte (cours_redige) est vide, elle porte objectifs/prérequis/
   // à retenir/vidéos/ressources (voir plus bas, avec son propre repli).
-  const onglets: Onglet<OngletId>[] = [];
-  if (!estVide(lecon.histoire)) {
-    onglets.push({ id: "pourquoi", label: "Pourquoi cette notion ?", couleur: COULEURS_ONGLET.pourquoi });
+  const idsDisponibles = rubriquesDisponibles(lecon);
+  const onglets: Onglet<OngletId>[] = idsDisponibles.map((id) => ({ id, ...IDENTITES_RUBRIQUES[id] }));
+  const ongletAffiche = rubriqueEffective(idsDisponibles, ongletActif);
+
+  /** Sections Markdown d'un champ en cartes (découpage ##/###), intro sans titre en texte libre. */
+  function cartes(markdown: string, id: RubriqueId): ReactNode {
+    const { couleur, icone } = IDENTITES_RUBRIQUES[id];
+    return decouperSections(markdown).map((section, index) =>
+      section.titre ? (
+        <CarteSection
+          key={`${index}-${section.titre}`}
+          titre={section.titre}
+          contenu={section.contenu}
+          onTermeClick={setSlugOuvert}
+          couleur={couleur}
+          icone={icone}
+        />
+      ) : (
+        <RenduMarkdown key={`${index}-intro`} contenu={section.contenu} onTermeClick={setSlugOuvert} />
+      )
+    );
   }
-  onglets.push({ id: "cours", label: "Cours", couleur: COULEURS_ONGLET.cours });
-  if (!estVide(lecon.demonstrations)) {
-    onglets.push({ id: "demonstrations", label: "Démonstrations", couleur: COULEURS_ONGLET.demonstrations });
-  }
-  if (lecon.exercices.length > 0) {
-    onglets.push({ id: "exercices", label: "Exercices", couleur: COULEURS_ONGLET.exercices });
-  }
-  if (!estVide(lecon.sujet_examen)) {
-    onglets.push({ id: "examen", label: "Examen", couleur: COULEURS_ONGLET.examen });
-  }
 
-  return (
-    <div className="mx-auto flex w-full max-w-[720px] flex-col gap-5">
-      <div className="flex flex-col gap-2">
-        <Link href={`/eleve/programmes/${lecon.notion.programme.id}`} className="text-sm font-medium text-fh-bleu hover:underline">
-          ← Retour au programme
-        </Link>
-        <div className="flex items-center gap-2">
-          <p className="truncate text-xs text-fh-ardoise">
-            {matiere} · {lecon.notion.theme.titre} · {lecon.notion.chapitre.titre}
-          </p>
-          {source === "locale" && (
-            <span className="shrink-0 rounded-full bg-fh-sable/60 px-2 py-0.5 text-[11px] font-medium text-fh-ardoise/70">
-              Hors-ligne
-            </span>
-          )}
-          {lecon.verrouille && (
-            <span className="shrink-0 rounded-full bg-fh-accent px-2 py-0.5 text-[11px] font-medium text-fh-orange-fonce">
-              🔒 Premium
-            </span>
-          )}
-        </div>
-        <h1 className="text-xl font-bold text-fh-bleu">{lecon.titre}</h1>
-        <div>
-          <BoutonTelecharger leconId={leconId} verrouille={lecon.verrouille} onChange={surChangementTelechargement} />
-        </div>
-      </div>
+  /** Contenu de chaque rubrique (inchangé fonctionnellement : mêmes champs, mêmes conditions). */
+  function contenuRubrique(id: OngletId): ReactNode {
+    switch (id) {
+      case "pourquoi":
+        return <div className="flex flex-col gap-5">{cartes(lecon!.histoire, "pourquoi")}</div>;
 
-      <OngletsLecon onglets={onglets} actif={ongletActif} onChange={setOngletActif} />
+      case "cours":
+        return (
+          <div className="flex flex-col gap-6">
+            {!estVide(lecon!.objectifs_pedagogiques) && (
+              <EncadreLecon titre="Objectifs" icone={IconTarget} couleur="#2563EB">
+                <RenduMarkdown contenu={lecon!.objectifs_pedagogiques} onTermeClick={setSlugOuvert} />
+              </EncadreLecon>
+            )}
 
-      {ongletActif === "pourquoi" && (
-        <div className="flex flex-col gap-5">
-          {decouperSections(lecon.histoire).map((section, index) =>
-            section.titre ? (
-              <CarteSection
-                key={`${index}-${section.titre}`}
-                titre={section.titre}
-                contenu={section.contenu}
-                onTermeClick={setSlugOuvert}
-              />
-            ) : (
-              <RenduMarkdown key={`${index}-intro`} contenu={section.contenu} onTermeClick={setSlugOuvert} />
-            )
-          )}
-        </div>
-      )}
+            {!estVide(lecon!.prerequis_texte) && (
+              <EncadreLecon titre="Prérequis" icone={IconListCheck} couleur="#7C3AED">
+                <RenduMarkdown contenu={lecon!.prerequis_texte} onTermeClick={setSlugOuvert} />
+              </EncadreLecon>
+            )}
 
-      {ongletActif === "cours" && (
-        <div className="flex flex-col gap-6">
-          {!estVide(lecon.objectifs_pedagogiques) && (
-            <div
-              className="rounded-2xl border px-4 py-4"
-              style={{ backgroundColor: "#EAF0FB", borderColor: "#D5E0F5" }}
-            >
-              <p className="mb-1 text-xs font-bold uppercase tracking-wide" style={{ color: "#2A4A9E" }}>
-                Objectifs
-              </p>
-              <RenduMarkdown contenu={lecon.objectifs_pedagogiques} onTermeClick={setSlugOuvert} />
-            </div>
-          )}
+            <SectionLecon titre="Cours" icone={IconBook2} couleur={IDENTITES_RUBRIQUES.cours.couleur}>
+              {estVide(lecon!.cours_redige) ? (
+                <p className="text-base text-slate-600">Le cours arrive bientôt.</p>
+              ) : (
+                <div className="flex flex-col gap-5">{cartes(lecon!.cours_redige, "cours")}</div>
+              )}
+            </SectionLecon>
 
-          {!estVide(lecon.prerequis_texte) && (
-            <div
-              className="rounded-2xl border px-4 py-4"
-              style={{ backgroundColor: "#F3EAFB", borderColor: "#E4D3F5" }}
-            >
-              <p className="mb-1 text-xs font-bold uppercase tracking-wide" style={{ color: "#6B2FA0" }}>
-                Prérequis
-              </p>
-              <RenduMarkdown contenu={lecon.prerequis_texte} onTermeClick={setSlugOuvert} />
-            </div>
-          )}
+            {lecon!.verrouille && <MurDeblocage />}
 
-          <SectionLecon titre="Cours">
-            {estVide(lecon.cours_redige) ? (
-              <p className="text-sm text-fh-ardoise/60">Le cours arrive bientôt.</p>
-            ) : (
-              <div className="flex flex-col gap-5">
-                {decouperSections(lecon.cours_redige).map((section, index) =>
-                  section.titre ? (
-                    <CarteSection
-                      key={`${index}-${section.titre}`}
-                      titre={section.titre}
-                      contenu={section.contenu}
-                      onTermeClick={setSlugOuvert}
-                    />
-                  ) : (
-                    <RenduMarkdown key={`${index}-intro`} contenu={section.contenu} onTermeClick={setSlugOuvert} />
-                  )
+            {!estVide(lecon!.a_retenir) && (
+              <EncadreLecon titre="À retenir" icone={IconBulb} couleur="#C2410C">
+                <RenduMarkdown contenu={lecon!.a_retenir} onTermeClick={setSlugOuvert} />
+              </EncadreLecon>
+            )}
+
+            {aVideosOuRessources && (
+              <div className="flex flex-col gap-6">
+                {lecon!.videos.length > 0 && (
+                  <SectionLecon titre="Vidéos" icone={IconVideo} couleur="#0891B2">
+                    <ul className="flex flex-col gap-3">
+                      {lecon!.videos.map((video) => (
+                        <LecteurVideo key={`${video.ordre}-${video.titre}`} video={video} />
+                      ))}
+                    </ul>
+                  </SectionLecon>
+                )}
+
+                {lecon!.ressources.length > 0 && (
+                  <SectionLecon titre="Ressources" icone={IconPaperclip} couleur="#0891B2">
+                    <ul className="flex flex-col gap-2">
+                      {lecon!.ressources.map((ressource) =>
+                        ressource.url ? (
+                          <li key={`${ressource.ordre}-${ressource.titre}`}>
+                            <a
+                              href={ressource.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex min-h-11 items-center gap-2 text-base font-semibold text-[#1D4ED8] hover:underline focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[#102A66]"
+                            >
+                              <IconPaperclip size={20} stroke={2} aria-hidden="true" className="shrink-0" />
+                              {ressource.titre}
+                            </a>
+                          </li>
+                        ) : null
+                      )}
+                    </ul>
+                  </SectionLecon>
                 )}
               </div>
             )}
-          </SectionLecon>
+          </div>
+        );
 
-          {lecon.verrouille && <MurDeblocage />}
+      case "demonstrations":
+        return (
+          <div className="flex flex-col gap-5">
+            {estVide(lecon!.demonstrations) ? (
+              <p className="text-base text-slate-600">Pas de démonstration pour cette leçon.</p>
+            ) : (
+              cartes(lecon!.demonstrations, "demonstrations")
+            )}
+          </div>
+        );
 
-          {!estVide(lecon.a_retenir) && (
-            <div className="rounded-2xl bg-fh-accent px-4 py-4">
-              <p className="mb-1 text-xs font-bold uppercase tracking-wide text-fh-orange-fonce">À retenir</p>
-              <RenduMarkdown contenu={lecon.a_retenir} onTermeClick={setSlugOuvert} />
-            </div>
-          )}
+      case "exercices":
+        return (
+          <div className="flex flex-col gap-5">
+            {lecon!.exercices.length === 0 ? (
+              <p className="text-base text-slate-600">Pas d&apos;exercice pour cette leçon.</p>
+            ) : (
+              lecon!.exercices.map((exercice, index) => (
+                <CarteExercice key={exercice.id} exercice={exercice} numero={index + 1} onTermeClick={setSlugOuvert} />
+              ))
+            )}
+          </div>
+        );
 
-          {aVideosOuRessources && (
-            <div className="flex flex-col gap-5">
-              {lecon.videos.length > 0 && (
-                <SectionLecon titre="Vidéos">
-                  <ul className="flex flex-col gap-3">
-                    {lecon.videos.map((video) => (
-                      <LecteurVideo key={`${video.ordre}-${video.titre}`} video={video} />
-                    ))}
-                  </ul>
-                </SectionLecon>
-              )}
+      case "examen":
+        return <SujetExamenLecture contenu={lecon!.sujet_examen} onTermeClick={setSlugOuvert} />;
+    }
+  }
 
-              {lecon.ressources.length > 0 && (
-                <SectionLecon titre="Ressources">
-                  <ul className="flex flex-col gap-2">
-                    {lecon.ressources.map((ressource) =>
-                      ressource.url ? (
-                        <li key={`${ressource.ordre}-${ressource.titre}`}>
-                          <a
-                            href={ressource.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-sm font-semibold text-fh-bleu hover:underline"
-                          >
-                            📎 {ressource.titre}
-                          </a>
-                        </li>
-                      ) : null
-                    )}
-                  </ul>
-                </SectionLecon>
-              )}
-            </div>
-          )}
+  return (
+    <>
+      <div className="lecon-lecture mx-auto flex w-full max-w-[1214px] flex-col gap-5">
+        {/* Bandeau de la leçon : informations réelles uniquement */}
+        <header className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#1D4ED8] to-[#102A66] px-5 py-5 text-white shadow-md sm:px-8 sm:py-7">
+          <Link
+            href={`/eleve/programmes/${lecon.notion.programme.id}`}
+            className="inline-flex min-h-11 items-center gap-2 rounded-full bg-white/15 px-4 text-sm font-semibold text-white transition-colors hover:bg-white/25 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-white"
+          >
+            <IconArrowLeft size={18} stroke={2.25} aria-hidden="true" />
+            Retour au programme
+          </Link>
+
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-sm font-bold text-[#102A66]">
+              <IconSchool size={18} stroke={2} aria-hidden="true" />
+              {matiere}
+            </span>
+            {classe && (
+              <span className="rounded-full bg-white/15 px-3 py-1 text-sm font-semibold">{classe}</span>
+            )}
+            {source === "locale" && (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-sm font-semibold">
+                <IconWifiOff size={16} stroke={2} aria-hidden="true" />
+                Hors-ligne
+              </span>
+            )}
+            {lecon.verrouille && (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-[#FFEDD5] px-3 py-1 text-sm font-bold text-[#9A3412]">
+                <IconLock size={16} stroke={2.25} aria-hidden="true" />
+                Premium
+              </span>
+            )}
+          </div>
+
+          <h1 className="mt-3 text-2xl leading-tight font-extrabold break-words sm:text-4xl">{lecon.titre}</h1>
+          <p className="mt-2 text-sm text-white/85 sm:text-base">
+            {lecon.notion.theme.titre} · {lecon.notion.chapitre.titre}
+          </p>
+
+          <div className="mt-4 w-fit rounded-2xl bg-white p-1.5 shadow-sm">
+            <BoutonTelecharger leconId={leconId} verrouille={lecon.verrouille} onChange={surChangementTelechargement} />
+          </div>
+        </header>
+
+        <div className="flex flex-col gap-5 lg:grid lg:grid-cols-[240px_minmax(0,1fr)] lg:items-start lg:gap-6">
+          <nav aria-label="Navigation de la leçon" className="lg:sticky lg:top-4">
+            <OngletsLecon onglets={onglets} actif={ongletAffiche} onChange={setOngletActif} prefixe={PREFIXE_ARIA} />
+          </nav>
+
+          <div className="min-w-0 max-w-[950px]">
+            {/* Un panneau par rubrique (les ids référencés par aria-controls existent toujours) ;
+                seul celui de la rubrique active est rempli — comportement de montage inchangé. */}
+            {idsDisponibles.map((id) => (
+              <div
+                key={id}
+                role="tabpanel"
+                id={idPanneau(PREFIXE_ARIA, id)}
+                aria-labelledby={idOnglet(PREFIXE_ARIA, id)}
+                hidden={id !== ongletAffiche}
+                tabIndex={0}
+                className="rounded-3xl focus-visible:outline-3 focus-visible:outline-offset-4 focus-visible:outline-[#102A66]"
+              >
+                {id === ongletAffiche ? contenuRubrique(id) : null}
+              </div>
+            ))}
+          </div>
         </div>
-      )}
-
-      {ongletActif === "demonstrations" && (
-        <div className="flex flex-col gap-5">
-          {estVide(lecon.demonstrations) ? (
-            <p className="text-sm text-fh-ardoise/60">Pas de démonstration pour cette leçon.</p>
-          ) : (
-            decouperSections(lecon.demonstrations).map((section, index) =>
-              section.titre ? (
-                <CarteSection
-                  key={`${index}-${section.titre}`}
-                  titre={section.titre}
-                  contenu={section.contenu}
-                  onTermeClick={setSlugOuvert}
-                />
-              ) : (
-                <RenduMarkdown key={`${index}-intro`} contenu={section.contenu} onTermeClick={setSlugOuvert} />
-              )
-            )
-          )}
-        </div>
-      )}
-
-      {ongletActif === "exercices" && (
-        <div className="flex flex-col gap-4">
-          {lecon.exercices.length === 0 ? (
-            <p className="text-sm text-fh-ardoise/60">Pas d&apos;exercice pour cette leçon.</p>
-          ) : (
-            lecon.exercices.map((exercice, index) => (
-              <CarteExercice key={exercice.id} exercice={exercice} numero={index + 1} onTermeClick={setSlugOuvert} />
-            ))
-          )}
-        </div>
-      )}
-
-      {ongletActif === "examen" && <SujetExamenLecture contenu={lecon.sujet_examen} onTermeClick={setSlugOuvert} />}
+      </div>
 
       <ModaleTerme
         slug={slugOuvert}
@@ -366,6 +387,6 @@ export default function LeconEleveDetailPage() {
         termesLocaux={source === "locale" ? termesLocaux ?? {} : undefined}
         leconsDisponibles={idsTelecharges}
       />
-    </div>
+    </>
   );
 }
