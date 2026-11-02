@@ -1,3 +1,5 @@
+import { IconSchool } from "@tabler/icons-react";
+
 interface SalutEleveProps {
   prenom: string;
   nom: string;
@@ -9,27 +11,6 @@ function initiales(prenom: string, nom: string): string {
   const p = prenom.trim().charAt(0);
   const n = nom.trim().charAt(0);
   return `${p}${n}`.toUpperCase() || "?";
-}
-
-/** Illustration scolaire vectorielle sobre : chapeau de diplômé et pile de livres. */
-function IllustrationScolaire() {
-  return (
-    <svg viewBox="0 0 220 150" aria-hidden="true" className="h-full w-full">
-      {/* livres */}
-      <rect x="40" y="112" width="140" height="18" rx="3" fill="#F97316" />
-      <rect x="40" y="119" width="140" height="3" fill="#C2410C" />
-      <rect x="52" y="94" width="120" height="18" rx="3" fill="#FFFFFF" />
-      <rect x="52" y="101" width="120" height="3" fill="#BFDBFE" />
-      <rect x="62" y="76" width="100" height="18" rx="3" fill="#7C3AED" />
-      <rect x="62" y="83" width="100" height="3" fill="#5B21B6" />
-      {/* chapeau de diplômé */}
-      <path d="M110 18 L184 46 L110 74 L36 46 Z" fill="#0B1F4D" />
-      <path d="M72 62 V80 C72 90 148 90 148 80 V62 L110 76 Z" fill="#1E3A8A" />
-      <path d="M110 18 L184 46 L110 74 L36 46 Z" fill="none" stroke="#93C5FD" strokeWidth="2" strokeLinejoin="round" />
-      <line x1="176" y1="49" x2="176" y2="86" stroke="#F97316" strokeWidth="3" strokeLinecap="round" />
-      <circle cx="176" cy="90" r="5" fill="#F97316" />
-    </svg>
-  );
 }
 
 /**
@@ -70,9 +51,8 @@ export default function SalutEleve({ prenom, nom, classe, photoUrl }: SalutEleve
             )}
           </div>
         </div>
-        <div className="hidden h-32 w-48 shrink-0 sm:block lg:h-36 lg:w-56">
-          <IllustrationScolaire />
-        </div>
+        {/* Chapeau de diplômé : grande icône blanche, centrée verticalement à droite ; masquée sur petit écran. */}
+        <IconSchool size={140} stroke={1.75} aria-hidden="true" className="hidden shrink-0 text-white sm:block" />
       </div>
     </section>
   );
