@@ -3,11 +3,12 @@
 import { Suspense, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { IconAlertCircle, IconArrowRight, IconBooks, IconCircleCheck, IconCreditCard, IconSchool } from "@tabler/icons-react";
 
 import { ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { activerCarteFahimta } from "@/lib/eleveApi";
-import RappelAbonnement from "@/components/eleve/RappelAbonnement";
+import StatutAbonnement from "@/components/eleve/StatutAbonnement";
 import PaiementNitaSection from "@/components/eleve/PaiementNitaSection";
 
 /**
@@ -63,67 +64,132 @@ function AbonnementContenu() {
   const echeance = user?.abonnementActifJusquAu;
 
   return (
-    <div className="mx-auto flex w-full max-w-[520px] flex-col gap-6 px-4 py-10 sm:px-0">
-      <div>
-        <h1 className="text-xl font-bold text-fh-bleu">Carte Fahimta</h1>
-        <p className="mt-1 text-sm text-fh-ardoise">
-          Procure-toi une carte Fahimta, saisis son code ci-dessous, et accède à tous les cours premium pendant
-          30 jours.
-        </p>
+    <div className="mx-auto flex w-full max-w-[1240px] flex-col gap-5">
+      {/* 1. Bandeau « Carte Fahimta » */}
+      <section
+        aria-label="Carte Fahimta"
+        className="relative overflow-hidden rounded-3xl bg-[linear-gradient(110deg,#1D4ED8_0%,#102A66_62%,#4C1D95_100%)] px-5 py-6 text-white shadow-md sm:px-8 sm:py-8"
+      >
+        <div className="flex items-center gap-4 sm:gap-8">
+          {/* Carte d'abonnement vectorielle inclinée — purement décorative : aucun numéro, aucun code. */}
+          <div aria-hidden="true" className="hidden shrink-0 -rotate-6 sm:block">
+            <div className="flex h-24 w-36 flex-col lg:h-28 lg:w-44 justify-between overflow-hidden rounded-2xl border border-white/30 bg-gradient-to-br from-[#F97316] to-[#C2410C] p-3 shadow-xl">
+              <IconCreditCard size={52} stroke={1.5} className="text-white" />
+              <div className="h-2 w-16 rounded-full bg-white/60" />
+            </div>
+          </div>
+
+          <div className="min-w-0 flex-1">
+            <div className="mb-3 flex sm:hidden">
+              <span
+                aria-hidden="true"
+                className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-[#F97316] to-[#C2410C] text-white"
+              >
+                <IconCreditCard size={34} stroke={1.75} />
+              </span>
+            </div>
+            <h1 className="text-3xl font-extrabold leading-tight sm:text-4xl">Carte Fahimta</h1>
+            <p className="mt-2 max-w-2xl text-base text-white/90 sm:text-lg">
+              Procure-toi une carte Fahimta, saisis son code ci-dessous, et accède à tous les cours premium pendant
+              30 jours.
+            </p>
+          </div>
+
+          <div aria-hidden="true" className="hidden shrink-0 items-end gap-1 text-white lg:flex">
+            <IconSchool size={112} stroke={1.5} />
+            <IconBooks size={72} stroke={1.5} className="mb-1 text-white/80" />
+          </div>
+        </div>
+      </section>
+
+      <div className="flex flex-col gap-5 rounded-[32px] bg-[#F8FAFF] p-3 ring-1 ring-blue-100 sm:p-5">
+        {/* 2. Cartes reçues + statut */}
         <Link
           href="/eleve/mes-cartes"
-          className="mt-2 inline-block text-sm font-medium text-fh-orange hover:text-fh-orange-fonce"
+          className="flex min-h-14 items-center gap-3 rounded-2xl border-2 border-orange-200 bg-white px-4 py-3 text-[#C2410C] shadow-sm transition-colors hover:bg-orange-50 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[#102A66] sm:px-5"
         >
-          Un vendeur t&apos;a envoyé une carte ? Voir mes cartes reçues →
+          <IconCreditCard size={30} stroke={1.8} aria-hidden="true" className="shrink-0" />
+          <span className="min-w-0 flex-1 text-sm font-semibold sm:text-base">
+            Un vendeur t&apos;a envoyé une carte ? <span className="font-extrabold underline">Voir mes cartes reçues</span>
+          </span>
+          <IconArrowRight size={26} stroke={2.25} aria-hidden="true" className="shrink-0" />
         </Link>
+
+        <StatutAbonnement actif={abonnementActif} echeance={echeance ?? null} />
+
+        {/* 3 & 4. Activation à gauche, NITA à droite */}
+        <div className="grid gap-5 lg:grid-cols-2 lg:items-start">
+          <form
+            onSubmit={handleSubmit}
+            className="flex flex-col gap-4 rounded-3xl border-2 border-[#C4B5FD] bg-gradient-to-b from-white to-[#F5F3FF] p-5 shadow-sm sm:p-7"
+          >
+            <div className="flex items-center gap-4">
+              <span
+                aria-hidden="true"
+                className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-[#7C3AED] text-white sm:h-[72px] sm:w-[72px]"
+              >
+                <IconCreditCard size={40} stroke={1.6} />
+              </span>
+              <div className="min-w-0">
+                <h2 className="text-xl font-extrabold text-[#102A66] sm:text-2xl">Activer ma carte Fahimta</h2>
+                <p className="mt-1 text-sm text-slate-600 sm:text-base">
+                  Saisis le code de ta carte pour accéder à tous les cours premium pendant 30 jours.
+                </p>
+              </div>
+            </div>
+
+            <label htmlFor="code-carte" className="text-base font-bold text-[#102A66]">
+              Code de la carte
+            </label>
+            <input
+              id="code-carte"
+              type="text"
+              value={code}
+              onChange={(event) => setCode(event.target.value)}
+              placeholder="FH-XXXX-XXXX-XXXX"
+              autoComplete="off"
+              autoCapitalize="characters"
+              className="min-h-14 rounded-2xl border-2 border-[#C4B5FD] bg-white px-4 py-3 text-center text-lg font-bold tracking-wider text-[#102A66] outline-none placeholder:font-semibold placeholder:text-slate-400 focus:border-[#7C3AED] focus:ring-4 focus:ring-[#7C3AED]/20 sm:text-xl"
+            />
+            <button
+              type="submit"
+              disabled={chargement || !code.trim()}
+              className="min-h-14 w-full rounded-2xl bg-[#C2410C] px-6 py-3 text-base font-bold text-white shadow-sm transition-colors hover:bg-[#9A3412] focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[#102A66] disabled:cursor-not-allowed disabled:opacity-60 sm:text-lg"
+            >
+              {chargement ? "Activation…" : "Activer ma carte"}
+            </button>
+
+            {message && (
+              <p
+                className={`flex items-start gap-2 rounded-2xl px-4 py-3 text-sm font-semibold sm:text-base ${
+                  message.tone === "succes" ? "bg-green-50 text-green-800" : "bg-red-50 text-red-700"
+                }`}
+                role={message.tone === "erreur" ? "alert" : undefined}
+              >
+                {message.tone === "succes" ? (
+                  <IconCircleCheck size={22} stroke={2} aria-hidden="true" className="mt-0.5 shrink-0" />
+                ) : (
+                  <IconAlertCircle size={22} stroke={2} aria-hidden="true" className="mt-0.5 shrink-0" />
+                )}
+                <span className="min-w-0">{message.texte}</span>
+              </p>
+            )}
+
+            {/* Seulement après une activation réussie : sans ça, l'élève reste
+                bloqué sur ce formulaire sans chemin évident vers ses cours. */}
+            {message?.tone === "succes" && (
+              <Link
+                href="/eleve"
+                className="flex min-h-14 items-center justify-center rounded-2xl bg-[#C2410C] px-6 py-3 text-base font-bold text-white transition-colors hover:bg-[#9A3412] focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[#102A66]"
+              >
+                Accéder à mes cours
+              </Link>
+            )}
+          </form>
+
+          <PaiementNitaSection />
+        </div>
       </div>
-
-      <RappelAbonnement actif={abonnementActif} echeance={echeance ?? null} />
-
-      <form onSubmit={handleSubmit} className="flex flex-col gap-3 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-fh-sable">
-        <label htmlFor="code-carte" className="text-sm font-semibold text-fh-bleu">
-          Code de la carte
-        </label>
-        <input
-          id="code-carte"
-          type="text"
-          value={code}
-          onChange={(event) => setCode(event.target.value)}
-          placeholder="FH-XXXX-XXXX-XXXX"
-          autoComplete="off"
-          autoCapitalize="characters"
-          className="min-h-11 rounded-lg border border-fh-bleu-vif/20 bg-white px-4 py-2 text-center text-base font-semibold tracking-wide text-fh-bleu outline-none focus:border-fh-orange"
-        />
-        <button
-          type="submit"
-          disabled={chargement || !code.trim()}
-          className="min-h-11 rounded-full bg-fh-orange px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-fh-orange-fonce disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {chargement ? "Activation…" : "Activer ma carte"}
-        </button>
-
-        {message && (
-          <p
-            className={`text-sm ${message.tone === "succes" ? "text-green-700" : "text-red-600"}`}
-            role={message.tone === "erreur" ? "alert" : undefined}
-          >
-            {message.texte}
-          </p>
-        )}
-
-        {/* Seulement après une activation réussie : sans ça, l'élève reste
-            bloqué sur ce formulaire sans chemin évident vers ses cours. */}
-        {message?.tone === "succes" && (
-          <Link
-            href="/eleve"
-            className="flex min-h-11 items-center justify-center rounded-full bg-fh-orange px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-fh-orange-fonce"
-          >
-            Accéder à mes cours
-          </Link>
-        )}
-      </form>
-
-      <PaiementNitaSection />
     </div>
   );
 }

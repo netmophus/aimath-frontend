@@ -1,7 +1,7 @@
 /** "2026-10-25" → "25 octobre 2026" — `abonnement_actif_jusqu_au` est une
  * DATE seule (pas datetime) côté backend, le T00:00:00 évite un décalage de
  * fuseau qui ferait parfois afficher la veille. */
-function formaterDateFr(iso: string): string {
+export function formaterDateFr(iso: string): string {
   return new Date(`${iso}T00:00:00`).toLocaleDateString("fr-FR", {
     day: "numeric",
     month: "long",

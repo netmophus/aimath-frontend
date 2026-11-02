@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { IconAlertCircle, IconCircleCheck, IconDeviceMobile } from "@tabler/icons-react";
 
 import { ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
@@ -113,33 +114,49 @@ export default function PaiementNitaSection() {
   }
 
   return (
-    <div className="flex flex-col gap-3 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-fh-sable">
-      <div>
-        <h2 className="text-sm font-semibold text-fh-bleu">Payer avec NITA</h2>
-        <p className="mt-0.5 text-xs text-fh-ardoise">
-          Paiement mobile par référence — active ton abonnement en quelques minutes.
-        </p>
+    <section
+      aria-label="Payer avec NITA"
+      className="flex flex-col gap-4 rounded-3xl border-2 border-orange-200 bg-gradient-to-b from-white to-[#FFF7ED] p-5 shadow-sm sm:p-7"
+    >
+      <div className="flex items-center gap-4">
+        <span
+          aria-hidden="true"
+          className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-[#F97316] text-white sm:h-[72px] sm:w-[72px]"
+        >
+          <IconDeviceMobile size={40} stroke={1.6} />
+        </span>
+        <div className="min-w-0">
+          <h2 className="text-xl font-extrabold text-[#102A66] sm:text-2xl">Payer avec NITA</h2>
+          <p className="mt-1 text-sm text-slate-600 sm:text-base">
+            Paiement mobile par référence — active ton abonnement en quelques minutes.
+          </p>
+        </div>
       </div>
 
       {etape === "choix" && (
         <>
-          <div className="flex items-center justify-between rounded-xl border border-fh-sable bg-fh-creme px-4 py-3">
-            <div>
-              <p className="text-sm font-semibold text-fh-bleu">{plan.label}</p>
-              <p className="text-xs text-fh-ardoise">{plan.duree_jours} jours · tous les cours</p>
+          <div className="flex items-center justify-between gap-3 rounded-2xl border-2 border-orange-200 bg-white px-4 py-4 sm:px-5">
+            <div className="min-w-0">
+              <p className="text-lg font-extrabold text-[#102A66]">{plan.label}</p>
+              <p className="text-sm text-slate-600">{plan.duree_jours} jours · tous les cours</p>
             </div>
-            <p className="text-sm font-bold text-fh-orange-fonce">
+            <p className="shrink-0 text-xl font-extrabold text-[#C2410C] sm:text-2xl">
               {plan.montant.toLocaleString("fr-FR")} FCFA
             </p>
           </div>
 
-          {erreur && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{erreur}</p>}
+          {erreur && (
+            <p className="flex items-start gap-2 rounded-2xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700 sm:text-base">
+              <IconAlertCircle size={22} stroke={2} aria-hidden="true" className="mt-0.5 shrink-0" />
+              <span className="min-w-0">{erreur}</span>
+            </p>
+          )}
 
           <button
             type="button"
             onClick={handlePayer}
             disabled={enCours}
-            className="min-h-11 rounded-full bg-fh-orange px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-fh-orange-fonce disabled:cursor-not-allowed disabled:opacity-60"
+            className="min-h-14 w-full rounded-2xl bg-[#C2410C] px-6 py-3 text-base font-bold text-white shadow-sm transition-colors hover:bg-[#9A3412] focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[#102A66] disabled:cursor-not-allowed disabled:opacity-60 sm:text-lg"
           >
             {enCours ? "Démarrage…" : "Payer avec NITA"}
           </button>
@@ -147,32 +164,37 @@ export default function PaiementNitaSection() {
       )}
 
       {etape === "attente" && reference && (
-        <div className="flex flex-col gap-3">
-          <div className="rounded-xl border border-dashed border-fh-bleu/30 bg-fh-creme px-4 py-3 text-center">
-            <p className="text-xs font-medium text-fh-ardoise">Référence à payer</p>
-            <p className="mt-1 break-all font-mono text-lg font-bold text-fh-bleu">{reference}</p>
+        <div className="flex flex-col gap-4">
+          <div className="rounded-2xl border-2 border-dashed border-[#F97316] bg-white px-4 py-4 text-center">
+            <p className="text-sm font-semibold text-slate-600">Référence à payer</p>
+            <p className="mt-1 break-all font-mono text-xl font-extrabold text-[#102A66] sm:text-2xl">{reference}</p>
           </div>
 
-          <p className="text-sm text-fh-ardoise">
+          <p className="text-sm text-slate-700 sm:text-base">
             Ouvre <strong>MYNITA</strong> (ou présente-toi au guichet NITA) et paie cette référence. Ton
             abonnement s&apos;active automatiquement dès la confirmation du paiement.
           </p>
 
-          {erreur && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{erreur}</p>}
+          {erreur && (
+            <p className="flex items-start gap-2 rounded-2xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700 sm:text-base">
+              <IconAlertCircle size={22} stroke={2} aria-hidden="true" className="mt-0.5 shrink-0" />
+              <span className="min-w-0">{erreur}</span>
+            </p>
+          )}
 
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-3">
             <button
               type="button"
               onClick={handleVerifierMaintenant}
               disabled={enCours}
-              className="min-h-11 flex-1 rounded-full bg-fh-orange px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-fh-orange-fonce disabled:cursor-not-allowed disabled:opacity-60"
+              className="min-h-14 flex-1 rounded-2xl bg-[#C2410C] px-4 py-3 text-base font-bold text-white shadow-sm transition-colors hover:bg-[#9A3412] focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[#102A66] disabled:cursor-not-allowed disabled:opacity-60"
             >
               {enCours ? "Vérification…" : "J'ai payé — vérifier maintenant"}
             </button>
             <button
               type="button"
               onClick={handleAnnuler}
-              className="min-h-11 rounded-full border border-fh-bleu/20 px-4 py-2.5 text-sm font-medium text-fh-bleu transition-colors hover:bg-fh-sable/60"
+              className="min-h-14 rounded-2xl border-2 border-[#102A66]/25 bg-white px-5 py-3 text-base font-semibold text-[#102A66] transition-colors hover:bg-slate-50 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[#102A66]"
             >
               Annuler
             </button>
@@ -181,16 +203,19 @@ export default function PaiementNitaSection() {
       )}
 
       {etape === "succes" && messageSucces && (
-        <div className="flex flex-col gap-3">
-          <p className="rounded-lg bg-green-50 px-3 py-3 text-sm text-green-700">{messageSucces}</p>
+        <div className="flex flex-col gap-4">
+          <p className="flex items-start gap-2 rounded-2xl bg-green-50 px-4 py-3 text-sm font-semibold text-green-800 sm:text-base">
+            <IconCircleCheck size={22} stroke={2} aria-hidden="true" className="mt-0.5 shrink-0" />
+            <span className="min-w-0">{messageSucces}</span>
+          </p>
           <Link
             href="/eleve"
-            className="flex min-h-11 items-center justify-center rounded-full bg-fh-orange px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-fh-orange-fonce"
+            className="flex min-h-14 items-center justify-center rounded-2xl bg-[#C2410C] px-6 py-3 text-base font-bold text-white transition-colors hover:bg-[#9A3412] focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[#102A66]"
           >
             Accéder à mes cours
           </Link>
         </div>
       )}
-    </div>
+    </section>
   );
 }
