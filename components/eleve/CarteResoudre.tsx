@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { IconCamera } from "@tabler/icons-react";
+import { IconFileText, IconPencil } from "@tabler/icons-react";
 
 import type { ProgrammeEleve } from "@/lib/eleveApi";
 import {
@@ -13,6 +13,14 @@ interface CarteResoudreProps {
   /** Programmes réels de l'élève (GET /api/eleve/mon-programme/). */
   programmes: ProgrammeEleve[];
 }
+
+/** Couleur du bouton par matière (nuances assez foncées pour un texte blanc lisible). */
+const COULEUR_BOUTON: Record<MatiereResolvable, string> = {
+  maths: "bg-[#C2410C] hover:bg-[#9A3412]",
+  physique: "bg-[#0E7490] hover:bg-[#155E75]",
+  chimie: "bg-[#7C3AED] hover:bg-[#6D28D9]",
+  svt: "bg-[#047857] hover:bg-[#065F46]",
+};
 
 /**
  * Carte du dashboard « Résoudre mon exercice » : un raccourci par matière
@@ -35,29 +43,30 @@ export default function CarteResoudre({ programmes }: CarteResoudreProps) {
   return (
     <section
       aria-labelledby="titre-resoudre"
-      className="rounded-2xl bg-white p-5 shadow-sm ring-1 ring-fh-sable"
+      className="rounded-3xl border border-blue-100 bg-blue-50/60 p-5 shadow-sm sm:p-7"
     >
-      <div className="flex items-start gap-3">
+      <div className="flex items-center gap-4">
         <span
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-fh-accent text-fh-orange-fonce"
+          className="relative flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-[#1D4ED8] text-white shadow-sm"
           aria-hidden="true"
         >
-          <IconCamera size={22} stroke={1.75} />
+          <IconFileText size={38} stroke={1.5} />
+          <IconPencil size={24} stroke={2} className="absolute -bottom-1.5 -right-1.5 rounded-full bg-[#F97316] p-1 text-white" />
         </span>
         <div className="min-w-0">
-          <h2 id="titre-resoudre" className="text-base font-bold text-fh-bleu">
+          <h2 id="titre-resoudre" className="text-xl font-extrabold text-[#102A66] sm:text-2xl">
             Résoudre mon exercice
           </h2>
-          <p className="mt-0.5 text-xs text-fh-ardoise">Choisis une matière pour commencer.</p>
+          <p className="mt-0.5 text-sm text-slate-600 sm:text-base">Choisis une matière pour commencer.</p>
         </div>
       </div>
 
-      <div className="mt-4 grid grid-cols-2 gap-2">
+      <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-4">
         {matieres.map((matiere) => (
           <Link
             key={matiere}
             href={`/eleve/programmes/${parMatiere.get(matiere)!.id}`}
-            className="flex min-h-11 items-center justify-center rounded-xl border border-fh-bleu/20 px-3 py-2 text-sm font-semibold text-fh-bleu transition-colors hover:bg-fh-accent"
+            className={`flex min-h-12 items-center justify-center rounded-xl px-3 py-2.5 text-base font-bold text-white shadow-sm transition-colors focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[#102A66] ${COULEUR_BOUTON[matiere]}`}
           >
             {LIBELLE_MATIERE_RESOLVABLE[matiere]}
           </Link>

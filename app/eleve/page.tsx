@@ -74,7 +74,7 @@ export default function EleveDashboardPage() {
   const hrefUniqueMatiere = programmes.length === 1 ? `/eleve/programmes/${programmes[0].id}` : null;
 
   return (
-    <div className="mx-auto w-full max-w-[1100px] px-4 pb-24 pt-[max(1rem,env(safe-area-inset-top))] sm:px-6 lg:px-8">
+    <div className="mx-auto w-full max-w-[1240px] px-4 pb-24 pt-[max(1rem,env(safe-area-inset-top))] sm:px-6 lg:px-8">
       <SalutEleve
         prenom={user?.prenom ?? ""}
         nom={user?.nom ?? ""}
@@ -82,14 +82,14 @@ export default function EleveDashboardPage() {
         photoUrl={user?.photoUrl ?? null}
       />
 
-      <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-stretch">
+      <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-stretch">
         <AbonnementBadge
           actif={user?.aUnAbonnementActif ?? false}
           echeance={user?.abonnementActifJusquAu ?? null}
         />
         <Link
           href="/eleve/abonnement"
-          className="flex shrink-0 items-center justify-center rounded-xl bg-fh-orange px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-fh-orange-fonce"
+          className="flex min-h-12 shrink-0 items-center justify-center rounded-2xl bg-[#C2410C] px-6 py-3 text-sm font-bold text-white shadow-sm transition-colors hover:bg-[#9A3412] focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[#102A66] sm:text-base"
         >
           {user?.aUnAbonnementActif ? "Prolonger mon abonnement" : "Activer mon abonnement"}
         </Link>
@@ -99,29 +99,26 @@ export default function EleveDashboardPage() {
         <InstallationPwaBouton />
       </div>
 
-      <div className="mt-6 flex flex-col gap-8 lg:grid lg:grid-cols-[2fr_3fr] lg:items-start lg:gap-8">
-        <div className="flex flex-col gap-4">
-          {chargementReprendre ? (
-            <div className="h-48 animate-pulse rounded-2xl bg-fh-sable/50" aria-busy="true" aria-label="Chargement" />
-          ) : (
-            <CarteReprendre lecon={leconAReprendre} hrefProgramme={hrefUniqueMatiere} />
-          )}
-          <CarteResoudre programmes={programmes} />
-        </div>
+      <div className="mt-6 flex flex-col gap-8">
+        {chargementReprendre ? (
+          <div className="h-48 animate-pulse rounded-3xl bg-fh-sable/50" aria-busy="true" aria-label="Chargement" />
+        ) : (
+          <CarteReprendre lecon={leconAReprendre} hrefProgramme={hrefUniqueMatiere} />
+        )}
 
         <section id="mes-matieres" className="scroll-mt-6">
           <div className="flex items-center justify-between gap-2">
-            <h2 className="text-base font-bold text-fh-bleu">Mes matières</h2>
-            <Link href="/eleve/telechargees" className="text-xs font-medium text-fh-bleu hover:underline">
+            <h2 className="text-xl font-extrabold text-[#102A66] sm:text-2xl">Mes matières</h2>
+            <Link href="/eleve/telechargees" className="text-sm font-semibold text-[#1D4ED8] hover:underline">
               📥 Hors-ligne
             </Link>
           </div>
 
-          <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
+          <div className="mt-4 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
             {chargementProgrammes ? (
               <>
-                <div className="h-28 animate-pulse rounded-2xl bg-fh-sable/50" />
-                <div className="h-28 animate-pulse rounded-2xl bg-fh-sable/50" />
+                <div className="h-36 animate-pulse rounded-3xl bg-fh-sable/50" />
+                <div className="h-36 animate-pulse rounded-3xl bg-fh-sable/50" />
               </>
             ) : erreurProgrammes ? (
               <p className="col-span-full rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{erreurProgrammes}</p>
@@ -137,6 +134,8 @@ export default function EleveDashboardPage() {
             )}
           </div>
         </section>
+
+        <CarteResoudre programmes={programmes} />
       </div>
     </div>
   );

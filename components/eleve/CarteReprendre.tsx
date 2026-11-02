@@ -12,7 +12,9 @@ interface CarteReprendreProps {
 }
 
 const BOUTON =
-  "mt-1 inline-flex w-fit min-h-11 items-center justify-center rounded-full bg-fh-orange px-5 text-sm font-semibold text-white transition-colors hover:bg-fh-orange-fonce";
+  "mt-1 inline-flex w-fit min-h-12 items-center justify-center rounded-xl bg-[#C2410C] px-7 text-base font-bold text-white shadow-sm transition-colors hover:bg-[#9A3412] focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-white";
+
+const CADRE = "relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#1D4ED8] to-[#7C3AED] px-5 py-6 text-white shadow-md sm:px-8 sm:py-8";
 
 /** "Classe · Thème N · Chapitre" → segments, pour un sous-titre plus ou moins détaillé. */
 function segments(chemin: string): string[] {
@@ -34,13 +36,13 @@ function segments(chemin: string): string[] {
 export default function CarteReprendre({ lecon, hrefProgramme }: CarteReprendreProps) {
   if (!lecon) {
     return (
-      <div className="flex flex-col items-start gap-3 rounded-2xl bg-fh-bleu px-5 py-6 text-white sm:px-7 sm:py-8">
-        <span className="text-2xl" aria-hidden="true">
+      <div className={`${CADRE} flex flex-col items-start gap-3`}>
+        <span className="text-3xl" aria-hidden="true">
           🌱
         </span>
         <div>
-          <p className="text-lg font-bold">Tes leçons arrivent bientôt</p>
-          <p className="mt-1 text-sm text-white/80">Ton professeur prépare le contenu — reviens un peu plus tard.</p>
+          <p className="text-xl font-bold">Tes leçons arrivent bientôt</p>
+          <p className="mt-1 text-base text-white/85">Ton professeur prépare le contenu — reviens un peu plus tard.</p>
         </div>
         {hrefProgramme && (
           <Link href={hrefProgramme} className={BOUTON}>
@@ -56,13 +58,13 @@ export default function CarteReprendre({ lecon, hrefProgramme }: CarteReprendreP
   const contexteComplet = parts.length > 0 ? parts.join(" · ") : lecon.chemin;
 
   return (
-    <div className="flex flex-col gap-3 rounded-2xl bg-fh-bleu px-5 py-6 text-white sm:px-7 sm:py-8">
-      <p className="text-xs font-semibold uppercase tracking-wide text-white/70">
+    <div className={`${CADRE} flex flex-col gap-3`}>
+      <p className="text-xs font-bold uppercase tracking-wider text-white/80 sm:text-sm">
         Reprendre là où tu t&apos;es arrêté
       </p>
       <div>
-        <p className="text-xl font-bold leading-snug">{lecon.titre}</p>
-        <p className="mt-1 text-sm text-white/80">
+        <p className="text-2xl font-extrabold leading-snug sm:text-3xl">{lecon.titre}</p>
+        <p className="mt-1.5 text-base text-white/90">
           <span className="lg:hidden">{contexteCourt}</span>
           <span className="hidden lg:inline">{contexteComplet}</span>
         </p>

@@ -54,13 +54,18 @@ export default function AbonnementBadge({ actif, echeance }: AbonnementBadgeProp
     return (
       <Link
         href="/eleve/abonnement"
-        className={`flex flex-1 items-center gap-2 rounded-xl px-3.5 py-2.5 text-sm font-semibold transition-colors ${
+        className={`flex flex-1 items-center gap-3 rounded-2xl border px-4 py-3 text-sm font-semibold transition-colors sm:text-base ${
           expireBientot
-            ? "bg-fh-orange/10 text-fh-orange-fonce hover:bg-fh-orange/15"
-            : "bg-green-50 text-green-800 hover:bg-green-100"
+            ? "border-orange-200 bg-orange-50 text-orange-900 hover:bg-orange-100"
+            : "border-emerald-200 bg-emerald-50 text-emerald-900 hover:bg-emerald-100"
         }`}
       >
-        <IconeCoche className="h-4 w-4 shrink-0" />
+        <span
+          aria-hidden="true"
+          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-white ${expireBientot ? "bg-[#F97316]" : "bg-[#10B981]"}`}
+        >
+          <IconeCoche className="h-5 w-5" />
+        </span>
         <span className="flex-1">
           {expireBientot ? (
             <>
@@ -78,10 +83,10 @@ export default function AbonnementBadge({ actif, echeance }: AbonnementBadgeProp
   return (
     <Link
       href="/eleve/abonnement"
-      className="flex flex-1 items-center justify-between gap-2 rounded-xl bg-fh-accent/40 px-3.5 py-2.5 text-sm transition-colors hover:bg-fh-accent/60"
+      className="flex flex-1 items-center justify-between gap-2 rounded-2xl border border-orange-200 bg-orange-50 px-4 py-3 text-sm transition-colors hover:bg-orange-100 sm:text-base"
     >
-      <span className="font-medium text-fh-ardoise">Aucun abonnement actif</span>
-      <span className="flex shrink-0 items-center gap-0.5 text-xs font-semibold text-fh-orange-fonce">
+      <span className="font-semibold text-orange-900">Aucun abonnement actif</span>
+      <span className="flex shrink-0 items-center gap-0.5 text-xs font-semibold text-orange-900 sm:text-sm">
         Gérer
         <IconeChevron className="h-3.5 w-3.5" />
       </span>
