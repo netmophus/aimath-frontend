@@ -21,7 +21,14 @@ import { getLeconEleve, type LeconEleve, type TermeGlossaireEleve } from "@/lib/
 import { getLeconLocale, listerIdsTelecharges } from "@/lib/offlineStore";
 import { extraireMatiere } from "@/lib/contexteLecon";
 import { decouperSections } from "@/lib/decouperSections";
-import { extraireClasseDuLibelle, rubriqueEffective, rubriquesDisponibles, type RubriqueId } from "@/lib/lecon/rubriques";
+import {
+  etatRubrique,
+  extraireClasseDuLibelle,
+  MESSAGE_RUBRIQUE_VIDE,
+  rubriqueEffective,
+  rubriquesDisponibles,
+  type RubriqueId,
+} from "@/lib/lecon/rubriques";
 import RenduMarkdown from "@/components/RenduMarkdown";
 import SectionLecon from "@/components/eleve/SectionLecon";
 import EncadreLecon from "@/components/eleve/EncadreLecon";
@@ -184,7 +191,7 @@ export default function LeconEleveDetailPage() {
   // "Cours" reste toujours présent : c'est l'ancre principale, même quand son
   // propre texte (cours_redige) est vide, elle porte objectifs/prérequis/
   // à retenir/vidéos/ressources (voir plus bas, avec son propre repli).
-  const idsDisponibles = rubriquesDisponibles(lecon);
+  const idsDisponibles = rubriquesDisponibles();
   const onglets: Onglet<OngletId>[] = idsDisponibles.map((id) => ({ id, ...IDENTITES_RUBRIQUES[id] }));
   const ongletAffiche = rubriqueEffective(idsDisponibles, ongletActif);
 
@@ -207,10 +214,20 @@ export default function LeconEleveDetailPage() {
     );
   }
 
+  /** Rubrique facultative : Markdown rendu par le moteur existant, ou message si elle est vide. */
+  function contenuFacultatif(markdown: string | null | undefined, id: RubriqueId): ReactNode {
+    // Verrouillée : aucun contenu transmis par le serveur ; mur de déblocage plutôt qu'un message trompeur.
+    const etat = etatRubrique(id, lecon!);
+    if (etat === "verrouille") return <MurDeblocage />;
+    if (etat === "vide") return <p className="text-base text-slate-600">{MESSAGE_RUBRIQUE_VIDE}</p>;
+    return <div className="flex flex-col gap-5">{cartes(markdown as string, id)}</div>;
+  }
+
   /** Contenu de chaque rubrique (inchangé fonctionnellement : mêmes champs, mêmes conditions). */
   function contenuRubrique(id: OngletId): ReactNode {
     switch (id) {
       case "pourquoi":
+        if (etatRubrique("pourquoi", lecon!) === "vide") return <p className="text-base text-slate-600">{MESSAGE_RUBRIQUE_VIDE}</p>;
         return <div className="flex flex-col gap-5">{cartes(lecon!.histoire, "pourquoi")}</div>;
 
       case "cours":
@@ -283,6 +300,8 @@ export default function LeconEleveDetailPage() {
         );
 
       case "demonstrations":
+        // Leçon verrouillée : le serveur a vidé le contenu ; on invite à débloquer au lieu d'affirmer qu'il n'y en a pas.
+        if (etatRubrique("demonstrations", lecon!) === "verrouille") return <MurDeblocage />;
         return (
           <div className="flex flex-col gap-5">
             {estVide(lecon!.demonstrations) ? (
@@ -294,6 +313,7 @@ export default function LeconEleveDetailPage() {
         );
 
       case "exercices":
+        if (etatRubrique("exercices", lecon!) === "verrouille") return <MurDeblocage />;
         return (
           <div className="flex flex-col gap-5">
             {lecon!.exercices.length === 0 ? (
@@ -307,15 +327,17 @@ export default function LeconEleveDetailPage() {
         );
 
       case "examen":
+        if (etatRubrique("examen", lecon!) === "verrouille") return <MurDeblocage />;
+        if (etatRubrique("examen", lecon!) === "vide") return <p className="text-base text-slate-600">Pas de sujet type examen pour cette leçon.</p>;
         return <SujetExamenLecture contenu={lecon!.sujet_examen} onTermeClick={setSlugOuvert} />;
 
       // Sections facultatives : même rendu Markdown que les autres rubriques
       // (KaTeX, tableaux, simulations), copies hors-ligne anciennes tolérées (`?? ""`).
       case "simuler":
-        return <div className="flex flex-col gap-5">{cartes(lecon!.simuler_pour_comprendre ?? "", "simuler")}</div>;
+        return contenuFacultatif(lecon!.simuler_pour_comprendre, "simuler");
 
       case "plus_loin":
-        return <div className="flex flex-col gap-5">{cartes(lecon!.pour_aller_plus_loin ?? "", "plus_loin")}</div>;
+        return contenuFacultatif(lecon!.pour_aller_plus_loin, "plus_loin");
     }
   }
 

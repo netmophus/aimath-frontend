@@ -11,7 +11,7 @@ import { remarkVariations } from "@/lib/remarkVariations";
 import { remarkMouvement } from "@/lib/remarkMouvement";
 import { decouperSections } from "@/lib/decouperSections";
 import { textesDeLaLecon } from "@/lib/offlineStore";
-import { rubriquesDisponibles } from "@/lib/lecon/rubriques";
+import { etatRubrique } from "@/lib/lecon/rubriques";
 import type { LeconEleve } from "@/lib/eleveApi";
 
 type Noeud = { type: string; lang?: string; data?: { hName?: string }; children?: Noeud[] };
@@ -67,10 +67,10 @@ const base: LeconEleve = {
 };
 
 describe("compatibilité hors-ligne", () => {
-  it("une ancienne copie sans les deux champs ne provoque aucune erreur et ne montre aucune rubrique en plus", () => {
+  it("une ancienne copie sans les deux champs ne provoque aucune erreur (rubriques visibles mais vides)", () => {
     expect(() => textesDeLaLecon(base)).not.toThrow();
     expect(textesDeLaLecon(base).every((t) => typeof t === "string")).toBe(true);
-    expect(rubriquesDisponibles(base)).toEqual(["cours"]);
+    expect([etatRubrique("simuler", base), etatRubrique("plus_loin", base)]).toEqual(["vide", "vide"]); // visibles, message d'attente
   });
 
   it("une copie récente inclut les deux sections dans le texte scruté pour le glossaire", () => {
@@ -78,6 +78,6 @@ describe("compatibilité hors-ligne", () => {
     const textes = textesDeLaLecon(lecon);
     expect(textes).toContain("voir [[pente]]");
     expect(textes).toContain("et [[aire]]");
-    expect(rubriquesDisponibles(lecon)).toEqual(["cours", "simuler", "plus_loin"]);
+    expect([etatRubrique("simuler", lecon), etatRubrique("plus_loin", lecon)]).toEqual(["contenu", "contenu"]);
   });
 });
