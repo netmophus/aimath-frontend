@@ -308,6 +308,14 @@ export default function LeconEleveDetailPage() {
 
       case "examen":
         return <SujetExamenLecture contenu={lecon!.sujet_examen} onTermeClick={setSlugOuvert} />;
+
+      // Sections facultatives : même rendu Markdown que les autres rubriques
+      // (KaTeX, tableaux, simulations), copies hors-ligne anciennes tolérées (`?? ""`).
+      case "simuler":
+        return <div className="flex flex-col gap-5">{cartes(lecon!.simuler_pour_comprendre ?? "", "simuler")}</div>;
+
+      case "plus_loin":
+        return <div className="flex flex-col gap-5">{cartes(lecon!.pour_aller_plus_loin ?? "", "plus_loin")}</div>;
     }
   }
 

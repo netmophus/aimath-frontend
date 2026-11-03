@@ -40,6 +40,8 @@ interface EditeurState {
   demonstrations: string;
   aRetenir: string;
   sujetExamen: string;
+  simulerPourComprendre: string;
+  pourAllerPlusLoin: string;
   estGratuit: boolean;
   exercices: ExerciceDraft[];
   videos: VideoDraft[];
@@ -56,6 +58,9 @@ function depuisLecon(lecon: LeconDetail): EditeurState {
     demonstrations: lecon.demonstrations,
     aRetenir: lecon.a_retenir,
     sujetExamen: lecon.sujet_examen,
+    // `?? ""` : réponse d'un backend pas encore migré → section simplement vide.
+    simulerPourComprendre: lecon.simuler_pour_comprendre ?? "",
+    pourAllerPlusLoin: lecon.pour_aller_plus_loin ?? "",
     estGratuit: lecon.est_gratuit,
     exercices: [...lecon.exercices]
       .sort((a, b) => a.ordre - b.ordre)
@@ -78,6 +83,8 @@ interface Comparable {
   demonstrations: string;
   a_retenir: string;
   sujet_examen: string;
+  simuler_pour_comprendre: string;
+  pour_aller_plus_loin: string;
   est_gratuit: boolean;
   exercices: { id?: number; enonce: string; corrige: string; difficulte: Difficulte }[];
   videos: { id?: number; titre: string; url: string; description: string }[];
@@ -95,6 +102,8 @@ function versComparable(etat: EditeurState): Comparable {
     demonstrations: etat.demonstrations,
     a_retenir: etat.aRetenir,
     sujet_examen: etat.sujetExamen,
+    simuler_pour_comprendre: etat.simulerPourComprendre,
+    pour_aller_plus_loin: etat.pourAllerPlusLoin,
     est_gratuit: etat.estGratuit,
     exercices: etat.exercices.map(({ id, enonce, corrige, difficulte }) => ({ id, enonce, corrige, difficulte })),
     videos: etat.videos.map(({ id, titre, url, description }) => ({ id, titre, url, description })),
@@ -230,6 +239,8 @@ export default function LeconEditeurPage() {
         demonstrations: etat.demonstrations,
         a_retenir: etat.aRetenir,
         sujet_examen: etat.sujetExamen,
+        simuler_pour_comprendre: etat.simulerPourComprendre,
+        pour_aller_plus_loin: etat.pourAllerPlusLoin,
         est_gratuit: etat.estGratuit,
         exercices: etat.exercices.map((e, index) => ({
           id: e.id,
@@ -616,7 +627,44 @@ export default function LeconEditeurPage() {
         />
       </Section>
 
-      <Section titre="10. Ressources">
+      <Section titre="10. Simuler pour comprendre">
+        <p className="text-sm text-slate-600">
+          Facultatif — vide par défaut. Explications et simulations déjà prises en charge (courbe, variations, horloge,
+          binaire, cercle trigonométrique, racines, mouvement…). Rubrique affichée à l&apos;élève uniquement si elle est renseignée.
+        </p>
+        <ChampMarkdown
+          valeur={etat.simulerPourComprendre}
+          onChange={(v) => setChamp("simulerPourComprendre", v)}
+          placeholder="Explique ce que l'élève doit observer, puis insère une simulation (facultatif)…"
+          hauteur={240}
+          avecInsertionTerme
+          avecInsertionCourbe
+          avecInsertionVariations
+          avecInsertionHorloge
+          avecInsertionBinaire
+          avecInsertionCercleTrigo
+          avecInsertionRacines
+          avecInsertionMouvement
+          avecInsertionCirculaire
+          avecInsertionPlanIncline
+        />
+      </Section>
+
+      <Section titre="11. Pour aller plus loin">
+        <p className="text-sm text-slate-600">
+          Facultatif — vide par défaut. Approfondissement en Markdown (texte, formules, tableaux). Rubrique affichée à
+          l&apos;élève uniquement si elle est renseignée.
+        </p>
+        <ChampMarkdown
+          valeur={etat.pourAllerPlusLoin}
+          onChange={(v) => setChamp("pourAllerPlusLoin", v)}
+          placeholder="Approfondissement pour les élèves qui veulent aller plus loin (facultatif)…"
+          hauteur={240}
+          avecInsertionTerme
+        />
+      </Section>
+
+      <Section titre="12. Ressources">
         <EditeurRessources ressources={etat.ressources} onChange={(ressources) => setChamp("ressources", ressources)} />
       </Section>
 

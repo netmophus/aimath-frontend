@@ -137,6 +137,8 @@ export interface LeconDetail {
   demonstrations: string;
   a_retenir: string;
   sujet_examen: string;
+  simuler_pour_comprendre: string;
+  pour_aller_plus_loin: string;
   exercices: ExerciceItem[];
   videos: VideoItem[];
   ressources: RessourceItem[];
@@ -226,6 +228,8 @@ export interface ModifierLeconInput {
   demonstrations?: string;
   a_retenir?: string;
   sujet_examen?: string;
+  simuler_pour_comprendre?: string;
+  pour_aller_plus_loin?: string;
   statut?: LeconStatut;
   est_gratuit?: boolean;
   exercices?: ExerciceEcriture[];

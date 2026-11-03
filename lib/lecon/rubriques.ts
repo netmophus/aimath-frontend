@@ -3,12 +3,21 @@
  * /eleve/lecons/[id] : quelles rubriques existent pour une leçon donnée, et
  * comment le clavier se déplace entre elles. Isolée ici pour être testable.
  *
- * Les cinq rubriques sont celles du modèle de données actuel — aucune n'est
- * ajoutée. « Cours » est toujours présente : elle porte aussi objectifs,
- * prérequis, à retenir, vidéos et ressources.
+ * Les cinq rubriques historiques (pourquoi, cours, démonstrations, exercices,
+ * examen) sont toujours régies par les mêmes règles. Deux rubriques facultatives
+ * s'y ajoutent — « Simuler pour comprendre » et « Pour aller plus loin » — et
+ * n'apparaissent que si leur champ est renseigné. « Cours » est toujours
+ * présente : elle porte aussi objectifs, prérequis, à retenir, vidéos et ressources.
  */
 
-export type RubriqueId = "pourquoi" | "cours" | "demonstrations" | "exercices" | "examen";
+export type RubriqueId =
+  | "pourquoi"
+  | "cours"
+  | "demonstrations"
+  | "simuler"
+  | "exercices"
+  | "examen"
+  | "plus_loin";
 
 /** Sous-ensemble de LeconEleve nécessaire pour décider des rubriques. */
 export interface ContenuLecon {
@@ -16,10 +25,13 @@ export interface ContenuLecon {
   demonstrations: string;
   sujet_examen: string;
   exercices: readonly unknown[];
+  /** Absents des copies hors-ligne téléchargées avant l'ajout des deux sections : traités comme vides. */
+  simuler_pour_comprendre?: string | null;
+  pour_aller_plus_loin?: string | null;
 }
 
-function aDuTexte(texte: string): boolean {
-  return texte.trim().length > 0;
+function aDuTexte(texte: string | null | undefined): boolean {
+  return typeof texte === "string" && texte.trim().length > 0;
 }
 
 /** Rubriques disponibles, dans l'ordre d'affichage. Une rubrique sans contenu n'apparaît pas ; « cours » reste toujours. */
@@ -28,8 +40,10 @@ export function rubriquesDisponibles(lecon: ContenuLecon): RubriqueId[] {
   if (aDuTexte(lecon.histoire)) ids.push("pourquoi");
   ids.push("cours");
   if (aDuTexte(lecon.demonstrations)) ids.push("demonstrations");
+  if (aDuTexte(lecon.simuler_pour_comprendre)) ids.push("simuler");
   if (lecon.exercices.length > 0) ids.push("exercices");
   if (aDuTexte(lecon.sujet_examen)) ids.push("examen");
+  if (aDuTexte(lecon.pour_aller_plus_loin)) ids.push("plus_loin");
   return ids;
 }
 

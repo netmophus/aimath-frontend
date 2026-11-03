@@ -121,6 +121,10 @@ export interface LeconEleve {
   demonstrations: string;
   a_retenir: string;
   sujet_examen: string;
+  /** Sections facultatives, vides si non renseignées ou si `verrouille`. Absentes
+   * des copies hors-ligne anciennes : toujours lire avec un repli (`?? ""`). */
+  simuler_pour_comprendre?: string;
+  pour_aller_plus_loin?: string;
   exercices: ExerciceEleve[];
   videos: VideoEleve[];
   ressources: RessourceEleve[];

@@ -34,6 +34,37 @@ describe("rubriquesDisponibles (rubriques conditionnelles)", () => {
   });
 });
 
+describe("rubriquesDisponibles : sections facultatives « Simuler pour comprendre » et « Pour aller plus loin »", () => {
+  it("absentes quand les champs sont vides, blancs, null ou non fournis (copie hors-ligne ancienne)", () => {
+    expect(rubriquesDisponibles({ ...vide, simuler_pour_comprendre: "", pour_aller_plus_loin: "" })).toEqual(["cours"]);
+    expect(rubriquesDisponibles({ ...vide, simuler_pour_comprendre: "   ", pour_aller_plus_loin: "   " })).toEqual(["cours"]);
+    expect(rubriquesDisponibles({ ...vide, simuler_pour_comprendre: null, pour_aller_plus_loin: null })).toEqual(["cours"]);
+    expect(rubriquesDisponibles(vide)).toEqual(["cours"]); // champs absents : aucune erreur
+  });
+
+  it("chaque section apparaît indépendamment de l'autre", () => {
+    expect(rubriquesDisponibles({ ...vide, simuler_pour_comprendre: "x" })).toEqual(["cours", "simuler"]);
+    expect(rubriquesDisponibles({ ...vide, pour_aller_plus_loin: "y" })).toEqual(["cours", "plus_loin"]);
+  });
+
+  it("ordre complet : les cinq rubriques historiques gardent leur ordre, les deux nouvelles s'y insèrent", () => {
+    const tout: ContenuLecon = {
+      histoire: "h", demonstrations: "d", sujet_examen: "e", exercices: [{}],
+      simuler_pour_comprendre: "s", pour_aller_plus_loin: "p",
+    };
+    expect(rubriquesDisponibles(tout)).toEqual(["pourquoi", "cours", "demonstrations", "simuler", "exercices", "examen", "plus_loin"]);
+  });
+
+  it("une leçon verrouillée (champs vidés par le serveur) ne montre aucune des deux", () => {
+    expect(rubriquesDisponibles({ ...vide, histoire: "h", simuler_pour_comprendre: "", pour_aller_plus_loin: "" })).toEqual(["pourquoi", "cours"]);
+  });
+
+  it("rubriqueEffective : repli sur « cours » si la section vient d'être vidée", () => {
+    expect(rubriqueEffective(["cours"], "simuler")).toBe("cours");
+    expect(rubriqueEffective(["cours", "plus_loin"], "plus_loin")).toBe("plus_loin");
+  });
+});
+
 describe("ongletApresTouche (navigation clavier)", () => {
   const ids: RubriqueId[] = ["pourquoi", "cours", "exercices"];
 

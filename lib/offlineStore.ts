@@ -65,7 +65,7 @@ function promesseRequete<T>(requete: IDBRequest<T>): Promise<T> {
 }
 
 /** Réunit tous les champs texte d'une leçon (Markdown) où un [[slug]] peut apparaître. */
-function textesDeLaLecon(lecon: LeconEleve): string[] {
+export function textesDeLaLecon(lecon: LeconEleve): string[] {
   return [
     lecon.histoire,
     lecon.objectifs_pedagogiques,
@@ -74,6 +74,8 @@ function textesDeLaLecon(lecon: LeconEleve): string[] {
     lecon.demonstrations,
     lecon.a_retenir,
     lecon.sujet_examen,
+    lecon.simuler_pour_comprendre ?? "",
+    lecon.pour_aller_plus_loin ?? "",
     ...lecon.exercices.flatMap((exercice) => [exercice.enonce, exercice.corrige]),
   ];
 }
