@@ -10,18 +10,15 @@ import {
   type ClasseCycle,
   type ClasseNiveau,
 } from "@/lib/api";
+import ChampMotDePasse from "@/components/auth/ChampMotDePasse";
+import ChampTelephone from "@/components/auth/ChampTelephone";
+import {
+  erreursDepuisApi,
+  validerInscription,
+  type ErreursInscription as FormErrors,
+} from "@/lib/authFormulaires";
 import { niveauNeedsSerie } from "@/lib/classes";
-
-interface FormErrors {
-  prenom?: string;
-  nom?: string;
-  telephone?: string;
-  cycle?: string;
-  niveau?: string;
-  serie?: string;
-  motDePasse?: string;
-  confirmation?: string;
-}
+import { construireTelephone } from "@/lib/telephone";
 
 interface Recap {
   cycleLabel: string;
@@ -32,41 +29,10 @@ interface Recap {
   message: string;
 }
 
-const TELEPHONE_RE = /^\+227\d{8}$/;
-
-/**
- * Traduit le corps d'erreur 400 de l'API (voir comptes/serializers.py,
- * InscriptionEleveSerializer) en erreurs par champ du formulaire — une clé
- * DRF (ex. "telephone", "password2") peut porter une simple chaîne ou une
- * liste de messages, d'où `premierMessage`.
- */
-function erreursDepuisApi(body: unknown): FormErrors {
-  if (!body || typeof body !== "object") return {};
-  const record = body as Record<string, unknown>;
-
-  function premierMessage(valeur: unknown): string | undefined {
-    if (typeof valeur === "string") return valeur;
-    if (Array.isArray(valeur) && typeof valeur[0] === "string") return valeur[0];
-    return undefined;
-  }
-
-  const resultat: FormErrors = {};
-  const prenom = premierMessage(record.prenom);
-  if (prenom) resultat.prenom = prenom;
-  const nom = premierMessage(record.nom);
-  if (nom) resultat.nom = nom;
-  const telephone = premierMessage(record.telephone);
-  if (telephone) resultat.telephone = telephone;
-  const motDePasse = premierMessage(record.password);
-  if (motDePasse) resultat.motDePasse = motDePasse;
-  const confirmation = premierMessage(record.password2);
-  if (confirmation) resultat.confirmation = confirmation;
-  const niveau = premierMessage(record.niveau);
-  if (niveau) resultat.niveau = niveau;
-  const serie = premierMessage(record.serie);
-  if (serie) resultat.serie = serie;
-  return resultat;
-}
+const LABEL = "mb-1.5 block text-sm font-semibold text-[#102A66]";
+const CHAMP =
+  "min-h-[52px] w-full rounded-xl border border-[#C7D2E5] bg-white px-4 text-base text-[#102A66] outline-none transition-shadow placeholder:text-[#94A3B8] focus:border-[#1D4ED8] focus:ring-2 focus:ring-[#1D4ED8]/20 disabled:cursor-not-allowed disabled:bg-[#F1F5F9] disabled:text-[#64748B]";
+const ERREUR = "mt-1.5 text-sm font-medium text-[#B03A10]";
 
 export default function RegisterForm() {
   const [cycles, setCycles] = useState<ClasseCycle[]>([]);
@@ -75,6 +41,7 @@ export default function RegisterForm() {
 
   const [prenom, setPrenom] = useState("");
   const [nom, setNom] = useState("");
+  // Numéro NATIONAL saisi ; l'indicatif +227 est affiché à part (fixe).
   const [telephone, setTelephone] = useState("");
   const [cycleId, setCycleId] = useState("");
   const [niveauId, setNiveauId] = useState("");
@@ -130,30 +97,18 @@ export default function RegisterForm() {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    const telephoneNettoye = telephone.trim().replace(/\s+/g, "");
-    const nextErrors: FormErrors = {};
-
-    if (!prenom.trim()) nextErrors.prenom = "Indique ton prénom.";
-    if (!nom.trim()) nextErrors.nom = "Indique ton nom.";
-    if (!telephoneNettoye) {
-      nextErrors.telephone = "Indique ton numéro de téléphone.";
-    } else if (!TELEPHONE_RE.test(telephoneNettoye)) {
-      nextErrors.telephone =
-        "Le numéro doit être au format +227 suivi de 8 chiffres (ex. +22790000000).";
-    }
-    if (!cycleId) nextErrors.cycle = "Choisis ton cycle.";
-    if (cycleId && !niveauId) nextErrors.niveau = "Choisis ton niveau.";
-    if (needsSerie && !serieId) nextErrors.serie = "Choisis ta série.";
-    if (!motDePasse) {
-      nextErrors.motDePasse = "Choisis un mot de passe.";
-    } else if (motDePasse.length < 8) {
-      nextErrors.motDePasse = "Le mot de passe doit contenir au moins 8 caractères.";
-    }
-    if (!confirmation) {
-      nextErrors.confirmation = "Confirme ton mot de passe.";
-    } else if (confirmation !== motDePasse) {
-      nextErrors.confirmation = "Les mots de passe ne correspondent pas.";
-    }
+    const telephoneComplet = construireTelephone(telephone);
+    const nextErrors = validerInscription({
+      prenom,
+      nom,
+      telephone: telephoneComplet,
+      cycleId,
+      niveauId,
+      serieId,
+      needsSerie,
+      motDePasse,
+      confirmation,
+    });
 
     setErrors(nextErrors);
     setErreurGenerale(null);
@@ -167,7 +122,7 @@ export default function RegisterForm() {
       const data = await inscrireEleve({
         prenom: prenom.trim(),
         nom: nom.trim(),
-        telephone: telephoneNettoye,
+        telephone: telephoneComplet,
         password: motDePasse,
         password2: confirmation,
         niveau: niveau.id,
@@ -204,35 +159,33 @@ export default function RegisterForm() {
         <span className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-fh-orange/15 text-2xl">
           ⏳
         </span>
-        <h1 className="mb-2 text-xl font-bold text-fh-bleu sm:text-2xl">
-          Compte en cours de validation
-        </h1>
-        <p className="mb-6 text-sm text-fh-ardoise">{recap.message}</p>
+        <h1 className="mb-2 text-2xl font-bold text-[#102A66]">Compte en cours de validation</h1>
+        <p className="mb-6 text-sm text-[#475A7A]">{recap.message}</p>
 
-        <dl className="mb-6 space-y-2 rounded-lg bg-fh-creme p-4 text-left text-sm">
+        <dl className="mb-6 space-y-2 rounded-xl bg-[#F1F6FF] p-4 text-left text-sm">
           <div className="flex items-center justify-between gap-4">
-            <dt className="text-fh-ardoise">Cycle</dt>
-            <dd className="font-medium text-fh-bleu">{recap.cycleLabel}</dd>
+            <dt className="text-[#475A7A]">Cycle</dt>
+            <dd className="font-medium text-[#102A66]">{recap.cycleLabel}</dd>
           </div>
           <div className="flex items-center justify-between gap-4">
-            <dt className="text-fh-ardoise">Niveau</dt>
-            <dd className="font-medium text-fh-bleu">{recap.niveauLabel}</dd>
+            <dt className="text-[#475A7A]">Niveau</dt>
+            <dd className="font-medium text-[#102A66]">{recap.niveauLabel}</dd>
           </div>
           {recap.serieLabel && (
             <div className="flex items-center justify-between gap-4">
-              <dt className="text-fh-ardoise">Série</dt>
-              <dd className="font-medium text-fh-bleu">{recap.serieLabel}</dd>
+              <dt className="text-[#475A7A]">Série</dt>
+              <dd className="font-medium text-[#102A66]">{recap.serieLabel}</dd>
             </div>
           )}
-          <div className="flex items-center justify-between gap-4 border-t border-fh-bleu-vif/10 pt-2">
-            <dt className="text-fh-ardoise">Statut</dt>
-            <dd className="font-semibold text-fh-orange">En attente</dd>
+          <div className="flex items-center justify-between gap-4 border-t border-[#1D4ED8]/10 pt-2">
+            <dt className="text-[#475A7A]">Statut</dt>
+            <dd className="font-semibold text-[#F4511E]">En attente</dd>
           </div>
         </dl>
 
         <Link
           href="/login"
-          className="inline-block rounded-full bg-fh-orange px-6 py-3 text-sm font-semibold text-fh-creme transition-colors hover:bg-fh-orange-fonce"
+          className="inline-flex min-h-[52px] items-center rounded-xl bg-gradient-to-r from-[#FB6A2B] to-[#F4511E] px-8 text-base font-bold text-white shadow-[0_8px_20px_rgba(244,81,30,0.3)] transition-opacity hover:opacity-90"
         >
           Retour à la connexion
         </Link>
@@ -242,59 +195,54 @@ export default function RegisterForm() {
 
   return (
     <div className="mx-auto w-full max-w-2xl">
-      <h1 className="mb-8 text-xl font-bold text-fh-bleu sm:text-2xl">
-        Créer un compte élève
-      </h1>
+      <h1 className="text-3xl font-bold text-[#102A66]">Créer un compte élève</h1>
+      <span aria-hidden="true" className="mt-3 mb-7 block h-1 w-12 rounded-full bg-[#F4511E]" />
 
       {erreurGenerale && (
-        <p role="alert" className="mb-4 rounded-lg bg-fh-orange/10 px-3 py-2 text-sm text-fh-orange-fonce">
+        <p role="alert" className="mb-4 rounded-xl bg-[#FFF1EC] px-4 py-3 text-sm font-medium text-[#B03A10]">
           {erreurGenerale}
         </p>
       )}
 
       <form noValidate onSubmit={handleSubmit} className="flex flex-col gap-5">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
           <div>
-            <label
-              htmlFor="prenom"
-              className="mb-1 block text-sm font-medium text-fh-ardoise"
-            >
+            <label htmlFor="prenom" className={LABEL}>
               Prénom
             </label>
             <input
               id="prenom"
               type="text"
+              autoComplete="given-name"
               value={prenom}
               onChange={(event) => setPrenom(event.target.value)}
               aria-invalid={Boolean(errors.prenom)}
               aria-describedby={errors.prenom ? "prenom-error" : undefined}
-              className="w-full rounded-lg border border-fh-bleu-vif/15 bg-fh-creme px-4 py-2.5 text-fh-bleu outline-none transition-shadow focus:border-fh-orange focus:ring-2 focus:ring-fh-orange/20"
+              className={CHAMP}
             />
             {errors.prenom && (
-              <p id="prenom-error" className="mt-1 text-sm text-fh-orange-fonce">
+              <p id="prenom-error" className={ERREUR}>
                 {errors.prenom}
               </p>
             )}
           </div>
 
           <div>
-            <label
-              htmlFor="nom"
-              className="mb-1 block text-sm font-medium text-fh-ardoise"
-            >
+            <label htmlFor="nom" className={LABEL}>
               Nom
             </label>
             <input
               id="nom"
               type="text"
+              autoComplete="family-name"
               value={nom}
               onChange={(event) => setNom(event.target.value)}
               aria-invalid={Boolean(errors.nom)}
               aria-describedby={errors.nom ? "nom-error" : undefined}
-              className="w-full rounded-lg border border-fh-bleu-vif/15 bg-fh-creme px-4 py-2.5 text-fh-bleu outline-none transition-shadow focus:border-fh-orange focus:ring-2 focus:ring-fh-orange/20"
+              className={CHAMP}
             />
             {errors.nom && (
-              <p id="nom-error" className="mt-1 text-sm text-fh-orange-fonce">
+              <p id="nom-error" className={ERREUR}>
                 {errors.nom}
               </p>
             )}
@@ -302,40 +250,31 @@ export default function RegisterForm() {
         </div>
 
         <div>
-          <label
-            htmlFor="telephone"
-            className="mb-1 block text-sm font-medium text-fh-ardoise"
-          >
+          <label htmlFor="telephone" className={LABEL}>
             Téléphone
           </label>
-          <input
+          <ChampTelephone
             id="telephone"
-            type="tel"
-            placeholder="+227 90 00 00 00"
             value={telephone}
-            onChange={(event) => setTelephone(event.target.value)}
-            aria-invalid={Boolean(errors.telephone)}
-            aria-describedby={errors.telephone ? "telephone-error" : undefined}
-            className="w-full rounded-lg border border-fh-bleu-vif/15 bg-fh-creme px-4 py-2.5 text-fh-bleu outline-none transition-shadow focus:border-fh-orange focus:ring-2 focus:ring-fh-orange/20"
+            onChange={setTelephone}
+            invalide={Boolean(errors.telephone)}
+            idErreur={errors.telephone ? "telephone-error" : undefined}
           />
           {errors.telephone && (
-            <p id="telephone-error" className="mt-1 text-sm text-fh-orange-fonce">
+            <p id="telephone-error" className={ERREUR}>
               {errors.telephone}
             </p>
           )}
         </div>
 
         {chargementClasses ? (
-          <p className="text-sm text-fh-ardoise">Chargement des classes…</p>
+          <p className="text-sm text-[#475A7A]">Chargement des classes…</p>
         ) : erreurClasses ? (
-          <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{erreurClasses}</p>
+          <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{erreurClasses}</p>
         ) : (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
             <div>
-              <label
-                htmlFor="cycle"
-                className="mb-1 block text-sm font-medium text-fh-ardoise"
-              >
+              <label htmlFor="cycle" className={LABEL}>
                 Cycle
               </label>
               <select
@@ -344,7 +283,7 @@ export default function RegisterForm() {
                 onChange={handleCycleChange}
                 aria-invalid={Boolean(errors.cycle)}
                 aria-describedby={errors.cycle ? "cycle-error" : undefined}
-                className="w-full rounded-lg border border-fh-bleu-vif/15 bg-fh-creme px-4 py-2.5 text-fh-bleu outline-none transition-shadow focus:border-fh-orange focus:ring-2 focus:ring-fh-orange/20"
+                className={CHAMP}
               >
                 <option value="">Choisir un cycle</option>
                 {cycles.map((cycleOption) => (
@@ -354,17 +293,14 @@ export default function RegisterForm() {
                 ))}
               </select>
               {errors.cycle && (
-                <p id="cycle-error" className="mt-1 text-sm text-fh-orange-fonce">
+                <p id="cycle-error" className={ERREUR}>
                   {errors.cycle}
                 </p>
               )}
             </div>
 
             <div>
-              <label
-                htmlFor="niveau"
-                className="mb-1 block text-sm font-medium text-fh-ardoise"
-              >
+              <label htmlFor="niveau" className={LABEL}>
                 Niveau
               </label>
               <select
@@ -374,11 +310,9 @@ export default function RegisterForm() {
                 disabled={!cycle}
                 aria-invalid={Boolean(errors.niveau)}
                 aria-describedby={errors.niveau ? "niveau-error" : undefined}
-                className="w-full rounded-lg border border-fh-bleu-vif/15 bg-fh-creme px-4 py-2.5 text-fh-bleu outline-none transition-shadow focus:border-fh-orange focus:ring-2 focus:ring-fh-orange/20 disabled:cursor-not-allowed disabled:opacity-50"
+                className={CHAMP}
               >
-                <option value="">
-                  {cycle ? "Choisir un niveau" : "Choisis d'abord un cycle"}
-                </option>
+                <option value="">{cycle ? "Choisir un niveau" : "Choisis d'abord un cycle"}</option>
                 {cycle?.niveaux.map((niveauOption) => (
                   <option key={niveauOption.id} value={niveauOption.id}>
                     {niveauOption.nom}
@@ -386,17 +320,14 @@ export default function RegisterForm() {
                 ))}
               </select>
               {errors.niveau && (
-                <p id="niveau-error" className="mt-1 text-sm text-fh-orange-fonce">
+                <p id="niveau-error" className={ERREUR}>
                   {errors.niveau}
                 </p>
               )}
             </div>
 
             <div>
-              <label
-                htmlFor="serie"
-                className="mb-1 block text-sm font-medium text-fh-ardoise"
-              >
+              <label htmlFor="serie" className={LABEL}>
                 Série
               </label>
               {needsSerie ? (
@@ -407,7 +338,7 @@ export default function RegisterForm() {
                     onChange={(event) => setSerieId(event.target.value)}
                     aria-invalid={Boolean(errors.serie)}
                     aria-describedby={errors.serie ? "serie-error" : undefined}
-                    className="w-full rounded-lg border border-fh-bleu-vif/15 bg-fh-creme px-4 py-2.5 text-fh-bleu outline-none transition-shadow focus:border-fh-orange focus:ring-2 focus:ring-fh-orange/20"
+                    className={CHAMP}
                   >
                     <option value="">Choisir une série</option>
                     {niveau?.series.map((serieOption) => (
@@ -417,78 +348,56 @@ export default function RegisterForm() {
                     ))}
                   </select>
                   {errors.serie && (
-                    <p id="serie-error" className="mt-1 text-sm text-fh-orange-fonce">
+                    <p id="serie-error" className={ERREUR}>
                       {errors.serie}
                     </p>
                   )}
                 </>
               ) : (
-                <select
-                  id="serie"
-                  disabled
-                  className="w-full cursor-not-allowed rounded-lg border border-fh-bleu-vif/15 bg-fh-creme px-4 py-2.5 text-fh-ardoise/50 opacity-50 outline-none"
-                >
-                  <option>
-                    {niveau ? "Pas de série pour ce niveau" : "—"}
-                  </option>
+                <select id="serie" disabled className={CHAMP}>
+                  <option>{niveau ? "Pas de série pour ce niveau" : "—"}</option>
                 </select>
               )}
             </div>
           </div>
         )}
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
           <div>
-            <label
-              htmlFor="motDePasse"
-              className="mb-1 block text-sm font-medium text-fh-ardoise"
-            >
+            <label htmlFor="motDePasse" className={LABEL}>
               Mot de passe
             </label>
-            <input
+            <ChampMotDePasse
               id="motDePasse"
-              type="password"
               value={motDePasse}
-              onChange={(event) => setMotDePasse(event.target.value)}
-              aria-invalid={Boolean(errors.motDePasse)}
-              aria-describedby={
-                errors.motDePasse ? "motDePasse-error" : undefined
-              }
-              className="w-full rounded-lg border border-fh-bleu-vif/15 bg-fh-creme px-4 py-2.5 text-fh-bleu outline-none transition-shadow focus:border-fh-orange focus:ring-2 focus:ring-fh-orange/20"
+              onChange={setMotDePasse}
+              autoComplete="new-password"
+              invalide={Boolean(errors.motDePasse)}
+              idErreur={errors.motDePasse ? "motDePasse-error" : undefined}
+              designation="le mot de passe"
             />
             {errors.motDePasse && (
-              <p
-                id="motDePasse-error"
-                className="mt-1 text-sm text-fh-orange-fonce"
-              >
+              <p id="motDePasse-error" className={ERREUR}>
                 {errors.motDePasse}
               </p>
             )}
           </div>
 
           <div>
-            <label
-              htmlFor="confirmation"
-              className="mb-1 block text-sm font-medium text-fh-ardoise"
-            >
+            <label htmlFor="confirmation" className={LABEL}>
               Confirmation du mot de passe
             </label>
-            <input
+            <ChampMotDePasse
               id="confirmation"
-              type="password"
               value={confirmation}
-              onChange={(event) => setConfirmation(event.target.value)}
-              aria-invalid={Boolean(errors.confirmation)}
-              aria-describedby={
-                errors.confirmation ? "confirmation-error" : undefined
-              }
-              className="w-full rounded-lg border border-fh-bleu-vif/15 bg-fh-creme px-4 py-2.5 text-fh-bleu outline-none transition-shadow focus:border-fh-orange focus:ring-2 focus:ring-fh-orange/20"
+              onChange={setConfirmation}
+              autoComplete="new-password"
+              invalide={Boolean(errors.confirmation)}
+              idErreur={errors.confirmation ? "confirmation-error" : undefined}
+              designation="la confirmation du mot de passe"
             />
             {errors.confirmation && (
-              <p
-                id="confirmation-error"
-                className="mt-1 text-sm text-fh-orange-fonce"
-              >
+              <p id="confirmation-error" className={ERREUR}>
                 {errors.confirmation}
               </p>
             )}
@@ -498,18 +407,15 @@ export default function RegisterForm() {
         <button
           type="submit"
           disabled={envoiEnCours || chargementClasses}
-          className="mt-2 rounded-full bg-fh-orange px-6 py-3 text-sm font-semibold text-fh-creme transition-colors hover:bg-fh-orange-fonce disabled:cursor-not-allowed disabled:opacity-60 sm:text-base"
+          className="mt-1 min-h-[52px] w-full rounded-xl bg-gradient-to-r from-[#FB6A2B] to-[#F4511E] px-6 py-3 text-base font-bold text-white shadow-[0_8px_20px_rgba(244,81,30,0.3)] transition-opacity hover:opacity-90 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {envoiEnCours ? "Création en cours…" : "Créer mon compte"}
         </button>
       </form>
 
-      <p className="mt-6 text-center text-sm text-fh-ardoise">
+      <p className="mt-6 text-center text-sm text-[#475A7A]">
         Déjà un compte ?{" "}
-        <Link
-          href="/login"
-          className="font-medium text-fh-orange hover:text-fh-orange-fonce"
-        >
+        <Link href="/login" className="font-bold text-[#F4511E] underline-offset-2 hover:underline">
           Se connecter
         </Link>
       </p>
