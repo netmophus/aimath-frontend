@@ -195,7 +195,7 @@ export default function EleveLayoutClient({ children, logo }: EleveLayoutClientP
           </div>
         </header>
       )}
-      <main className={estDashboard ? "flex-1" : "flex-1 px-4 pt-5 pb-24 sm:px-6"}>{children}</main>
+      <main className={estDashboard ? "flex-1" : "flex-1 px-4 pt-5 pb-28 sm:px-6 sm:pb-32"}>{children}</main>
       <BarreNavBasse />
     </div>
   );

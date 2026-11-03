@@ -74,7 +74,7 @@ export default function EleveDashboardPage() {
   const hrefUniqueMatiere = programmes.length === 1 ? `/eleve/programmes/${programmes[0].id}` : null;
 
   return (
-    <div className="mx-auto w-full max-w-[1240px] px-4 pb-24 pt-[max(1rem,env(safe-area-inset-top))] sm:px-6 lg:px-8">
+    <div className="mx-auto w-full max-w-[1240px] px-4 pb-28 sm:pb-32 pt-[max(1rem,env(safe-area-inset-top))] sm:px-6 lg:px-8">
       <SalutEleve
         prenom={user?.prenom ?? ""}
         nom={user?.nom ?? ""}
