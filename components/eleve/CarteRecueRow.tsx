@@ -4,13 +4,14 @@ import type { CSSProperties } from "react";
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { IconCheck, IconCircleCheck, IconCopy, IconCreditCard } from "@tabler/icons-react";
 
 import type { CarteRecueEleve, StatutCarteRecue } from "@/lib/eleveApi";
 import StatutBadge from "@/components/admin/StatutBadge";
 
 const STYLES_STATUT: Record<StatutCarteRecue, string> = {
-  active: "bg-fh-accent text-fh-orange-fonce",
-  utilisee: "bg-green-100 text-green-700",
+  active: "bg-[#FFEDD5] text-[#9A3412]",
+  utilisee: "bg-green-100 text-green-800",
 };
 
 const LABELS_STATUT: Record<StatutCarteRecue, string> = {
@@ -26,21 +27,22 @@ function formaterDateFr(iso: string): string {
   });
 }
 
-/** Hachures grises en CSS pur — même texture que l'aperçu admin (voir
+/** Hachures en CSS pur — même texture que l'aperçu admin (voir
  * components/admin/cartes/CarteRow.tsx), pour un design carte cohérent dans
  * toute l'app : ici le code est VISIBLE (c'est légitime, l'élève est
  * propriétaire de sa carte), la texture n'a donc qu'un rôle décoratif. */
 const TEXTURE_GRATTAGE: CSSProperties = {
   backgroundImage:
-    "repeating-linear-gradient(45deg, rgba(255,255,255,0.14) 0px, rgba(255,255,255,0.14) 2px, transparent 2px, transparent 9px)",
+    "repeating-linear-gradient(45deg, rgba(255,255,255,0.10) 0px, rgba(255,255,255,0.10) 2px, transparent 2px, transparent 9px)",
 };
 
 /**
  * Une carte reçue d'un vendeur, affichée à l'élève connecté — MÊME design
- * visuel que l'aperçu admin (dégradé, logo, pastille prix) mais avec le
- * CODE EN CLAIR (voir lib/eleveApi.ts, CarteRecueEleve.code) : contrairement
- * au vendeur, l'élève a le droit de voir le code de SA carte. Boutons
- * "Copier le code" et "Activer" (pré-remplit /eleve/abonnement?code=...).
+ * visuel que l'aperçu admin (dégradé, logo, durée) mais avec le CODE EN
+ * CLAIR (voir lib/eleveApi.ts, CarteRecueEleve.code) : contrairement au
+ * vendeur, l'élève a le droit de voir le code de SA carte. Boutons "Copier
+ * le code" et "Activer" (pré-remplit /eleve/abonnement?code=... — ne déclenche
+ * aucune activation par lui-même).
  */
 export default function CarteRecueRow({ carte }: { carte: CarteRecueEleve }) {
   const [copie, setCopie] = useState(false);
@@ -57,22 +59,30 @@ export default function CarteRecueRow({ carte }: { carte: CarteRecueEleve }) {
   }
 
   return (
-    <div className="flex flex-col gap-4 overflow-hidden rounded-2xl bg-gradient-to-br from-[#1E2B6A] to-[#243584] p-4 text-white shadow-md sm:p-5">
+    <div className="flex flex-col gap-4 overflow-hidden rounded-3xl border border-white/15 bg-[linear-gradient(135deg,#102A66_0%,#1E3A8A_55%,#4C1D95_130%)] p-4 text-white shadow-lg sm:p-6">
       <div className="flex items-center gap-3">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white p-1">
-          <Image src="/fahimta.png" alt="" width={32} height={32} className="h-full w-full object-contain" />
+        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white p-1.5">
+          <Image src="/fahimta.png" alt="" width={36} height={36} className="h-full w-full object-contain" />
         </span>
-        <span className="text-sm font-bold tracking-wide text-white">Fahimta</span>
-        <span className="ml-auto text-xs text-white/70">
-          {carte.duree_jours} jour{carte.duree_jours > 1 ? "s" : ""} · tous les cours
+        <div className="min-w-0">
+          <p className="text-lg font-extrabold tracking-wide">Fahimta</p>
+          <p className="text-sm text-white/80">
+            {carte.duree_jours} jour{carte.duree_jours > 1 ? "s" : ""} · tous les cours
+          </p>
+        </div>
+        <span
+          aria-hidden="true"
+          className="ml-auto flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#F97316] to-[#C2410C] text-white shadow-md"
+        >
+          <IconCreditCard size={34} stroke={1.7} />
         </span>
       </div>
 
       <div
         style={TEXTURE_GRATTAGE}
-        className="flex items-center justify-center rounded-lg bg-fh-bleu-charbon/60 px-3 py-2.5"
+        className="flex items-center justify-center rounded-2xl border border-white/20 bg-[#0B1B45]/70 px-3 py-4"
       >
-        <span className="break-all text-center font-mono text-sm font-semibold tracking-wide text-white sm:text-base">
+        <span className="break-all text-center font-mono text-base font-bold tracking-[0.1em] text-white sm:text-xl">
           {carte.code}
         </span>
       </div>
@@ -80,23 +90,25 @@ export default function CarteRecueRow({ carte }: { carte: CarteRecueEleve }) {
       <div className="flex flex-wrap items-center gap-2">
         <StatutBadge statut={carte.statut} styles={STYLES_STATUT} labels={LABELS_STATUT} />
         {carte.statut === "utilisee" && carte.date_activation && (
-          <span className="text-xs text-white/70">Activée le {formaterDateFr(carte.date_activation)}</span>
+          <span className="text-sm text-white/80">Activée le {formaterDateFr(carte.date_activation)}</span>
         )}
       </div>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-3">
         <button
           type="button"
           onClick={copierCode}
-          className="rounded-full border border-white/30 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-white/10"
+          className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl border-2 border-white/60 px-5 text-base font-bold text-white transition-colors hover:bg-white/10 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-white sm:flex-none"
         >
+          {copie ? <IconCheck size={22} stroke={2.5} aria-hidden="true" /> : <IconCopy size={22} stroke={2} aria-hidden="true" />}
           {copie ? "Copié !" : "Copier le code"}
         </button>
         {carte.statut === "active" && (
           <Link
             href={`/eleve/abonnement?code=${encodeURIComponent(carte.code)}`}
-            className="rounded-full bg-fh-orange px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-fh-orange-fonce"
+            className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-[#C2410C] px-6 text-base font-bold text-white shadow-sm transition-colors hover:bg-[#9A3412] focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-white sm:flex-none"
           >
+            <IconCircleCheck size={22} stroke={2} aria-hidden="true" />
             Activer
           </Link>
         )}

@@ -3,7 +3,7 @@
 import { Suspense, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { IconAlertCircle, IconArrowRight, IconBooks, IconCircleCheck, IconCreditCard, IconSchool } from "@tabler/icons-react";
+import { IconAlertCircle, IconArrowLeft, IconArrowRight, IconBooks, IconCircleCheck, IconCreditCard, IconSchool } from "@tabler/icons-react";
 
 import { ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
@@ -65,6 +65,14 @@ function AbonnementContenu() {
 
   return (
     <div className="mx-auto flex w-full max-w-[1240px] flex-col gap-5">
+      <Link
+        href="/eleve"
+        className="inline-flex min-h-12 w-fit items-center gap-2 rounded-xl bg-[#102A66] px-5 text-base font-bold text-white shadow-sm transition-colors hover:bg-[#1D4ED8] focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[#102A66]"
+      >
+        <IconArrowLeft size={22} stroke={2.25} aria-hidden="true" />
+        Retour à l&apos;accueil
+      </Link>
+
       {/* 1. Bandeau « Carte Fahimta » */}
       <section
         aria-label="Carte Fahimta"
@@ -104,16 +112,17 @@ function AbonnementContenu() {
 
       <div className="flex flex-col gap-5 rounded-[32px] bg-[#F8FAFF] p-3 ring-1 ring-blue-100 sm:p-5">
         {/* 2. Cartes reçues + statut */}
-        <Link
-          href="/eleve/mes-cartes"
-          className="flex min-h-14 items-center gap-3 rounded-2xl border-2 border-orange-200 bg-white px-4 py-3 text-[#C2410C] shadow-sm transition-colors hover:bg-orange-50 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[#102A66] sm:px-5"
-        >
-          <IconCreditCard size={30} stroke={1.8} aria-hidden="true" className="shrink-0" />
-          <span className="min-w-0 flex-1 text-sm font-semibold sm:text-base">
-            Un vendeur t&apos;a envoyé une carte ? <span className="font-extrabold underline">Voir mes cartes reçues</span>
-          </span>
-          <IconArrowRight size={26} stroke={2.25} aria-hidden="true" className="shrink-0" />
-        </Link>
+        <div className="flex flex-col gap-3 rounded-2xl border-2 border-orange-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-5">
+          <p className="text-base font-semibold text-[#102A66] sm:text-lg">Un vendeur t&apos;a envoyé une carte ?</p>
+          <Link
+            href="/eleve/mes-cartes"
+            className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#C2410C] px-3 py-2.5 sm:gap-3 sm:px-6 text-base font-bold text-white shadow-sm transition-colors hover:bg-[#9A3412] focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[#102A66] sm:w-auto"
+          >
+            <IconCreditCard size={30} stroke={1.8} aria-hidden="true" className="shrink-0" />
+            Voir mes cartes reçues
+            <IconArrowRight size={24} stroke={2.5} aria-hidden="true" className="shrink-0" />
+          </Link>
+        </div>
 
         <StatutAbonnement actif={abonnementActif} echeance={echeance ?? null} />
 
