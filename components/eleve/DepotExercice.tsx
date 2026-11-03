@@ -25,7 +25,7 @@ import {
   type DepotExerciceReponse,
   type SeanceProfesseur,
 } from "@/lib/eleveApi";
-import { MESSAGE_RESULTAT_EXPIRE, attendreTache, planifierVue, tacheVue } from "@/lib/taches";
+import { MESSAGE_RESULTAT_EXPIRE, attendreTache, marquerTacheVue, planifierVue, tacheVue } from "@/lib/taches";
 import { preparerImage } from "@/lib/reduireImage";
 import {
   ACCEPT_IMPORT,
@@ -235,6 +235,8 @@ export default function DepotExercice({ programmeId, matiere }: DepotExercicePro
         const reprise = await getReprise(programmeId);
         if (annule || envoiVerrou.current) return;
         const { analyse: enonceRetrouve, lecture, correction, seance } = reprise;
+        // Une correction ou une séance n'existe que si l'élève a déjà confirmé sa lecture : celle-ci est dépassée, on ne la ressort pas.
+        if ((correction || seance) && lecture && !tacheVue(lecture.id)) marquerTacheVue(lecture.id);
         const lectureOk = lecture?.statut === "terminee" && (lecture.corps as DepotExerciceReponse | null)?.correction_disponible;
 
         if (seance && !seance.termine) {

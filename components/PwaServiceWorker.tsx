@@ -58,9 +58,12 @@ export default function PwaServiceWorker() {
         // pas empêcher le reste de l'app de fonctionner.
       });
 
+    // Première installation (aucun contrôleur avant) : le SW prend la main sans qu'un rechargement soit nécessaire. Recharger
+    // alors ferait perdre à l'élève un résultat IA reçu à cet instant ; on ne recharge que pour une MISE À JOUR demandée.
+    const avaitUnControleur = Boolean(navigator.serviceWorker.controller);
     let rechargeDeclenchee = false;
     function surChangementControleur() {
-      if (rechargeDeclenchee) return;
+      if (!avaitUnControleur || rechargeDeclenchee) return;
       rechargeDeclenchee = true;
       window.location.reload();
     }
