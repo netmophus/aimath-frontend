@@ -116,7 +116,7 @@ export default function PaiementNitaSection() {
   return (
     <section
       aria-label="Payer avec NITA"
-      className="flex flex-col gap-4 rounded-3xl border-2 border-orange-200 bg-gradient-to-b from-white to-[#FFF7ED] p-5 shadow-sm sm:p-7"
+      className="flex min-w-0 flex-col gap-4 rounded-3xl border-2 border-orange-200 bg-gradient-to-b from-white to-[#FFF7ED] p-4 shadow-sm sm:p-7"
     >
       <div className="flex items-center gap-4">
         <span
@@ -128,14 +128,14 @@ export default function PaiementNitaSection() {
         <div className="min-w-0">
           <h2 className="text-xl font-extrabold text-[#102A66] sm:text-2xl">Payer avec NITA</h2>
           <p className="mt-1 text-sm text-slate-600 sm:text-base">
-            Paiement mobile par référence — active ton abonnement en quelques minutes.
+            Paiement mobile par référence. Abonnement actif en quelques minutes.
           </p>
         </div>
       </div>
 
       {etape === "choix" && (
         <>
-          <div className="flex items-center justify-between gap-3 rounded-2xl border-2 border-orange-200 bg-white px-4 py-4 sm:px-5">
+          <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-2xl border-2 border-orange-200 bg-white px-4 py-4 sm:px-5">
             <div className="min-w-0">
               <p className="text-lg font-extrabold text-[#102A66]">{plan.label}</p>
               <p className="text-sm text-slate-600">{plan.duree_jours} jours · tous les cours</p>
@@ -189,7 +189,7 @@ export default function PaiementNitaSection() {
               disabled={enCours}
               className="min-h-14 flex-1 rounded-2xl bg-[#C2410C] px-4 py-3 text-base font-bold text-white shadow-sm transition-colors hover:bg-[#9A3412] focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[#102A66] disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {enCours ? "Vérification…" : "J'ai payé — vérifier maintenant"}
+              {enCours ? "Vérification…" : "J'ai payé, vérifier"}
             </button>
             <button
               type="button"

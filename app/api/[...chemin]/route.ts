@@ -15,9 +15,27 @@ import { NextResponse, type NextRequest } from "next/server";
  * quels (dont Authorization) — ce n'est qu'un tuyau, pas une logique métier.
  */
 
-const BACKEND = "http://127.0.0.1:8001";
+/**
+ * URL du backend Django, lue côté serveur uniquement (jamais exposée au navigateur).
+ * Ordre : BACKEND_API_URL, puis NEXT_PUBLIC_API_URL si elle est absolue. En production il n'existe AUCUN repli
+ * local : 127.0.0.1 n'est jamais joignable depuis Heroku. Le repli 127.0.0.1:8001 ne sert qu'au développement.
+ */
+function urlBackend(): string | null {
+  const candidates = [process.env.BACKEND_API_URL, process.env.NEXT_PUBLIC_API_URL];
+  for (const c of candidates) {
+    const v = (c ?? "").trim().replace(/\/+$/, "");
+    if (/^https?:\/\//.test(v)) return v;
+  }
+  return process.env.NODE_ENV === "production" ? null : "http://127.0.0.1:8001";
+}
+
+function erreurPasserelle(status: number, detail: string) {
+  return NextResponse.json({ detail }, { status });
+}
 
 async function relayer(request: NextRequest, contexte: { params: Promise<{ chemin: string[] }> }) {
+  const BACKEND = urlBackend();
+  if (!BACKEND) return erreurPasserelle(503, "Service temporairement indisponible.");
   const { chemin } = await contexte.params;
   const url = new URL(request.url);
   const cible = `${BACKEND}/api/${chemin.join("/")}/${url.search}`;
@@ -28,12 +46,18 @@ async function relayer(request: NextRequest, contexte: { params: Promise<{ chemi
 
   const aUnCorps = !["GET", "HEAD"].includes(request.method);
 
-  const reponse = await fetch(cible, {
-    method: request.method,
-    headers: entetes,
-    body: aUnCorps ? await request.arrayBuffer() : undefined,
-    redirect: "manual",
-  });
+  let reponse: Response;
+  try {
+    reponse = await fetch(cible, {
+      method: request.method,
+      headers: entetes,
+      body: aUnCorps ? await request.arrayBuffer() : undefined,
+      redirect: "manual",
+    });
+  } catch {
+    // Backend injoignable : réponse propre (plus d'exception non gérée ni de 500 générique).
+    return erreurPasserelle(502, "Service temporairement indisponible.");
+  }
 
   // On ne repasse pas tous les en-têtes de la réponse Django tels quels :
   // `fetch` a déjà décompressé un éventuel gzip, donc renvoyer un

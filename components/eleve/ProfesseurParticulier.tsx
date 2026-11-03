@@ -41,7 +41,9 @@ const AIDES: { type: TypeDemandeExplication; libelle: string }[] = [
 interface ProfesseurParticulierProps {
   programmeId: number;
   /** Énoncé confirmé par l'élève : seule donnée envoyée pour démarrer (jamais les photos). */
-  analyse: Analyse;
+  analyse?: Analyse;
+  /** Séance retrouvée après actualisation : on la reprend telle quelle, sans nouvel appel. */
+  seanceInitiale?: SeanceProfesseur | null;
 }
 
 function Bulle({ message }: { message: MessageProfesseur }) {
@@ -79,14 +81,14 @@ function Bulle({ message }: { message: MessageProfesseur }) {
  * qu'il a vu ; il n'envoie ni historique ni réponse attendue, et ne reçoit jamais
  * le plan de correction. Un seul envoi à la fois (verrou anti double clic).
  */
-export default function ProfesseurParticulier({ programmeId, analyse }: ProfesseurParticulierProps) {
-  const [seance, setSeance] = useState<SeanceProfesseur | null>(null);
+export default function ProfesseurParticulier({ programmeId, analyse, seanceInitiale }: ProfesseurParticulierProps) {
+  const [seance, setSeance] = useState<SeanceProfesseur | null>(seanceInitiale ?? null);
   const [erreur, setErreur] = useState<ErreurProfesseur | null>(null);
   const [enCours, setEnCours] = useState(false);
   const [saisie, setSaisie] = useState("");
   const [aideOuverte, setAideOuverte] = useState(false);
   const verrou = useRef(false);
-  const demarre = useRef(false);
+  const demarre = useRef(Boolean(seanceInitiale));
   const fin = useRef<HTMLDivElement>(null);
   const nbMessages = seance?.messages.length ?? 0;
 
@@ -112,6 +114,7 @@ export default function ProfesseurParticulier({ programmeId, analyse }: Professe
 
   const demarrer = useCallback(() => {
     demarre.current = true;
+    if (!analyse) return;
     void executer(() => demarrerSeanceProfesseur(programmeId, analyse));
   }, [analyse, executer, programmeId]);
 
@@ -131,7 +134,7 @@ export default function ProfesseurParticulier({ programmeId, analyse }: Professe
 
   if (!seance) {
     return (
-      <section aria-label="Professeur particulier" className="rounded-2xl bg-white p-5 text-center shadow-sm ring-1 ring-fh-sable">
+      <section aria-label="fahimta ai" className="rounded-2xl bg-white p-5 text-center shadow-sm ring-1 ring-fh-sable">
         {erreur ? (
           <div role="alert" className="flex flex-col items-center gap-3">
             <p className="text-sm text-red-700">{erreur.message}</p>
@@ -145,7 +148,7 @@ export default function ProfesseurParticulier({ programmeId, analyse }: Professe
           </div>
         ) : (
           <p role="status" aria-busy="true" className="text-sm text-fh-ardoise">
-            Le professeur prépare ta séance… (environ une minute)
+            fahimta ai prépare ta séance… (environ une minute)
           </p>
         )}
       </section>
@@ -157,7 +160,7 @@ export default function ProfesseurParticulier({ programmeId, analyse }: Professe
   const bloque = enCours || expiree;
 
   return (
-    <section aria-label="Professeur particulier" className="flex flex-col gap-3">
+    <section aria-label="fahimta ai" className="flex flex-col gap-3">
       <div className="rounded-2xl bg-white p-3 shadow-sm ring-1 ring-fh-sable">
         <div className="flex items-center justify-between gap-2 text-xs font-semibold text-fh-bleu">
           <span>
@@ -197,7 +200,7 @@ export default function ProfesseurParticulier({ programmeId, analyse }: Professe
 
       {enCours && (
         <p role="status" aria-busy="true" className="text-sm text-fh-ardoise">
-          Le professeur réfléchit…
+          fahimta ai réfléchit…
         </p>
       )}
 
@@ -219,7 +222,7 @@ export default function ProfesseurParticulier({ programmeId, analyse }: Professe
           </p>
           {(seance.etudes ?? []).map((item, index) => (
             <div key={index} className="rounded-2xl bg-white p-3 shadow-sm ring-1 ring-fh-sable">
-              <p className="mb-2 text-xs font-bold uppercase tracking-wide text-fh-ardoise">Pour retenir — question {item.question}</p>
+              <p className="mb-2 text-xs font-bold uppercase tracking-wide text-fh-ardoise">Pour retenir : question {item.question}</p>
               <EtudeFonction etude={item.etude} afficher="tout" />
             </div>
           ))}

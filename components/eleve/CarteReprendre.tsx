@@ -42,7 +42,7 @@ export default function CarteReprendre({ lecon, hrefProgramme }: CarteReprendreP
         </span>
         <div>
           <p className="text-xl font-bold">Tes leçons arrivent bientôt</p>
-          <p className="mt-1 text-base text-white/85">Ton professeur prépare le contenu — reviens un peu plus tard.</p>
+          <p className="mt-1 text-base text-white/85">Le contenu arrive bientôt. Reviens un peu plus tard.</p>
         </div>
         {hrefProgramme && (
           <Link href={hrefProgramme} className={BOUTON}>

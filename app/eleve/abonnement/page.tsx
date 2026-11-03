@@ -70,7 +70,7 @@ function AbonnementContenu() {
         className="inline-flex min-h-12 w-fit items-center gap-2 rounded-xl bg-[#102A66] px-5 text-base font-bold text-white shadow-sm transition-colors hover:bg-[#1D4ED8] focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[#102A66]"
       >
         <IconArrowLeft size={22} stroke={2.25} aria-hidden="true" />
-        Retour à l&apos;accueil
+        Retour
       </Link>
 
       {/* 1. Bandeau « Carte Fahimta » */}
@@ -98,8 +98,7 @@ function AbonnementContenu() {
             </div>
             <h1 className="text-3xl font-extrabold leading-tight sm:text-4xl">Carte Fahimta</h1>
             <p className="mt-2 max-w-2xl text-base text-white/90 sm:text-lg">
-              Procure-toi une carte Fahimta, saisis son code ci-dessous, et accède à tous les cours premium pendant
-              30 jours.
+              Active ta carte et accède aux cours premium pendant 30 jours.
             </p>
           </div>
 
@@ -111,26 +110,23 @@ function AbonnementContenu() {
       </section>
 
       <div className="flex flex-col gap-5 rounded-[32px] bg-[#F8FAFF] p-3 ring-1 ring-blue-100 sm:p-5">
-        {/* 2. Cartes reçues + statut */}
-        <div className="flex flex-col gap-3 rounded-2xl border-2 border-orange-200 bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-5">
-          <p className="text-base font-semibold text-[#102A66] sm:text-lg">Un vendeur t&apos;a envoyé une carte ?</p>
-          <Link
-            href="/eleve/mes-cartes"
-            className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#C2410C] px-3 py-2.5 sm:gap-3 sm:px-6 text-base font-bold text-white shadow-sm transition-colors hover:bg-[#9A3412] focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[#102A66] sm:w-auto"
-          >
-            <IconCreditCard size={30} stroke={1.8} aria-hidden="true" className="shrink-0" />
-            Voir mes cartes reçues
-            <IconArrowRight size={24} stroke={2.5} aria-hidden="true" className="shrink-0" />
-          </Link>
-        </div>
+        {/* 2. Accès aux cartes reçues */}
+        <Link
+          href="/eleve/mes-cartes"
+          className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#C2410C] px-4 py-2.5 text-base font-bold text-white shadow-sm transition-colors hover:bg-[#9A3412] focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[#102A66] sm:w-fit sm:self-start sm:px-6"
+        >
+          <IconCreditCard size={26} stroke={1.8} aria-hidden="true" className="shrink-0" />
+          Mes cartes
+          <IconArrowRight size={22} stroke={2.5} aria-hidden="true" className="shrink-0" />
+        </Link>
 
         <StatutAbonnement actif={abonnementActif} echeance={echeance ?? null} />
 
         {/* 3 & 4. Activation à gauche, NITA à droite */}
-        <div className="grid gap-5 lg:grid-cols-2 lg:items-start">
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:items-start">
           <form
             onSubmit={handleSubmit}
-            className="flex flex-col gap-4 rounded-3xl border-2 border-[#C4B5FD] bg-gradient-to-b from-white to-[#F5F3FF] p-5 shadow-sm sm:p-7"
+            className="flex min-w-0 flex-col gap-4 rounded-3xl border-2 border-[#C4B5FD] bg-gradient-to-b from-white to-[#F5F3FF] p-4 shadow-sm sm:p-7"
           >
             <div className="flex items-center gap-4">
               <span
@@ -140,9 +136,9 @@ function AbonnementContenu() {
                 <IconCreditCard size={40} stroke={1.6} />
               </span>
               <div className="min-w-0">
-                <h2 className="text-xl font-extrabold text-[#102A66] sm:text-2xl">Activer ma carte Fahimta</h2>
+                <h2 className="text-xl font-extrabold text-[#102A66] sm:text-2xl">Activer ma carte</h2>
                 <p className="mt-1 text-sm text-slate-600 sm:text-base">
-                  Saisis le code de ta carte pour accéder à tous les cours premium pendant 30 jours.
+                  Saisis le code de ta carte.
                 </p>
               </div>
             </div>
@@ -158,7 +154,7 @@ function AbonnementContenu() {
               placeholder="FH-XXXX-XXXX-XXXX"
               autoComplete="off"
               autoCapitalize="characters"
-              className="min-h-14 rounded-2xl border-2 border-[#C4B5FD] bg-white px-4 py-3 text-center text-lg font-bold tracking-wider text-[#102A66] outline-none placeholder:font-semibold placeholder:text-slate-400 focus:border-[#7C3AED] focus:ring-4 focus:ring-[#7C3AED]/20 sm:text-xl"
+              className="min-h-14 w-full min-w-0 rounded-2xl border-2 border-[#C4B5FD] bg-white px-3 py-3 text-center text-base font-bold tracking-wide text-[#102A66] outline-none placeholder:font-semibold placeholder:text-slate-400 focus:border-[#7C3AED] focus:ring-4 focus:ring-[#7C3AED]/20 sm:px-4 sm:text-xl sm:tracking-wider"
             />
             <button
               type="submit"

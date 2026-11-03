@@ -14,7 +14,7 @@ export default function BandeauHorsLigne() {
 
   return (
     <div className="bg-fh-ardoise px-4 py-1.5 text-center text-xs font-medium text-white">
-      📡 Mode hors-ligne — tu consultes les leçons déjà téléchargées.
+      📡 Mode hors-ligne : tu consultes les leçons déjà téléchargées.
     </div>
   );
 }

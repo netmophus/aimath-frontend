@@ -9,7 +9,7 @@ import { ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { getProgrammeEleve, type ProgrammeDetailEleve } from "@/lib/eleveApi";
 import { listerIdsTelecharges } from "@/lib/offlineStore";
-import { matiereResolvable, type MatiereResolvable } from "@/lib/resoudre";
+import { libelleCourtMatiere, matiereResolvable, type MatiereResolvable } from "@/lib/resoudre";
 import ThemeAccordion from "@/components/eleve/ThemeAccordion";
 import DrawerLateral from "@/components/eleve/DrawerLateral";
 import CarteResoudreMatiere from "@/components/eleve/CarteResoudreMatiere";
@@ -132,7 +132,7 @@ export default function ProgrammeEleveDetailPage() {
               <IconeMatiere size={44} stroke={1.6} />
             </span>
             <div className="min-w-0">
-              <h1 className="break-words text-2xl font-extrabold leading-tight sm:text-4xl">{programme.matiere.nom}</h1>
+              <h1 className="break-words text-2xl font-extrabold leading-tight sm:text-4xl">{libelleCourtMatiere(programme.matiere.nom)}</h1>
               <p className="mt-1.5 inline-block rounded-full bg-white/15 px-3 py-0.5 text-sm font-semibold sm:text-base">{classe}</p>
             </div>
           </div>

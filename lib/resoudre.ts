@@ -14,7 +14,7 @@ export type MatiereResolvable = "maths" | "physique" | "chimie" | "svt";
 export const ORDRE_MATIERES_RESOLVABLES: readonly MatiereResolvable[] = ["maths", "physique", "chimie", "svt"];
 
 export const LIBELLE_MATIERE_RESOLVABLE: Record<MatiereResolvable, string> = {
-  maths: "Mathématiques",
+  maths: "Maths",
   physique: "Physique",
   chimie: "Chimie",
   svt: "SVT",
@@ -44,6 +44,11 @@ export function matiereResolvable(nomMatiere: string): MatiereResolvable | null 
   if (nom.startsWith("chim")) return "chimie";
   if (nom === "svt" || nom.startsWith("sciences de la vie")) return "svt";
   return null;
+}
+
+/** Nom de matière à AFFICHER (« Mathématiques » devient « Maths »). La donnée du backend reste inchangée. */
+export function libelleCourtMatiere(nom: string): string {
+  return matiereResolvable(nom) === "maths" ? "Maths" : nom;
 }
 
 /** Destination des boutons « Résoudre mon exercice » : la page de dépôt, pour un programme donné. */
@@ -101,13 +106,13 @@ export type ModeResolution = "correction" | "professeur";
 export const MODES_RESOLUTION: readonly { valeur: ModeResolution; titre: string; description: string }[] = [
   {
     valeur: "correction",
-    titre: "Correction complète",
-    description: "Obtiens une correction détaillée, étape par étape.",
+    titre: "Correction",
+    description: "Une correction détaillée, étape par étape.",
   },
   {
     valeur: "professeur",
-    titre: "Professeur particulier IA",
-    description: "Comprends et trouve la solution avec l'aide d'un professeur IA.",
+    titre: "fahimta ai",
+    description: "Comprends et trouve la solution avec un professeur IA.",
   },
 ];
 
@@ -134,7 +139,7 @@ export function erreurFichier(fichier: File): string | null {
 // --- Envoi à l'API (étape 4) : lecture des erreurs ---
 
 export const MESSAGE_DEPOT_VALIDE =
-  "Ton exercice a été reçu et validé. La correction automatique sera disponible prochainement.";
+  "Ton exercice est valide, mais l'analyse automatique n'est pas encore activée. Rien n'a été enregistré ni résolu.";
 
 export interface ErreurDepot {
   messages: string[];
@@ -151,7 +156,10 @@ export function messagesErreurDjango(corps: unknown): string[] {
     } else if (Array.isArray(valeur)) {
       valeur.forEach(parcourir);
     } else if (valeur && typeof valeur === "object") {
-      Object.values(valeur).forEach(parcourir);
+      // `code` est un identifiant technique (ex. limite_jour) : jamais montré à l'élève.
+      Object.entries(valeur).forEach(([cle, v]) => {
+        if (cle !== "code") parcourir(v);
+      });
     }
   };
   parcourir(corps);
@@ -184,6 +192,11 @@ export function decrireErreurDepot(error: unknown): ErreurDepot {
           sessionExpiree: false,
         };
       }
+      case error.status === 429: {
+        // Quota du jour ou de l'exercice : le serveur envoie un message court, sans détail interne.
+        const messages = messagesErreurDjango(error.body);
+        return { messages: messages.length > 0 ? messages : ["Limite du jour atteinte."], sessionExpiree: false };
+      }
       case error.status === 502 || error.status === 503 || error.status === 504: {
         // Le serveur renvoie ici un message français sans détail technique.
         const messages = messagesErreurDjango(error.body);
@@ -201,6 +214,13 @@ export function decrireErreurDepot(error: unknown): ErreurDepot {
       default:
         return { messages: [error.message], sessionExpiree: false };
     }
+  }
+  // Délai dépassé côté navigateur (voir DELAI_MAX_DEPOT_MS) : on le dit, sans laisser l'écran bloqué.
+  if (error instanceof DOMException && (error.name === "AbortError" || error.name === "TimeoutError")) {
+    return {
+      messages: ["Le serveur met trop de temps à répondre. Réessaie, avec moins de pages si possible."],
+      sessionExpiree: false,
+    };
   }
   // fetch() qui échoue (hors-ligne, serveur coupé) ou corps de réponse illisible.
   return {
@@ -227,9 +247,10 @@ export function decrireErreurProfesseur(error: unknown): ErreurProfesseur {
   const premier = messagesErreurDjango(error.body)[0];
   const code = (error.body as { code?: string } | null)?.code;
   if (error.status === 401) return { ...neutre, sessionExpiree: true, message: "Ta session a expiré. Reconnecte-toi pour continuer." };
-  if (error.status === 404) return { ...neutre, seanceExpiree: true, message: "Cette séance a expiré. Relance le Professeur pour recommencer." };
+  if (error.status === 404) return { ...neutre, seanceExpiree: true, message: "Cette séance a expiré. Relance fahimta ai pour recommencer." };
+  if (error.status === 410) return { ...neutre, seanceExpiree: true, message: "Ce résultat a expiré. Relance fahimta ai pour recommencer." };
   if (error.status === 503 && code === "professeur_desactive") {
-    return { ...neutre, message: "Le Professeur particulier n'est pas encore disponible." };
+    return { ...neutre, message: "fahimta ai n'est pas encore disponible." };
   }
   if (error.status === 409 && code === "etat_obsolete") {
     return { ...neutre, message: "La séance s'est mise à jour (autre onglet ou double envoi). Vérifie l'écran puis réessaie." };
@@ -240,7 +261,7 @@ export function decrireErreurProfesseur(error: unknown): ErreurProfesseur {
   }
   if (error.status === 400 && premier) return { ...neutre, message: premier };
   if (error.status === 502 || error.status === 503 || error.status === 504) {
-    return { ...neutre, message: premier ?? "Le professeur n'a pas pu répondre. Réessaie dans un instant." };
+    return { ...neutre, message: premier ?? "fahimta ai n'a pas pu répondre. Réessaie dans un instant." };
   }
   return { ...neutre, message: "Le serveur ne répond pas correctement pour le moment. Réessaie dans un instant." };
 }

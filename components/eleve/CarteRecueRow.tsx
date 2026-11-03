@@ -59,7 +59,7 @@ export default function CarteRecueRow({ carte }: { carte: CarteRecueEleve }) {
   }
 
   return (
-    <div className="flex flex-col gap-4 overflow-hidden rounded-3xl border border-white/15 bg-[linear-gradient(135deg,#102A66_0%,#1E3A8A_55%,#4C1D95_130%)] p-4 text-white shadow-lg sm:p-6">
+    <div className="flex min-w-0 flex-col gap-4 rounded-3xl border border-white/15 bg-[linear-gradient(135deg,#102A66_0%,#1E3A8A_55%,#4C1D95_130%)] p-4 text-white shadow-lg sm:p-6">
       <div className="flex items-center gap-3">
         <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white p-1.5">
           <Image src="/fahimta.png" alt="" width={36} height={36} className="h-full w-full object-contain" />
@@ -101,7 +101,7 @@ export default function CarteRecueRow({ carte }: { carte: CarteRecueEleve }) {
           className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl border-2 border-white/60 px-5 text-base font-bold text-white transition-colors hover:bg-white/10 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-white sm:flex-none"
         >
           {copie ? <IconCheck size={22} stroke={2.5} aria-hidden="true" /> : <IconCopy size={22} stroke={2} aria-hidden="true" />}
-          {copie ? "Copié !" : "Copier le code"}
+          {copie ? "Copié !" : "Copier"}
         </button>
         {carte.statut === "active" && (
           <Link

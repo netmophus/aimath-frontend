@@ -15,7 +15,7 @@ export default function MurDeblocage() {
       </span>
       <p className="text-base font-bold text-fh-bleu">Ce cours fait partie de l&apos;offre Fahimta</p>
       <p className="max-w-sm text-sm text-fh-ardoise">
-        Débloque la suite du cours — démonstrations, exercices corrigés, sujet type examen et vidéos — avec une
+        Débloque la suite du cours (démonstrations, exercices corrigés, sujet d&apos;examen et vidéos) avec une
         carte Fahimta.
       </p>
       <Link

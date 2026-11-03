@@ -114,7 +114,7 @@ export default function EleveDashboardPage() {
             </Link>
           </div>
 
-          <div className="mt-4 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+          <div className="mt-4 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
             {chargementProgrammes ? (
               <>
                 <div className="h-36 animate-pulse rounded-3xl bg-fh-sable/50" />

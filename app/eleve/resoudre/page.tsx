@@ -97,7 +97,7 @@ function ResoudreContenu() {
         className="inline-flex min-h-12 w-fit items-center gap-2 rounded-xl bg-[#102A66] px-5 text-base font-bold text-white shadow-sm transition-colors hover:bg-[#1D4ED8] focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[#102A66]"
       >
         <IconArrowLeft size={22} stroke={2.25} aria-hidden="true" />
-        Retour à l&apos;accueil
+        Retour
       </Link>
 
       {/* Bandeau principal */}

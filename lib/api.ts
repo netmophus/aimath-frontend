@@ -174,15 +174,25 @@ export async function apiRequest<T>(path: string, options: RequestOptions = {}):
 async function rawRequestMultipart<T>(
   path: string,
   formData: FormData,
-  method: "POST" | "PATCH" | "PUT" = "PATCH"
+  method: "POST" | "PATCH" | "PUT" = "PATCH",
+  delaiMaxMs?: number
 ): Promise<T> {
   const headers: Record<string, string> = {};
   const access = tokenStorage.getAccess();
   if (access) headers.Authorization = `Bearer ${access}`;
 
-  const response = await fetch(`${API_BASE_URL}${path}`, { method, headers, body: formData });
+  // Délai maximal facultatif : sans lui, un serveur qui ne répond jamais laisserait l'écran en attente indéfiniment.
+  const controleur = delaiMaxMs ? new AbortController() : null;
+  const minuteur = controleur ? setTimeout(() => controleur.abort(), delaiMaxMs) : null;
 
-  const text = await response.text();
+  let response: Response;
+  let text: string;
+  try {
+    response = await fetch(`${API_BASE_URL}${path}`, { method, headers, body: formData, signal: controleur?.signal });
+    text = await response.text();
+  } finally {
+    if (minuteur) clearTimeout(minuteur);
+  }
   const data: unknown = text ? JSON.parse(text) : null;
 
   if (!response.ok) {
@@ -197,10 +207,11 @@ async function rawRequestMultipart<T>(
 export async function apiRequestMultipart<T>(
   path: string,
   formData: FormData,
-  method: "POST" | "PATCH" | "PUT" = "PATCH"
+  method: "POST" | "PATCH" | "PUT" = "PATCH",
+  delaiMaxMs?: number
 ): Promise<T> {
   try {
-    return await rawRequestMultipart<T>(path, formData, method);
+    return await rawRequestMultipart<T>(path, formData, method, delaiMaxMs);
   } catch (error) {
     const shouldRetry = error instanceof ApiError && error.status === 401;
     if (!shouldRetry) throw error;
@@ -211,7 +222,7 @@ export async function apiRequestMultipart<T>(
       tokenStorage.clear();
       throw error;
     }
-    return rawRequestMultipart<T>(path, formData, method);
+    return rawRequestMultipart<T>(path, formData, method, delaiMaxMs);
   }
 }
 

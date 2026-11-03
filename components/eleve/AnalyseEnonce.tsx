@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { IconAlertTriangle, IconEye } from "@tabler/icons-react";
 
 import CorrectionComplete from "@/components/eleve/CorrectionComplete";
@@ -11,9 +11,12 @@ import {
   type AnalyseEnonce as Analyse,
   type ConfianceLecture,
   type CorrectionComplete as Correction,
+  type CorrectionReponse,
   type MatiereLue,
+  type SeanceProfesseur,
 } from "@/lib/eleveApi";
 import { LONGUEUR_MAX_CORRECTION, decrireErreurDepot, type ErreurDepot } from "@/lib/resoudre";
+import { attendreTache } from "@/lib/taches";
 
 const LIBELLE_MATIERE: Record<MatiereLue, string> = {
   mathematiques: "Mathématiques",
@@ -31,6 +34,10 @@ const LIBELLE_CONFIANCE: Record<ConfianceLecture, string> = {
 };
 
 interface AnalyseEnonceProps {
+  /** Reprise après actualisation : tâche de correction à retrouver (en cours, terminée ou en erreur). */
+  correctionTacheId?: string;
+  /** Reprise après actualisation : séance fahimta ai à rouvrir telle quelle. */
+  seanceInitiale?: SeanceProfesseur | null;
   analyse: Analyse;
   matiereProgramme: string;
   /** Programme de l'exercice (pour demander la correction). */
@@ -79,15 +86,39 @@ export default function AnalyseEnonce({
   onDemanderCorrection,
   onConfirmer,
   confirmee,
+  correctionTacheId,
+  seanceInitiale,
 }: AnalyseEnonceProps) {
   const [signalement, setSignalement] = useState(false);
   const [remarque, setRemarque] = useState("");
   // La correction est liée à l'énoncé confirmé : si la lecture change, elle disparaît.
   const [correction, setCorrection] = useState<{ pour: Analyse; contenu: Correction } | null>(null);
-  const [correctionEnCours, setCorrectionEnCours] = useState(false);
+  const [correctionEnCours, setCorrectionEnCours] = useState(Boolean(correctionTacheId));
   const [erreurCorrection, setErreurCorrection] = useState<ErreurDepot | null>(null);
-  const [professeurOuvert, setProfesseurOuvert] = useState<Analyse | null>(null);
-  const verrouCorrection = useRef(false); // deux clics rapprochés = un seul appel payant
+  const [professeurOuvert, setProfesseurOuvert] = useState<Analyse | null>(seanceInitiale ? analyse : null);
+  const verrouCorrection = useRef(Boolean(correctionTacheId)); // deux clics rapprochés = un seul appel payant
+
+  // Actualisation pendant (ou après) une correction : on retrouve son état, jamais de nouvel appel payant.
+  useEffect(() => {
+    if (!correctionTacheId) return;
+    let annule = false;
+    attendreTache<CorrectionReponse>(correctionTacheId)
+      .then((reponse) => {
+        if (!annule) setCorrection({ pour: analyse, contenu: reponse.correction });
+      })
+      .catch((error) => {
+        if (!annule) setErreurCorrection(decrireErreurDepot(error));
+      })
+      .finally(() => {
+        verrouCorrection.current = false;
+        if (!annule) setCorrectionEnCours(false);
+      });
+    return () => {
+      annule = true;
+    };
+    // Une seule fois par tâche retrouvée.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [correctionTacheId]);
 
   async function voirCorrection() {
     if (verrouCorrection.current) return;
@@ -225,7 +256,7 @@ export default function AnalyseEnonce({
             {analyse.figures.map((figure, index) => (
               <li key={`f${index}`}>
                 Figure{page(figure.page)} : {figure.description}
-                {!figure.exploitable && <strong className="text-amber-900"> — peu exploitable</strong>}
+                {!figure.exploitable && <strong className="text-amber-900"> (peu exploitable)</strong>}
               </li>
             ))}
             {analyse.tableaux.map((tableau, index) => (
@@ -246,7 +277,7 @@ export default function AnalyseEnonce({
               <li key={`i${index}`}>
                 <RenduMath contenu={partie.probleme} className="rendu-markdown inline rendu-en-ligne" />
                 {page(partie.page)}
-                {partie.extrait && <em> — « {partie.extrait} »</em>}
+                {partie.extrait && <em> : « {partie.extrait} »</em>}
               </li>
             ))}
             {analyse.remarques.map((texte, index) => (
@@ -277,12 +308,12 @@ export default function AnalyseEnonce({
                 : "min-h-12 rounded-full border border-fh-orange px-6 text-sm font-semibold text-fh-orange-fonce transition-colors hover:bg-fh-accent/40 sm:text-base"
             }
           >
-            Travailler avec le Professeur particulier IA
+            Travailler avec fahimta ai
           </button>
         </div>
       )}
 
-      {professeurAffiche && <ProfesseurParticulier programmeId={programmeId} analyse={analyse} />}
+      {professeurAffiche && <ProfesseurParticulier programmeId={programmeId} analyse={analyse} seanceInitiale={seanceInitiale} />}
 
       {confirmee && correctionDisponible && !correctionAffichee && !professeurAffiche && (
         <div className="flex flex-col gap-2">
@@ -293,7 +324,7 @@ export default function AnalyseEnonce({
             aria-busy={correctionEnCours}
             className="min-h-12 rounded-full bg-fh-orange px-6 text-sm font-semibold text-white transition-colors hover:bg-fh-orange-fonce disabled:cursor-not-allowed disabled:opacity-50 sm:text-base"
           >
-            {correctionEnCours ? "Correction en préparation…" : "Voir la correction complète"}
+            {correctionEnCours ? "Correction en préparation…" : "Voir la correction"}
           </button>
           {correctionEnCours && (
             <p className="text-center text-xs text-fh-ardoise">La rédaction et le contrôle des calculs prennent environ une minute.</p>

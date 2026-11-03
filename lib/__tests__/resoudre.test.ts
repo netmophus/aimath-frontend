@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import { ApiError } from "@/lib/api";
+
 import {
   LONGUEUR_MAX_ENONCE,
   MODES_RESOLUTION,
@@ -7,7 +9,9 @@ import {
   TAILLE_MAX_FICHIER_OCTETS,
   TAILLE_MAX_TOTAL_OCTETS,
   erreurFichier,
+  decrireErreurDepot,
   hrefResoudre,
+  libelleCourtMatiere,
   programmesParMatiere,
 } from "@/lib/resoudre";
 
@@ -56,13 +60,52 @@ describe("modes d'aide : valeurs techniques et textes", () => {
 
   it("affiche les titres et descriptions de la maquette", () => {
     expect(MODES_RESOLUTION[0]).toMatchObject({
-      titre: "Correction complète",
-      description: "Obtiens une correction détaillée, étape par étape.",
+      titre: "Correction",
+      description: "Une correction détaillée, étape par étape.",
     });
     expect(MODES_RESOLUTION[1]).toMatchObject({
-      titre: "Professeur particulier IA",
-      description: "Comprends et trouve la solution avec l'aide d'un professeur IA.",
+      titre: "fahimta ai",
+      description: "Comprends et trouve la solution avec un professeur IA.",
     });
+  });
+});
+
+describe("libellés courts", () => {
+  it("Mathématiques s'affiche « Maths », les autres matières sont inchangées", () => {
+    expect(libelleCourtMatiere("Mathématiques")).toBe("Maths");
+    expect(libelleCourtMatiere("Physique")).toBe("Physique");
+    expect(libelleCourtMatiere("SVT")).toBe("SVT");
+    expect(libelleCourtMatiere("Histoire-Géographie")).toBe("Histoire-Géographie");
+  });
+});
+
+describe("retour d'erreur de la soumission (aucun blocage silencieux)", () => {
+  it("délai dépassé côté navigateur : message explicite", () => {
+    const r = decrireErreurDepot(new DOMException("aborted", "AbortError"));
+    expect(r.messages[0]).toMatch(/trop de temps/);
+    expect(decrireErreurDepot(new DOMException("t", "TimeoutError")).messages[0]).toMatch(/trop de temps/);
+  });
+  it("hors-ligne : message de connexion", () => {
+    expect(decrireErreurDepot(new TypeError("fetch failed")).messages[0]).toMatch(/Impossible de contacter le serveur/);
+  });
+  it("erreurs du backend conservées (401, 403, 404, 409, 413, 502, 503, 504)", () => {
+    const e = (status: number, body: unknown = null) => decrireErreurDepot(new ApiError(status, "x", body));
+    expect(e(401).sessionExpiree).toBe(true);
+    expect(e(403).messages[0]).toMatch(/pas autorisé/);
+    expect(e(404).messages[0]).toMatch(/pas accessible/);
+    expect(e(409).messages[0]).toMatch(/déjà en cours/);
+    expect(e(413).messages[0]).toMatch(/trop volumineux/);
+    expect(e(503, { detail: "L'analyse n'est pas configurée sur le serveur." }).messages[0]).toBe("L'analyse n'est pas configurée sur le serveur.");
+    expect(e(504, { detail: "L'analyse a pris trop de temps." }).messages[0]).toBe("L'analyse a pris trop de temps.");
+  });
+  it("quota et budget : messages courts du serveur, sans prix ni détail interne", () => {
+    const e = (status: number, body: unknown = null) => decrireErreurDepot(new ApiError(status, "x", body));
+    expect(e(429, { detail: "Limite du jour atteinte.", code: "limite_jour" }).messages[0]).toBe("Limite du jour atteinte.");
+    expect(e(429).messages[0]).toBe("Limite du jour atteinte.");
+    expect(e(429, { detail: "Limite du jour atteinte.", code: "limite_jour" }).messages).toEqual(["Limite du jour atteinte."]);   // jamais le code technique
+    expect(e(503, { detail: "Service temporairement indisponible. Réessaie plus tard.", code: "budget_epuise" }).messages[0]).toBe(
+      "Service temporairement indisponible. Réessaie plus tard.",
+    );
   });
 });
 

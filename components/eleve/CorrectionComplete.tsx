@@ -64,7 +64,7 @@ function Controle({ controle }: { controle: ControleCorrection }) {
             {controle.methodes.map((methode) => (
               <li key={methode.nom}>
                 <strong className="text-fh-bleu">{methode.nom}</strong> {LIBELLE_METHODE[methode.statut] ?? methode.statut}
-                {methode.detail ? ` — ${methode.detail}` : ""}
+                {methode.detail ? ` : ${methode.detail}` : ""}
               </li>
             ))}
           </ul>
@@ -140,7 +140,7 @@ function Concordance({ concordance }: { concordance: ConcordanceCorrection }) {
       <div className="min-w-0 flex-1">
         <p className="font-semibold text-fh-bleu">{ligne.titre}</p>
         <p className="mt-0.5 text-xs text-fh-ardoise">
-          <span className="font-semibold text-fh-bleu">{concordance.grandeur}</span> — {concordance.detail}
+          <span className="font-semibold text-fh-bleu">{concordance.grandeur}</span> : {concordance.detail}
         </p>
         {(concordance.annonce || concordance.attendu) && (
           <dl className="mt-1 grid grid-cols-[auto_1fr] gap-x-2 gap-y-0.5 text-xs text-fh-ardoise">
@@ -191,8 +191,8 @@ export default function CorrectionComplete({ correction }: { correction: Correct
   const r = correction.resume_verification;
 
   return (
-    <section aria-label="Correction complète" className="flex flex-col gap-4">
-      <h2 className="text-lg font-bold text-fh-bleu">Correction complète</h2>
+    <section aria-label="Correction" className="flex flex-col gap-4">
+      <h2 className="text-lg font-bold text-fh-bleu">Correction</h2>
 
       <div role={correction.statut === "contradiction" ? "alert" : "status"} className={`rounded-2xl p-4 ring-1 ${bandeau.classes}`}>
         <p className="flex items-center gap-2 text-sm font-bold">
@@ -252,7 +252,7 @@ export default function CorrectionComplete({ correction }: { correction: Correct
               {question.etapes.map((etape, i) => (
                 <li key={i} className="rounded-xl bg-fh-creme px-3 py-2">
                   <div className="text-sm font-semibold text-fh-bleu">
-                    Étape {i + 1} — <RenduMath contenu={etape.titre} className="rendu-markdown inline rendu-en-ligne" />
+                    Étape {i + 1} : <RenduMath contenu={etape.titre} className="rendu-markdown inline rendu-en-ligne" />
                   </div>
                   {etape.explication && <RenduMath contenu={etape.explication} className="rendu-markdown mt-1 text-sm text-fh-ardoise" />}
                   {etape.calcul && <RenduMath contenu={etape.calcul} bloc className="rendu-markdown rendu-calcul mt-1 overflow-x-auto text-fh-bleu" />}

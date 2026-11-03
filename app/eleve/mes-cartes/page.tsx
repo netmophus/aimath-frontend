@@ -102,7 +102,7 @@ export default function MesCartesPage() {
         className="inline-flex min-h-12 w-fit items-center gap-2 rounded-xl bg-[#102A66] px-5 text-base font-bold text-white shadow-sm transition-colors hover:bg-[#1D4ED8] focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[#102A66]"
       >
         <IconArrowLeft size={22} stroke={2.25} aria-hidden="true" />
-        Retour à l&apos;abonnement
+        Retour
       </Link>
 
       {/* Bandeau « Mes cartes » */}
@@ -141,7 +141,7 @@ export default function MesCartesPage() {
         <StatutAbonnement actif={user?.aUnAbonnementActif ?? false} echeance={user?.abonnementActifJusquAu ?? null} />
 
         {chargement ? (
-          <div className="grid gap-4 lg:grid-cols-2" aria-busy="true" aria-label="Chargement des cartes">
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2" aria-busy="true" aria-label="Chargement des cartes">
             {[0, 1].map((cle) => (
               <div key={cle} className="h-56 animate-pulse rounded-3xl bg-slate-200/70" />
             ))}
@@ -191,7 +191,7 @@ export default function MesCartesPage() {
                       borderColor: estActif ? couleur : `color-mix(in srgb, ${couleur} 35%, white)`,
                       backgroundColor: estActif ? teinte : "#FFFFFF",
                     }}
-                    className={`relative flex min-h-16 flex-col items-center gap-1.5 overflow-hidden rounded-2xl border-2 px-3 py-3 text-center transition-shadow sm:flex-row sm:gap-4 sm:px-5 sm:text-left focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[#102A66] ${
+                    className={`relative flex min-h-16 min-w-0 flex-col items-center gap-1.5 overflow-hidden rounded-2xl border-2 px-3 py-3 text-center transition-shadow sm:flex-row sm:gap-4 sm:px-5 sm:text-left focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[#102A66] ${
                       estActif ? "shadow-lg" : "shadow-sm hover:shadow-md"
                     }`}
                   >
@@ -225,7 +225,7 @@ export default function MesCartesPage() {
                   </p>
                 </div>
               ) : (
-                <div className="grid gap-4 lg:grid-cols-2">
+                <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                   {listeAffichee.map((carte) => (
                     <CarteRecueRow key={carte.id} carte={carte} />
                   ))}

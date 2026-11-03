@@ -14,6 +14,7 @@ import {
   type SerieInfo,
   type Statut,
 } from "./api";
+import { suivreSiTache, type TacheAcceptee, type TacheListee } from "./taches";
 
 export interface MatiereInfo {
   id: number;
@@ -387,6 +388,9 @@ export interface DepotExerciceReponse {
   };
 }
 
+/** Au-delà, l'envoi est abandonné avec un message (le serveur a lui-même un délai d'analyse de 120 à 180 s). */
+export const DELAI_MAX_DEPOT_MS = 200_000;
+
 /** multipart/form-data : `programme`, `mode`, `enonce`, puis chaque fichier
  * sous la même clé répétée `fichiers`. Aucun Content-Type posé à la main (le
  * navigateur ajoute le boundary — voir apiRequestMultipart). */
@@ -399,7 +403,10 @@ export function deposerExercice(payload: DepotExerciceInput): Promise<DepotExerc
   if (payload.correction) formData.append("correction", payload.correction);
   for (const fichier of payload.fichiers) formData.append("fichiers", fichier);
 
-  return apiRequestMultipart<DepotExerciceReponse>("/api/eleve/resoudre/", formData, "POST");
+  // L'envoi lui-même est court ; si l'analyse est mise en file (202), on attend son résultat (voir lib/taches.ts).
+  return apiRequestMultipart<DepotExerciceReponse | TacheAcceptee>("/api/eleve/resoudre/", formData, "POST", DELAI_MAX_DEPOT_MS).then((r) =>
+    suivreSiTache<DepotExerciceReponse>(r),
+  );
 }
 
 // --- POST /api/eleve/correction/ : correction complète (maths, pilote) ---
@@ -469,7 +476,9 @@ export interface CorrectionReponse {
 
 /** Envoie l'énoncé CONFIRMÉ (texte) : les documents ne sont pas relus. */
 export function demanderCorrection(programme: number, analyse: AnalyseEnonce): Promise<CorrectionReponse> {
-  return apiRequest<CorrectionReponse>("/api/eleve/correction/", { method: "POST", body: { programme, analyse } });
+  return apiRequest<CorrectionReponse | TacheAcceptee>("/api/eleve/correction/", { method: "POST", body: { programme, analyse } }).then((r) =>
+    suivreSiTache<CorrectionReponse>(r),
+  );
 }
 
 // --- Professeur particulier IA (étape 7) : séance gérée côté serveur ---
@@ -532,11 +541,15 @@ export type TypeDemandeExplication = "incomprehension" | "autre_explication" | "
 const BASE_PROFESSEUR = "/api/eleve/professeur/seances/";
 
 export function demarrerSeanceProfesseur(programme: number, analyse: AnalyseEnonce): Promise<SeanceReponse> {
-  return apiRequest<SeanceReponse>(BASE_PROFESSEUR, { method: "POST", body: { programme, analyse } });
+  return apiRequest<SeanceReponse | TacheAcceptee>(BASE_PROFESSEUR, { method: "POST", body: { programme, analyse } }).then((r) =>
+    suivreSiTache<SeanceReponse>(r),
+  );
 }
 
 function actionSeance(id: string, action: string, corps: Record<string, unknown>): Promise<SeanceReponse> {
-  return apiRequest<SeanceReponse>(`${BASE_PROFESSEUR}${encodeURIComponent(id)}/${action}/`, { method: "POST", body: corps });
+  return apiRequest<SeanceReponse | TacheAcceptee>(`${BASE_PROFESSEUR}${encodeURIComponent(id)}/${action}/`, { method: "POST", body: corps }).then(
+    (r) => suivreSiTache<SeanceReponse>(r),
+  );
 }
 
 export const envoyerReponseProfesseur = (id: string, version: number, texte: string) =>
@@ -546,3 +559,19 @@ export const demanderExplicationProfesseur = (id: string, version: number, type:
   actionSeance(id, "explication", { version, type, texte });
 export const voirSolutionProfesseur = (id: string, version: number) => actionSeance(id, "solution", { version });
 export const etapeSuivanteProfesseur = (id: string, version: number) => actionSeance(id, "suivante", { version });
+
+
+// --- GET /api/eleve/reprise/?programme=<id> : reprise après actualisation (lecture seule, aucun appel IA) ---
+
+export interface RepriseReponse {
+  /** Dernier énoncé lu pour ce programme, encore disponible (2 h). */
+  analyse: AnalyseEnonce | null;
+  lecture: TacheListee | null;
+  correction: TacheListee | null;
+  /** Séance fahimta ai en cours (historique autorisé, indices, compteur d'échanges). */
+  seance: SeanceProfesseur | null;
+}
+
+export function getReprise(programme: number): Promise<RepriseReponse> {
+  return apiRequest<RepriseReponse>(`/api/eleve/reprise/?programme=${encodeURIComponent(String(programme))}`);
+}

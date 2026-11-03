@@ -17,7 +17,15 @@ import {
 import { useAuth } from "@/lib/auth";
 import AnalyseEnonce from "@/components/eleve/AnalyseEnonce";
 import { IDENTITES_MODES, melangeBlanc } from "@/components/eleve/teintesResoudre";
-import { deposerExercice, type AnalyseEnonce as Analyse } from "@/lib/eleveApi";
+import ProfesseurParticulier from "@/components/eleve/ProfesseurParticulier";
+import {
+  deposerExercice,
+  getReprise,
+  type AnalyseEnonce as Analyse,
+  type DepotExerciceReponse,
+  type SeanceProfesseur,
+} from "@/lib/eleveApi";
+import { MESSAGE_RESULTAT_EXPIRE, attendreTache, planifierVue, tacheVue } from "@/lib/taches";
 import { preparerImage } from "@/lib/reduireImage";
 import {
   ACCEPT_IMPORT,
@@ -53,7 +61,7 @@ interface DepotExerciceProps {
 const CARTE = "rounded-3xl border border-blue-100 bg-white p-4 shadow-sm sm:p-7";
 
 const BOUTON_ACTION =
-  "inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border-2 border-[#1D4ED8] bg-white px-4 py-2 text-base font-bold sm:px-6 text-[#1D4ED8] transition-colors hover:bg-blue-50 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[#102A66] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto";
+  "inline-flex min-h-12 min-w-0 flex-1 items-center justify-center gap-2 rounded-xl border-2 border-[#1D4ED8] bg-white px-4 py-2 text-base font-bold text-[#1D4ED8] transition-colors hover:bg-blue-50 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[#102A66] disabled:cursor-not-allowed disabled:opacity-50 sm:flex-none sm:px-8";
 
 const MO = 1024 * 1024;
 
@@ -81,8 +89,12 @@ export default function DepotExercice({ programmeId, matiere }: DepotExercicePro
   const [envoiEnCours, setEnvoiEnCours] = useState(false);
   const [erreurEnvoi, setErreurEnvoi] = useState<ErreurDepot | null>(null);
   const [depotValide, setDepotValide] = useState(false);
+  // Étape affichée pendant l'envoi : « envoi » puis « analyse » (l'analyse suit l'envoi, elle peut durer jusqu'à 2 minutes).
+  const [phase, setPhase] = useState<"envoi" | "analyse">("envoi");
   // Énoncé reconnu par l'IA, à relire avant toute résolution (null tant qu'il n'y en a pas).
   const [analyse, setAnalyse] = useState<Analyse | null>(null);
+  const [correctionTacheId, setCorrectionTacheId] = useState<string | undefined>(undefined);
+  const [seanceRetrouvee, setSeanceRetrouvee] = useState<SeanceProfesseur | null>(null);
   const [enonceConfirme, setEnonceConfirme] = useState(false);
   const [correctionDisponible, setCorrectionDisponible] = useState(false);
   const [professeurDisponible, setProfesseurDisponible] = useState(false);
@@ -96,6 +108,13 @@ export default function DepotExercice({ programmeId, matiere }: DepotExercicePro
   const imagesRef = useRef<ImageDepot[]>([]);
   const entreeCamera = useRef<HTMLInputElement>(null);
   const entreeImport = useRef<HTMLInputElement>(null);
+
+  // Passe de « Envoi » à « Analyse » après quelques secondes : l'élève sait toujours où en est le traitement.
+  useEffect(() => {
+    if (!envoiEnCours) return;
+    const minuteur = setTimeout(() => setPhase("analyse"), 4000);
+    return () => clearTimeout(minuteur);
+  }, [envoiEnCours]);
 
   useEffect(() => {
     imagesRef.current = images;
@@ -192,9 +211,87 @@ export default function DepotExercice({ programmeId, matiere }: DepotExercicePro
     setEnonceConfirme(false);
   }
 
+  function appliquerReponse(reponse: DepotExerciceReponse) {
+    if (reponse.valide === true) {
+      if (reponse.analysee && reponse.analyse) {
+        setAnalyse(reponse.analyse);
+        setCorrectionDisponible(reponse.correction_disponible === true);
+        setProfesseurDisponible(reponse.professeur_disponible === true);
+        setEnonceConfirme(false);
+      } else {
+        setDepotValide(true);
+      }
+    } else {
+      setErreurEnvoi({ messages: ["Réponse inattendue du serveur : ton exercice n'a pas été validé."], sessionExpiree: false });
+    }
+  }
+
+  // Actualisation, fermeture du navigateur ou coupure : on retrouve la séance fahimta ai, la correction ou la lecture en cours
+  // (ou terminée) de cet élève. Lecture seule côté serveur : jamais de nouvel appel payant.
+  useEffect(() => {
+    let annule = false;
+    (async () => {
+      try {
+        const reprise = await getReprise(programmeId);
+        if (annule || envoiVerrou.current) return;
+        const { analyse: enonceRetrouve, lecture, correction, seance } = reprise;
+        const lectureOk = lecture?.statut === "terminee" && (lecture.corps as DepotExerciceReponse | null)?.correction_disponible;
+
+        if (seance && !seance.termine) {
+          if (enonceRetrouve) {
+            setAnalyse(enonceRetrouve);
+            setEnonceConfirme(true);
+            setCorrectionDisponible(lectureOk === true || lecture === null || lecture.statut === "expiree");
+            setProfesseurDisponible(true);
+          }
+          setSeanceRetrouvee(seance);
+          return;
+        }
+        if (correction && !tacheVue(correction.id)) {
+          if (correction.statut === "expiree") {
+            planifierVue(correction.id);
+            setErreurEnvoi({ messages: [MESSAGE_RESULTAT_EXPIRE], sessionExpiree: false });
+          } else if (enonceRetrouve) {
+            setAnalyse(enonceRetrouve);
+            setEnonceConfirme(true);
+            setCorrectionDisponible(true);
+            setProfesseurDisponible(lecture?.statut === "terminee" ? (lecture.corps as DepotExerciceReponse | null)?.professeur_disponible === true : false);
+            setCorrectionTacheId(correction.id);
+          }
+          return;
+        }
+        if (lecture && !tacheVue(lecture.id)) {
+          if (lecture.statut === "expiree") {
+            planifierVue(lecture.id);
+            setErreurEnvoi({ messages: [MESSAGE_RESULTAT_EXPIRE], sessionExpiree: false });
+            return;
+          }
+          envoiVerrou.current = true;
+          setPhase("analyse");
+          setEnvoiEnCours(true);
+          try {
+            const resultat = await attendreTache<DepotExerciceReponse>(lecture.id);
+            if (!annule) appliquerReponse(resultat);
+          } catch (error) {
+            if (!annule) setErreurEnvoi(decrireErreurDepot(error));
+          } finally {
+            envoiVerrou.current = false;
+            if (!annule) setEnvoiEnCours(false);
+          }
+        }
+      } catch {
+        /* rien à reprendre, ou réseau indisponible : le dépôt normal reste possible */
+      }
+    })();
+    return () => {
+      annule = true;
+    };
+  }, [programmeId]);
+
   async function soumettre(remarque?: string) {
     if (envoiVerrou.current || !aContenu) return;
     envoiVerrou.current = true;
+    setPhase("envoi");
     setEnvoiEnCours(true);
     setErreurEnvoi(null);
 
@@ -209,18 +306,7 @@ export default function DepotExercice({ programmeId, matiere }: DepotExercicePro
         analyser: true,
         correction: remarque,
       });
-      if (reponse.valide === true) {
-        if (reponse.analysee && reponse.analyse) {
-          setAnalyse(reponse.analyse);
-          setCorrectionDisponible(reponse.correction_disponible === true);
-          setProfesseurDisponible(reponse.professeur_disponible === true);
-          setEnonceConfirme(false);
-        } else {
-          setDepotValide(true);
-        }
-      } else {
-        setErreurEnvoi({ messages: ["Réponse inattendue du serveur : ton exercice n'a pas été validé."], sessionExpiree: false });
-      }
+      appliquerReponse(reponse);
     } catch (error) {
       setErreurEnvoi(decrireErreurDepot(error));
     } finally {
@@ -234,9 +320,15 @@ export default function DepotExercice({ programmeId, matiere }: DepotExercicePro
     router.push("/login");
   }
 
+  if (seanceRetrouvee && !analyse) {
+    return <ProfesseurParticulier programmeId={programmeId} seanceInitiale={seanceRetrouvee} />;
+  }
+
   if (analyse) {
     return (
       <AnalyseEnonce
+        correctionTacheId={correctionTacheId}
+        seanceInitiale={seanceRetrouvee}
         analyse={analyse}
         matiereProgramme={matiere}
         programmeId={programmeId}
@@ -282,7 +374,7 @@ export default function DepotExercice({ programmeId, matiere }: DepotExercicePro
   }
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex min-w-0 flex-col gap-5">
       {/* Verrouille tous les champs pendant l'envoi (fieldset disabled) */}
       <fieldset disabled={envoiEnCours} className="m-0 flex min-w-0 flex-col gap-5 border-0 p-0">
         {/* 1. Ajoute ton exercice */}
@@ -323,7 +415,7 @@ export default function DepotExercice({ programmeId, matiere }: DepotExercicePro
               maximum par fichier ({TAILLE_MAX_TOTAL_OCTETS / MO} Mo au total).
             </p>
 
-            <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
+            <div className="flex w-full max-w-md flex-row gap-3 sm:w-auto sm:max-w-none">
               <button
                 type="button"
                 onClick={() => entreeCamera.current?.click()}
@@ -331,11 +423,11 @@ export default function DepotExercice({ programmeId, matiere }: DepotExercicePro
                 className={BOUTON_ACTION}
               >
                 <IconCamera size={24} stroke={1.9} aria-hidden="true" />
-                {images.length > 0 ? "Photographier une autre page" : "Prendre une photo"}
+                {images.length > 0 ? "Autre photo" : "Photo"}
               </button>
               <button type="button" onClick={() => entreeImport.current?.click()} className={BOUTON_ACTION}>
                 <IconPhoto size={24} stroke={1.9} aria-hidden="true" />
-                Importer images ou PDF
+                Importer
               </button>
             </div>
           </div>
@@ -484,7 +576,7 @@ export default function DepotExercice({ programmeId, matiere }: DepotExercicePro
         {/* 2. Choisis ton mode d'aide */}
         <section aria-labelledby="titre-mode" className={CARTE}>
           <EnteteEtape numero={2} fond="bg-gradient-to-br from-[#4F46E5] to-[#7C3AED]" id="titre-mode" titre="Choisis ton mode d'aide" />
-          <div role="radiogroup" aria-labelledby="titre-mode" className="mt-5 grid gap-4 md:grid-cols-2">
+          <div role="radiogroup" aria-labelledby="titre-mode" className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
             {MODES_RESOLUTION.map((option) => {
               const actif = mode === option.valeur;
               const { couleur, teinte, icone: Icone } = IDENTITES_MODES[option.valeur];
@@ -495,7 +587,7 @@ export default function DepotExercice({ programmeId, matiere }: DepotExercicePro
                     borderColor: actif ? couleur : melangeBlanc(couleur, 40),
                     backgroundColor: actif ? teinte : "#FFFFFF",
                   }}
-                  className={`flex min-h-24 cursor-pointer items-center gap-4 rounded-2xl border-2 p-4 transition-shadow focus-within:outline-3 focus-within:outline-offset-2 focus-within:outline-[#102A66] sm:p-5 ${
+                  className={`flex h-full min-h-24 min-w-0 cursor-pointer items-center gap-2.5 rounded-2xl border-2 p-3 transition-shadow sm:gap-4 focus-within:outline-3 focus-within:outline-offset-2 focus-within:outline-[#102A66] sm:p-5 ${
                     actif ? "shadow-lg" : "shadow-sm hover:shadow-md"
                   }`}
                 >
@@ -510,18 +602,18 @@ export default function DepotExercice({ programmeId, matiere }: DepotExercicePro
                   <span
                     aria-hidden="true"
                     style={{ backgroundColor: couleur }}
-                    className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl text-white sm:h-[72px] sm:w-[72px]"
+                    className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-white sm:h-[72px] sm:w-[72px]"
                   >
-                    <Icone size={38} stroke={1.6} />
+                    <Icone size={30} stroke={1.6} />
                   </span>
                   <span className="min-w-0 flex-1">
-                    <span className="block text-lg font-extrabold text-[#102A66] sm:text-xl">{option.titre}</span>
-                    <span className="mt-0.5 block text-sm text-slate-600 sm:text-base">{option.description}</span>
+                    <span className="block text-base font-extrabold text-[#102A66] sm:text-xl">{option.titre}</span>
+                    <span className="mt-0.5 block break-words text-sm text-slate-600 sm:text-base">{option.description}</span>
                   </span>
                   <span
                     aria-hidden="true"
                     style={actif ? { backgroundColor: couleur, borderColor: couleur } : { borderColor: melangeBlanc(couleur, 55) }}
-                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 text-white"
+                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 text-white sm:h-8 sm:w-8"
                   >
                     {actif && <IconCheck size={20} stroke={3} />}
                   </span>
@@ -568,14 +660,16 @@ export default function DepotExercice({ programmeId, matiere }: DepotExercicePro
           className="inline-flex min-h-[54px] w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-[#1D4ED8] to-[#7C3AED] px-8 text-lg font-extrabold text-white shadow-lg transition-[filter,box-shadow] hover:brightness-110 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[#102A66] disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none disabled:hover:brightness-100 sm:text-xl"
         >
           <IconSend size={26} stroke={2} aria-hidden="true" />
-          {envoiEnCours ? "Envoi en cours…" : "Soumettre mon exercice"}
+          {envoiEnCours ? (phase === "analyse" ? "Analyse en cours…" : "Envoi en cours…") : "Soumettre"}
         </button>
         <p id="aide-soumission" className="text-center text-sm text-slate-600">
           {envoiEnCours
-            ? "Envoi en cours, ne ferme pas la page."
+            ? phase === "analyse"
+              ? "fahimta ai lit ton exercice (jusqu'à 2 minutes). Ne ferme pas la page."
+              : "Envoi de ton exercice. Ne ferme pas la page."
             : aContenu
               ? "Ton exercice sera envoyé pour vérification."
-              : "Ajoute une photo, un fichier ou ton énoncé pour pouvoir soumettre."}
+              : "Ajoute une photo, un fichier ou ton énoncé pour soumettre."}
         </p>
       </div>
     </div>
