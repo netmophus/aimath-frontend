@@ -46,9 +46,34 @@ export function matiereResolvable(nomMatiere: string): MatiereResolvable | null 
   return null;
 }
 
-/** Destination du bouton « Commencer » : la page de dépôt, pour un programme donné. */
+/** Destination des boutons « Résoudre mon exercice » : la page de dépôt, pour un programme donné. */
 export function hrefResoudre(programmeId: number): string {
   return `/eleve/resoudre?programme=${programmeId}`;
+}
+
+/** Sous-ensemble d'un programme de l'élève nécessaire pour retrouver sa matière. */
+export interface ProgrammeAvecMatiere {
+  id: number;
+  matiere: { nom: string };
+}
+
+/**
+ * Un programme RÉEL par matière résolvable (le premier rencontré), dans l'ordre
+ * d'affichage Maths, Physique, Chimie, SVT. Une matière que la classe de l'élève
+ * n'a pas est simplement absente : aucun identifiant n'est jamais inventé.
+ */
+export function programmesParMatiere<T extends ProgrammeAvecMatiere>(
+  programmes: readonly T[]
+): { matiere: MatiereResolvable; programme: T }[] {
+  const trouves = new Map<MatiereResolvable, T>();
+  for (const programme of programmes) {
+    const matiere = matiereResolvable(programme.matiere.nom);
+    if (matiere && !trouves.has(matiere)) trouves.set(matiere, programme);
+  }
+  return ORDRE_MATIERES_RESOLVABLES.filter((matiere) => trouves.has(matiere)).map((matiere) => ({
+    matiere,
+    programme: trouves.get(matiere)!,
+  }));
 }
 
 // --- Dépôt d'un exercice (étape 2 : validation côté navigateur uniquement) ---
@@ -77,12 +102,12 @@ export const MODES_RESOLUTION: readonly { valeur: ModeResolution; titre: string;
   {
     valeur: "correction",
     titre: "Correction complète",
-    description: "La résolution rédigée de l'exercice, étape par étape.",
+    description: "Obtiens une correction détaillée, étape par étape.",
   },
   {
     valeur: "professeur",
     titre: "Professeur particulier IA",
-    description: "Un accompagnement pour comprendre et trouver la solution par toi-même.",
+    description: "Comprends et trouve la solution avec l'aide d'un professeur IA.",
   },
 ];
 

@@ -1,11 +1,22 @@
 "use client";
 
-import { useEffect, useRef, useState, type ChangeEvent } from "react";
+import { useEffect, useRef, useState, type ChangeEvent, type DragEvent } from "react";
 import { useRouter } from "next/navigation";
-import { IconCamera, IconCircleCheck, IconFileTypePdf, IconPhoto, IconRefresh, IconX } from "@tabler/icons-react";
+import {
+  IconCamera,
+  IconCheck,
+  IconCircleCheck,
+  IconCloudUpload,
+  IconFileTypePdf,
+  IconPhoto,
+  IconRefresh,
+  IconSend,
+  IconX,
+} from "@tabler/icons-react";
 
 import { useAuth } from "@/lib/auth";
 import AnalyseEnonce from "@/components/eleve/AnalyseEnonce";
+import { IDENTITES_MODES, melangeBlanc } from "@/components/eleve/teintesResoudre";
 import { deposerExercice, type AnalyseEnonce as Analyse } from "@/lib/eleveApi";
 import { preparerImage } from "@/lib/reduireImage";
 import {
@@ -14,6 +25,7 @@ import {
   MESSAGE_DEPOT_VALIDE,
   MODES_RESOLUTION,
   NB_MAX_IMAGES,
+  TAILLE_MAX_FICHIER_OCTETS,
   TAILLE_MAX_TOTAL_OCTETS,
   TYPE_PDF,
   decrireErreurDepot,
@@ -38,8 +50,12 @@ interface DepotExerciceProps {
   matiere: string;
 }
 
+const CARTE = "rounded-3xl border border-blue-100 bg-white p-4 shadow-sm sm:p-7";
+
 const BOUTON_ACTION =
-  "inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl border border-fh-bleu/20 bg-white px-4 py-2 text-sm font-semibold text-fh-bleu transition-colors hover:bg-fh-accent disabled:cursor-not-allowed disabled:opacity-50";
+  "inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border-2 border-[#1D4ED8] bg-white px-4 py-2 text-base font-bold sm:px-6 text-[#1D4ED8] transition-colors hover:bg-blue-50 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[#102A66] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto";
+
+const MO = 1024 * 1024;
 
 /**
  * Interface de dépôt d'un exercice : photo(s) à la caméra, import d'images ou
@@ -70,6 +86,8 @@ export default function DepotExercice({ programmeId, matiere }: DepotExercicePro
   const [enonceConfirme, setEnonceConfirme] = useState(false);
   const [correctionDisponible, setCorrectionDisponible] = useState(false);
   const [professeurDisponible, setProfesseurDisponible] = useState(false);
+  // Survol de la zone de glisser-déposer (affichage seulement).
+  const [dragActif, setDragActif] = useState(false);
 
   // Verrou synchrone : deux clics très rapprochés peuvent précéder le rendu qui
   // désactive le bouton, un état React seul ne suffirait pas.
@@ -92,6 +110,7 @@ export default function DepotExercice({ programmeId, matiere }: DepotExercicePro
 
   const aContenu = images.length > 0 || pdf !== null || enonce.trim().length > 0;
   const placesRestantes = NB_MAX_IMAGES - images.length;
+  const nbFichiers = images.length + (pdf ? 1 : 0);
 
   function ajouterFichiers(fichiers: File[]) {
     const problemes: string[] = [];
@@ -142,6 +161,15 @@ export default function DepotExercice({ programmeId, matiere }: DepotExercicePro
     // Remet le champ à zéro : sans ça, re-choisir le même fichier après l'avoir
     // supprimé ne déclencherait aucun évènement.
     event.target.value = "";
+    if (fichiers.length > 0) ajouterFichiers(fichiers);
+  }
+
+  /** Glisser-déposer : mêmes règles que les boutons (tout passe par ajouterFichiers). Ignoré pendant l'envoi. */
+  function handleDepot(event: DragEvent<HTMLDivElement>) {
+    event.preventDefault();
+    setDragActif(false);
+    if (envoiEnCours) return;
+    const fichiers = Array.from(event.dataTransfer.files);
     if (fichiers.length > 0) ajouterFichiers(fichiers);
   }
 
@@ -257,28 +285,59 @@ export default function DepotExercice({ programmeId, matiere }: DepotExercicePro
     <div className="flex flex-col gap-5">
       {/* Verrouille tous les champs pendant l'envoi (fieldset disabled) */}
       <fieldset disabled={envoiEnCours} className="m-0 flex min-w-0 flex-col gap-5 border-0 p-0">
-        {/* 1. Fournir l'exercice */}
-        <section className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-fh-sable sm:p-5">
-          <h2 className="text-base font-bold text-fh-bleu">1. Ton exercice de {matiere}</h2>
-          <p className="mt-0.5 text-xs text-fh-ardoise">
-            Photographie-le, importe un fichier, ou tape l&apos;énoncé. Images : JPG, PNG ou WebP, {NB_MAX_IMAGES} maximum.
-            PDF : un seul. 10 Mo maximum par fichier.
-          </p>
+        {/* 1. Ajoute ton exercice */}
+        <section aria-labelledby="titre-ajout" className={CARTE}>
+          <EnteteEtape
+            numero={1}
+            fond="bg-[#1D4ED8]"
+            id="titre-ajout"
+            titre="Ajoute ton exercice"
+            texte="Prends une photo, importe une ou plusieurs images, ou un fichier PDF, puis saisis l'énoncé si nécessaire."
+          />
 
-          <div className="mt-4 flex flex-col gap-2 sm:flex-row">
-            <button
-              type="button"
-              onClick={() => entreeCamera.current?.click()}
-              disabled={pdf !== null || placesRestantes <= 0}
-              className={BOUTON_ACTION}
+          {/* Zone d'importation : glisser-déposer + boutons. Le dépôt passe par
+              ajouterFichiers, donc par EXACTEMENT les mêmes règles de validation
+              que les boutons. */}
+          <div
+            onDragOver={(event) => {
+              event.preventDefault();
+              if (!envoiEnCours) setDragActif(true);
+            }}
+            onDragLeave={(event) => {
+              if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setDragActif(false);
+            }}
+            onDrop={handleDepot}
+            className={`mt-5 flex flex-col items-center gap-4 rounded-2xl border-2 border-dashed px-4 py-8 text-center transition-colors sm:py-10 ${
+              dragActif ? "border-[#1D4ED8] bg-blue-100/70" : "border-[#60A5FA] bg-[#F5F9FF]"
+            }`}
+          >
+            <span
+              aria-hidden="true"
+              className="flex h-20 w-20 items-center justify-center rounded-3xl bg-[#DBEAFE] text-[#1D4ED8]"
             >
-              <IconCamera size={20} stroke={1.75} aria-hidden="true" />
-              {images.length > 0 ? "Photographier une autre page" : "Prendre une photo"}
-            </button>
-            <button type="button" onClick={() => entreeImport.current?.click()} className={BOUTON_ACTION}>
-              <IconPhoto size={20} stroke={1.75} aria-hidden="true" />
-              Importer images ou PDF
-            </button>
+              <IconCloudUpload size={50} stroke={1.5} />
+            </span>
+            <p className="text-lg font-extrabold text-[#102A66] sm:text-2xl">Glisse-dépose tes fichiers ici</p>
+            <p className="max-w-2xl text-sm text-slate-600 sm:text-base">
+              Images : JPG, PNG ou WebP, {NB_MAX_IMAGES} maximum · PDF : un seul · {TAILLE_MAX_FICHIER_OCTETS / MO} Mo
+              maximum par fichier ({TAILLE_MAX_TOTAL_OCTETS / MO} Mo au total).
+            </p>
+
+            <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
+              <button
+                type="button"
+                onClick={() => entreeCamera.current?.click()}
+                disabled={pdf !== null || placesRestantes <= 0}
+                className={BOUTON_ACTION}
+              >
+                <IconCamera size={24} stroke={1.9} aria-hidden="true" />
+                {images.length > 0 ? "Photographier une autre page" : "Prendre une photo"}
+              </button>
+              <button type="button" onClick={() => entreeImport.current?.click()} className={BOUTON_ACTION}>
+                <IconPhoto size={24} stroke={1.9} aria-hidden="true" />
+                Importer images ou PDF
+              </button>
+            </div>
           </div>
 
           {/* Champs fichier masqués. `capture` ouvre directement l'appareil photo
@@ -305,84 +364,107 @@ export default function DepotExercice({ programmeId, matiere }: DepotExercicePro
           />
 
           {erreurs.length > 0 && (
-            <ul role="alert" className="mt-3 flex flex-col gap-1 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700">
+            <ul role="alert" className="mt-4 flex flex-col gap-1 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">
               {erreurs.map((message) => (
                 <li key={message}>{message}</li>
               ))}
             </ul>
           )}
 
-          {images.length > 0 && (
-            <div className="mt-4">
-              <p className="text-xs font-medium text-fh-ardoise">
-                {images.length} page{images.length > 1 ? "s" : ""} · {placesRestantes} place
-                {placesRestantes > 1 ? "s" : ""} restante{placesRestantes > 1 ? "s" : ""}
-              </p>
-              <ul className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-3">
-                {images.map((image, index) => (
-                  <li key={image.id} className="relative overflow-hidden rounded-xl ring-1 ring-fh-sable">
-                    {/* eslint-disable-next-line @next/next/no-img-element -- URL d'objet locale (blob:), next/image n'est pas applicable */}
-                    <img
-                      src={image.apercuUrl}
-                      alt={`Page ${index + 1} de l'exercice`}
-                      className="aspect-[3/4] w-full bg-fh-sable/40 object-cover"
-                    />
-                    <span className="absolute bottom-1 left-1 rounded-full bg-fh-bleu/80 px-2 py-0.5 text-[11px] font-semibold text-white">
-                      Page {index + 1}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => supprimerImage(image.id)}
-                      aria-label={`Supprimer la page ${index + 1}`}
-                      className="absolute right-1 top-1 flex h-9 w-9 items-center justify-center rounded-full bg-white/95 text-fh-bleu shadow ring-1 ring-fh-sable transition-colors hover:bg-fh-accent"
-                    >
-                      <IconX size={18} aria-hidden="true" />
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {pdf && (
-            <div className="mt-4 flex items-center gap-3 rounded-xl bg-fh-creme px-3 py-3 ring-1 ring-fh-sable">
-              <span
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-fh-accent text-fh-orange-fonce"
-                aria-hidden="true"
-              >
-                <IconFileTypePdf size={22} stroke={1.75} />
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="break-all text-sm font-semibold text-fh-bleu">{pdf.name}</p>
-                <p className="text-xs text-fh-ardoise">PDF · {formaterTaille(pdf.size)}</p>
+          {nbFichiers > 0 && (
+            <div className="mt-5 rounded-2xl border border-blue-100 bg-white p-3 sm:p-4">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h3 className="text-base font-extrabold text-[#102A66] sm:text-lg">Fichiers ajoutés ({nbFichiers})</h3>
+                {images.length > 0 && (
+                  <p className="text-sm text-slate-600">
+                    {placesRestantes} place{placesRestantes > 1 ? "s" : ""} restante{placesRestantes > 1 ? "s" : ""}
+                  </p>
+                )}
               </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setPdf(null);
-                  setErreurs([]);
-                }}
-                aria-label="Retirer le PDF"
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-fh-bleu transition-colors hover:bg-fh-accent"
-              >
-                <IconX size={18} aria-hidden="true" />
-              </button>
+
+              {images.length > 0 && (
+                <ul className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                  {images.map((image, index) => (
+                    <li
+                      key={image.id}
+                      className="relative flex flex-col overflow-hidden rounded-2xl border border-blue-100 bg-[#F8FAFF]"
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element -- URL d'objet locale (blob:), next/image n'est pas applicable */}
+                      <img
+                        src={image.apercuUrl}
+                        alt={`Page ${index + 1} de l'exercice`}
+                        className="aspect-[3/4] w-full bg-fh-sable/40 object-cover"
+                      />
+                      <span
+                        aria-hidden="true"
+                        className="absolute left-2 top-2 flex h-8 min-w-8 items-center justify-center rounded-full bg-[#1D4ED8] px-2 text-sm font-extrabold text-white shadow"
+                      >
+                        {index + 1}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => supprimerImage(image.id)}
+                        aria-label={`Supprimer la page ${index + 1}`}
+                        className="absolute right-2 top-2 flex h-10 w-10 items-center justify-center rounded-full bg-white text-[#C2410C] shadow ring-1 ring-blue-100 transition-colors hover:bg-orange-50 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[#102A66]"
+                      >
+                        <IconX size={20} aria-hidden="true" />
+                      </button>
+                      <div className="min-w-0 px-3 py-2">
+                        <p className="break-all text-sm font-bold text-[#102A66]">Page {index + 1} · {image.fichier.name}</p>
+                        <p className="text-xs text-slate-600">{formaterTaille(image.fichier.size)}</p>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              {pdf && (
+                <div className="mt-3 flex items-center gap-3 rounded-2xl border border-blue-100 bg-[#F8FAFF] px-3 py-3">
+                  <span
+                    aria-hidden="true"
+                    className="flex h-8 min-w-8 shrink-0 items-center justify-center rounded-full bg-[#1D4ED8] px-2 text-sm font-extrabold text-white"
+                  >
+                    1
+                  </span>
+                  <span
+                    className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#FFEDD5] text-[#C2410C]"
+                    aria-hidden="true"
+                  >
+                    <IconFileTypePdf size={28} stroke={1.75} />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="break-all text-sm font-bold text-[#102A66]">{pdf.name}</p>
+                    <p className="text-xs text-slate-600">PDF · {formaterTaille(pdf.size)}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPdf(null);
+                      setErreurs([]);
+                    }}
+                    aria-label="Retirer le PDF"
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white text-[#C2410C] shadow ring-1 ring-blue-100 transition-colors hover:bg-orange-50 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[#102A66]"
+                  >
+                    <IconX size={20} aria-hidden="true" />
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
-          <div className="mt-4">
-            <label htmlFor="enonce" className="mb-1 block text-sm font-medium text-fh-bleu">
-              Ou saisis l&apos;énoncé
+          <div className="mt-6">
+            <label htmlFor="enonce" className="mb-2 block text-lg font-extrabold text-[#102A66] sm:text-xl">
+              Ou écris ton énoncé
             </label>
             <textarea
               id="enonce"
               value={enonce}
               onChange={(event) => setEnonce(event.target.value.slice(0, LONGUEUR_MAX_ENONCE))}
-              rows={5}
+              rows={7}
               placeholder="Recopie ici le texte de ton exercice…"
-              className="w-full rounded-xl border border-fh-bleu-vif/15 bg-fh-creme px-3 py-2 text-sm text-fh-bleu outline-none transition-shadow focus:border-fh-orange focus:ring-2 focus:ring-fh-orange/20"
+              className="w-full rounded-2xl border-2 border-blue-200 bg-white px-4 py-3 text-base text-[#102A66] outline-none transition-shadow placeholder:text-slate-400 focus:border-[#1D4ED8] focus:ring-4 focus:ring-[#1D4ED8]/15"
             />
-            <p className="mt-1 text-right text-xs text-fh-ardoise/70">
+            <p className="mt-1 text-right text-sm text-slate-500">
               {enonce.length} / {LONGUEUR_MAX_ENONCE}
             </p>
           </div>
@@ -391,27 +473,30 @@ export default function DepotExercice({ programmeId, matiere }: DepotExercicePro
             <button
               type="button"
               onClick={recommencer}
-              className="mt-2 inline-flex min-h-11 items-center gap-2 rounded-full px-3 text-sm font-medium text-fh-ardoise transition-colors hover:bg-fh-sable/60"
+              className="mt-2 inline-flex min-h-12 items-center gap-2 rounded-xl border-2 border-slate-300 bg-white px-5 text-base font-bold text-slate-700 transition-colors hover:bg-slate-50 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[#102A66]"
             >
-              <IconRefresh size={18} aria-hidden="true" />
+              <IconRefresh size={20} aria-hidden="true" />
               Tout recommencer
             </button>
           )}
         </section>
 
-        {/* 2. Choisir le mode */}
-        <section className="rounded-2xl bg-white p-4 shadow-sm ring-1 ring-fh-sable sm:p-5">
-          <h2 id="titre-mode" className="text-base font-bold text-fh-bleu">
-            2. Comment veux-tu être aidé ?
-          </h2>
-          <div role="radiogroup" aria-labelledby="titre-mode" className="mt-3 flex flex-col gap-2 sm:flex-row">
+        {/* 2. Choisis ton mode d'aide */}
+        <section aria-labelledby="titre-mode" className={CARTE}>
+          <EnteteEtape numero={2} fond="bg-gradient-to-br from-[#4F46E5] to-[#7C3AED]" id="titre-mode" titre="Choisis ton mode d'aide" />
+          <div role="radiogroup" aria-labelledby="titre-mode" className="mt-5 grid gap-4 md:grid-cols-2">
             {MODES_RESOLUTION.map((option) => {
               const actif = mode === option.valeur;
+              const { couleur, teinte, icone: Icone } = IDENTITES_MODES[option.valeur];
               return (
                 <label
                   key={option.valeur}
-                  className={`flex min-h-11 flex-1 cursor-pointer items-start gap-3 rounded-xl border p-3 transition-colors focus-within:ring-2 focus-within:ring-fh-orange/30 ${
-                    actif ? "border-fh-orange bg-fh-accent/60" : "border-fh-bleu/15 bg-white hover:bg-fh-creme"
+                  style={{
+                    borderColor: actif ? couleur : melangeBlanc(couleur, 40),
+                    backgroundColor: actif ? teinte : "#FFFFFF",
+                  }}
+                  className={`flex min-h-24 cursor-pointer items-center gap-4 rounded-2xl border-2 p-4 transition-shadow focus-within:outline-3 focus-within:outline-offset-2 focus-within:outline-[#102A66] sm:p-5 ${
+                    actif ? "shadow-lg" : "shadow-sm hover:shadow-md"
                   }`}
                 >
                   <input
@@ -420,11 +505,25 @@ export default function DepotExercice({ programmeId, matiere }: DepotExercicePro
                     value={option.valeur}
                     checked={actif}
                     onChange={() => setMode(option.valeur)}
-                    className="mt-1 h-4 w-4 shrink-0 accent-fh-orange"
+                    className="sr-only"
                   />
-                  <span className="min-w-0">
-                    <span className="block text-sm font-semibold text-fh-bleu">{option.titre}</span>
-                    <span className="block text-xs text-fh-ardoise">{option.description}</span>
+                  <span
+                    aria-hidden="true"
+                    style={{ backgroundColor: couleur }}
+                    className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl text-white sm:h-[72px] sm:w-[72px]"
+                  >
+                    <Icone size={38} stroke={1.6} />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-lg font-extrabold text-[#102A66] sm:text-xl">{option.titre}</span>
+                    <span className="mt-0.5 block text-sm text-slate-600 sm:text-base">{option.description}</span>
+                  </span>
+                  <span
+                    aria-hidden="true"
+                    style={actif ? { backgroundColor: couleur, borderColor: couleur } : { borderColor: melangeBlanc(couleur, 55) }}
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 text-white"
+                  >
+                    {actif && <IconCheck size={20} stroke={3} />}
                   </span>
                 </label>
               );
@@ -433,10 +532,10 @@ export default function DepotExercice({ programmeId, matiere }: DepotExercicePro
         </section>
       </fieldset>
 
-      {/* 3. Soumettre */}
+      {/* Soumettre */}
       <div className="flex flex-col gap-2">
         {erreurEnvoi && (
-          <div role="alert" className="flex flex-col gap-2 rounded-xl bg-red-50 px-3 py-3 text-sm text-red-700">
+          <div role="alert" className="flex flex-col gap-2 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">
             {erreurEnvoi.messages.length === 1 ? (
               <p>{erreurEnvoi.messages[0]}</p>
             ) : (
@@ -466,17 +565,38 @@ export default function DepotExercice({ programmeId, matiere }: DepotExercicePro
           disabled={!aContenu || envoiEnCours}
           aria-describedby="aide-soumission"
           aria-busy={envoiEnCours}
-          className="min-h-12 rounded-full bg-fh-orange px-6 text-sm font-semibold text-white transition-colors hover:bg-fh-orange-fonce disabled:cursor-not-allowed disabled:opacity-50 sm:text-base"
+          className="inline-flex min-h-[54px] w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-[#1D4ED8] to-[#7C3AED] px-8 text-lg font-extrabold text-white shadow-lg transition-[filter,box-shadow] hover:brightness-110 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[#102A66] disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-none disabled:hover:brightness-100 sm:text-xl"
         >
+          <IconSend size={26} stroke={2} aria-hidden="true" />
           {envoiEnCours ? "Envoi en cours…" : "Soumettre mon exercice"}
         </button>
-        <p id="aide-soumission" className="text-center text-xs text-fh-ardoise">
+        <p id="aide-soumission" className="text-center text-sm text-slate-600">
           {envoiEnCours
             ? "Envoi en cours, ne ferme pas la page."
             : aContenu
               ? "Ton exercice sera envoyé pour vérification."
               : "Ajoute une photo, un fichier ou ton énoncé pour pouvoir soumettre."}
         </p>
+      </div>
+    </div>
+  );
+}
+
+/** En-tête d'une grande carte : numéro dans un cercle coloré, titre, texte d'aide facultatif. */
+function EnteteEtape({ numero, fond, id, titre, texte }: { numero: number; fond: string; id: string; titre: string; texte?: string }) {
+  return (
+    <div className="flex items-start gap-4">
+      <span
+        aria-hidden="true"
+        className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-2xl font-extrabold text-white ${fond}`}
+      >
+        {numero}
+      </span>
+      <div className="min-w-0">
+        <h2 id={id} className="text-xl font-extrabold text-[#102A66] sm:text-2xl">
+          {titre}
+        </h2>
+        {texte && <p className="mt-1 text-sm text-slate-600 sm:text-base">{texte}</p>}
       </div>
     </div>
   );

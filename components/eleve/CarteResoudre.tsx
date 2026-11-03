@@ -4,8 +4,8 @@ import { IconFileText, IconPencil } from "@tabler/icons-react";
 import type { ProgrammeEleve } from "@/lib/eleveApi";
 import {
   LIBELLE_MATIERE_RESOLVABLE,
-  ORDRE_MATIERES_RESOLVABLES,
-  matiereResolvable,
+  hrefResoudre,
+  programmesParMatiere,
   type MatiereResolvable,
 } from "@/lib/resoudre";
 
@@ -24,20 +24,14 @@ const COULEUR_BOUTON: Record<MatiereResolvable, string> = {
 
 /**
  * Carte du dashboard « Résoudre mon exercice » : un raccourci par matière
- * (Maths, Physique, Chimie, SVT) vers la page programme existante
- * /eleve/programmes/[id], où se trouve le bouton « Commencer ». Les liens
- * utilisent les identifiants des programmes déjà chargés ; une matière que
- * la classe de l'élève n'a pas n'apparaît simplement pas. Rien n'est rendu
- * si aucune des quatre matières n'est disponible.
+ * (Maths, Physique, Chimie, SVT) qui ouvre DIRECTEMENT la page de dépôt
+ * /eleve/resoudre?programme=<id>. Les identifiants sont ceux des programmes
+ * réels déjà chargés (jamais codés en dur) ; une matière que la classe de
+ * l'élève n'a pas n'apparaît simplement pas. Rien n'est rendu si aucune des
+ * quatre matières n'est disponible.
  */
 export default function CarteResoudre({ programmes }: CarteResoudreProps) {
-  const parMatiere = new Map<MatiereResolvable, ProgrammeEleve>();
-  for (const programme of programmes) {
-    const matiere = matiereResolvable(programme.matiere.nom);
-    if (matiere && !parMatiere.has(matiere)) parMatiere.set(matiere, programme);
-  }
-
-  const matieres = ORDRE_MATIERES_RESOLVABLES.filter((matiere) => parMatiere.has(matiere));
+  const matieres = programmesParMatiere(programmes);
   if (matieres.length === 0) return null;
 
   return (
@@ -62,10 +56,10 @@ export default function CarteResoudre({ programmes }: CarteResoudreProps) {
       </div>
 
       <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-4">
-        {matieres.map((matiere) => (
+        {matieres.map(({ matiere, programme }) => (
           <Link
             key={matiere}
-            href={`/eleve/programmes/${parMatiere.get(matiere)!.id}`}
+            href={hrefResoudre(programme.id)}
             className={`flex min-h-12 items-center justify-center rounded-xl px-3 py-2.5 text-base font-bold text-white shadow-sm transition-colors focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[#102A66] ${COULEUR_BOUTON[matiere]}`}
           >
             {LIBELLE_MATIERE_RESOLVABLE[matiere]}
