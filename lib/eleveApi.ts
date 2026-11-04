@@ -219,10 +219,11 @@ export function getProfilEleve(): Promise<ProfilEleve> {
 }
 
 export interface MajProfilEleveInput {
-  date_naissance: string;
-  ecole: string;
-  ville: string;
-  genre: GenreEleve | "";
+  /** Champ absent (undefined) = inchangé : il n'est pas envoyé et le serveur le conserve (voir lib/profil.ts). */
+  date_naissance?: string;
+  ecole?: string;
+  ville?: string;
+  genre?: GenreEleve | "";
   /** undefined = photo inchangée ; File = nouvelle photo à envoyer. */
   photo?: File;
 }
@@ -231,10 +232,10 @@ export interface MajProfilEleveInput {
  * moyen d'envoyer à la fois des champs texte et un fichier en un appel. */
 export function majProfilEleve(payload: MajProfilEleveInput): Promise<ProfilEleve> {
   const formData = new FormData();
-  formData.append("date_naissance", payload.date_naissance);
-  formData.append("ecole", payload.ecole);
-  formData.append("ville", payload.ville);
-  formData.append("genre", payload.genre);
+  if (payload.date_naissance !== undefined) formData.append("date_naissance", payload.date_naissance);
+  if (payload.ecole !== undefined) formData.append("ecole", payload.ecole);
+  if (payload.ville !== undefined) formData.append("ville", payload.ville);
+  if (payload.genre !== undefined) formData.append("genre", payload.genre);
   if (payload.photo) formData.append("photo", payload.photo);
 
   return apiRequestMultipart<ProfilEleve>("/api/eleve/profil/", formData, "PATCH");

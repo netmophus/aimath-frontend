@@ -149,7 +149,7 @@ export default function EleveLayoutClient({ children, logo }: EleveLayoutClientP
                 ci-dessous) — dupliquée avec un show/hide responsive plutôt
                 qu'un réordonnancement flex, pour un contrôle simple et sûr
                 de "avec qui" elle s'aligne à chaque taille. */}
-            <div className="flex items-center justify-between gap-3 md:justify-start">
+            <div className="flex items-center justify-between gap-3 md:shrink-0 md:justify-start">
               {logo}
               <button
                 type="button"
@@ -162,7 +162,7 @@ export default function EleveLayoutClient({ children, logo }: EleveLayoutClientP
             </div>
 
             {/* Ligne 2 (mobile) / bloc droite (desktop) : avatar + nom + classe. */}
-            <div className="flex items-center justify-between gap-3 md:justify-end md:gap-4">
+            <div className="flex min-w-0 items-center justify-between gap-3 md:justify-end md:gap-4">
               <div className="flex min-w-0 items-center gap-3">
                 <span
                   className="relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-fh-orange text-sm font-bold text-white"
@@ -176,10 +176,10 @@ export default function EleveLayoutClient({ children, logo }: EleveLayoutClientP
                   )}
                 </span>
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold text-white">
+                  <p className="break-words text-sm font-semibold leading-tight text-white">
                     {user.prenom} {user.nom}
                   </p>
-                  {classe && <p className="text-xs text-white/80">{classe}</p>}
+                  {classe && <p className="break-words text-xs text-white/80">{classe}</p>}
                 </div>
               </div>
 
