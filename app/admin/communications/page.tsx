@@ -6,6 +6,7 @@ import { ApiError } from "@/lib/api";
 import {
   LIBELLE_EXCLUSION,
   etatCampagne,
+  validerReglages,
   LIBELLE_STATUT_MESSAGE,
   LIBELLE_TYPE,
   formatFcfa,
@@ -30,13 +31,18 @@ function Reglages({ params, onSauve, onErreur }: { params: api.Parametres; onSau
   async function enregistrer(e: FormEvent) {
     e.preventDefault();
     if (enCours) return;
+    const valides = validerReglages(plafond, String(tarif));
+    if (!valides.ok) {
+      onErreur(valides.erreur);
+      return;
+    }
     setEnCours(true);
     try {
       onSauve(
         await api.modifierParametres({
           lien_whatsapp: lien.trim(),
-          plafond_mensuel_fcfa: Number(plafond) || 0,
-          cout_segment_fcfa: String(tarif).trim() === "" ? null : Number(String(tarif).replace(",", ".")),
+          plafond_mensuel_fcfa: valides.plafond,
+          cout_segment_fcfa: valides.tarif,
         }),
       );
     } catch (err) {

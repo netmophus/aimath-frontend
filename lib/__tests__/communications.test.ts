@@ -10,6 +10,7 @@ import {
   formatFcfa,
   nombreSelectionne,
   nouvelleCleCommunication,
+  validerReglages,
   TEXTE_ACTIVATION,
   variablesInconnues,
 } from "../communications";
@@ -114,5 +115,27 @@ describe("etatCampagne : une campagne confirmée n'est jamais « envoyée »", (
   it("aperçu et arrêtée gardent leur sens", () => {
     expect(etatCampagne({ statut: "apercu", messages: vide }).aide).toMatch(/Rien n'est parti/);
     expect(etatCampagne({ statut: "arretee", messages: vide }).libelle).toBe("Arrêtée");
+  });
+});
+
+describe("validerReglages", () => {
+  it("accepte 15 FCFA et 15 000 FCFA", () => {
+    expect(validerReglages("15000", "15")).toEqual({ ok: true, plafond: 15000, tarif: 15 });
+    expect(validerReglages("15000", "12,5")).toEqual({ ok: true, plafond: 15000, tarif: 12.5 });
+  });
+
+  it("le plafond nul est valide (il bloque les envois), négatif ou non numérique refusé", () => {
+    expect(validerReglages("0", "15")).toEqual({ ok: true, plafond: 0, tarif: 15 });
+    expect(validerReglages("-1", "15").ok).toBe(false);
+    expect(validerReglages("abc", "15").ok).toBe(false);
+    expect(validerReglages("", "15").ok).toBe(false);
+  });
+
+  it("le tarif doit être strictement positif ; vide = inconnu", () => {
+    expect(validerReglages("100", "0").ok).toBe(false);
+    expect(validerReglages("100", "-3").ok).toBe(false);
+    expect(validerReglages("100", "abc").ok).toBe(false);
+    expect(validerReglages("100", "1.234").ok).toBe(false);
+    expect(validerReglages("100", "")).toEqual({ ok: true, plafond: 100, tarif: null });
   });
 });

@@ -55,6 +55,23 @@ export const LIBELLE_STATUT_CAMPAGNE: Record<string, string> = {
   arretee: "Arrêtée",
 };
 
+export type ReglagesValides = { ok: true; plafond: number; tarif: number | null } | { ok: false; erreur: string };
+
+/**
+ * Valide les réglages saisis : plafond entier >= 0 (0 bloque les envois), tarif strictement positif ou vide (inconnu).
+ * Une saisie invalide n'est jamais convertie en silence en 0 ou en « tarif inconnu ».
+ */
+export function validerReglages(plafond: string, tarif: string): ReglagesValides {
+  const p = plafond.trim();
+  if (!/^\d+$/.test(p)) return { ok: false, erreur: "Le plafond mensuel doit être un nombre entier de FCFA, 0 ou plus." };
+  const t = tarif.trim().replace(",", ".");
+  if (t === "") return { ok: true, plafond: Number(p), tarif: null };
+  if (!/^\d+(\.\d{1,2})?$/.test(t) || Number(t) <= 0) {
+    return { ok: false, erreur: "Le tarif d'un segment doit être strictement positif (deux décimales au plus)." };
+  }
+  return { ok: true, plafond: Number(p), tarif: Number(t) };
+}
+
 export type EtatCampagne = "apercu" | "en_attente" | "en_cours" | "terminee" | "arretee";
 
 export interface EtatAffiche {
