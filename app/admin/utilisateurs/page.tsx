@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 
 import type { Role, Statut } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
@@ -11,6 +11,11 @@ import RejeterModal from "@/components/admin/RejeterModal";
 import ReinitialiserMdpModal from "@/components/admin/ReinitialiserMdpModal";
 import EntityFormModal, { type ChampFormulaire } from "@/components/admin/EntityFormModal";
 import Toast from "@/components/admin/Toast";
+import ComposerModal from "@/components/admin/communications/ComposerModal";
+import ActivationFlow from "@/components/admin/communications/ActivationFlow";
+import { TEXTE_ACTIVATION, basculerId, basculerPage, nombreSelectionne, type StatutIndicateur, type TypeCommunication } from "@/lib/communications";
+import { statutsActivation } from "@/lib/communicationsApi";
+import { listerNiveaux, listerSeries, type Niveau, type Serie } from "@/lib/structureApi";
 
 const OPTIONS_ROLE: readonly { value: Role | ""; label: string }[] = [
   { value: "", label: "Tous les rôles" },
@@ -72,6 +77,19 @@ export default function UtilisateursPage() {
   const [rechercheSaisie, setRechercheSaisie] = useState("");
   const [recherche, setRecherche] = useState("");
   const [page, setPage] = useState(1);
+  const [niveauFiltre, setNiveauFiltre] = useState(0);
+  const [serieFiltre, setSerieFiltre] = useState(0);
+  const [niveaux, setNiveaux] = useState<Niveau[]>([]);
+  const [series, setSeries] = useState<Serie[]>([]);
+
+  // Sélection pour les envois : identifiants réels des comptes, ou « tous les résultats filtrés ».
+  const [idsSelection, setIdsSelection] = useState<number[]>([]);
+  const [tousLesFiltres, setTousLesFiltres] = useState(false);
+  const [compteSms, setCompteSms] = useState<Compte | null>(null);
+  const [compteActivation, setCompteActivation] = useState<Compte | null>(null);
+  const [envoiGroupe, setEnvoiGroupe] = useState<TypeCommunication | null>(null);
+  const [indicateurs, setIndicateurs] = useState<Record<string, StatutIndicateur>>({});
+  const [rafraichir, setRafraichir] = useState(0);
 
   const [modaleCreation, setModaleCreation] = useState(false);
   const [compteAModifier, setCompteAModifier] = useState<Compte | null>(null);
@@ -90,6 +108,8 @@ export default function UtilisateursPage() {
     setToast,
     fermerToast,
     recharger,
+    compteApprouve,
+    fermerApprobation,
     approuver,
     confirmerRejet,
     suspendre,
@@ -99,13 +119,52 @@ export default function UtilisateursPage() {
       role: roleFiltre || undefined,
       statut: statutFiltre || undefined,
       search: recherche || undefined,
+      niveau: niveauFiltre || undefined,
+      serie: serieFiltre || undefined,
     },
     page
   );
 
+  // Changer de filtre ou de recherche change l'ensemble des résultats : la sélection est donc vidée.
   function reinitialiserPage() {
     setPage(1);
+    setIdsSelection([]);
+    setTousLesFiltres(false);
   }
+
+  useEffect(() => {
+    let actif = true;
+    listerNiveaux().then((r) => actif && setNiveaux(r.results)).catch(() => undefined);
+    listerSeries().then((r) => actif && setSeries(r.results)).catch(() => undefined);
+    return () => {
+      actif = false;
+    };
+  }, []);
+
+  // Indicateur « SMS d'activation » des comptes actifs affichés (lecture seule).
+  const idsActifsAffiches = (data?.results ?? []).filter((c) => c.statut === "actif").map((c) => c.id);
+  const cleActifs = idsActifsAffiches.join(",");
+  useEffect(() => {
+    if (!cleActifs) return;
+    let actif = true;
+    statutsActivation(cleActifs.split(",").map(Number))
+      .then((r) => actif && setIndicateurs((cur) => ({ ...cur, ...r })))
+      .catch(() => undefined);
+    return () => {
+      actif = false;
+    };
+  }, [cleActifs, rafraichir]);
+
+  const idsPage = (data?.results ?? []).map((c) => c.id);
+  const nbSelectionnes = nombreSelectionne({ ids: idsSelection, tousLesFiltres }, data?.count ?? 0);
+  const pageEntiere = idsPage.length > 0 && idsPage.every((id) => idsSelection.includes(id));
+  const filtresActuels = {
+    role: roleFiltre || undefined,
+    statut: statutFiltre || undefined,
+    search: recherche || undefined,
+    niveau: niveauFiltre || undefined,
+    serie: serieFiltre || undefined,
+  };
 
   function handleSearchSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -207,6 +266,43 @@ export default function UtilisateursPage() {
           ))}
         </select>
 
+        <select
+          aria-label="Classe"
+          value={niveauFiltre}
+          onChange={(event) => {
+            setNiveauFiltre(Number(event.target.value));
+            setSerieFiltre(0);
+            reinitialiserPage();
+          }}
+          className="min-w-0 max-w-full rounded-lg border border-fh-bleu-vif/20 bg-white px-3 py-2 text-sm text-fh-bleu outline-none focus:border-fh-orange"
+        >
+          <option value={0}>Toutes les classes</option>
+          {niveaux.map((n) => (
+            <option key={n.id} value={n.id}>
+              {n.nom}
+            </option>
+          ))}
+        </select>
+
+        <select
+          aria-label="Série"
+          value={serieFiltre}
+          onChange={(event) => {
+            setSerieFiltre(Number(event.target.value));
+            reinitialiserPage();
+          }}
+          className="min-w-0 max-w-full rounded-lg border border-fh-bleu-vif/20 bg-white px-3 py-2 text-sm text-fh-bleu outline-none focus:border-fh-orange"
+        >
+          <option value={0}>Toutes les séries</option>
+          {series
+            .filter((s) => !niveauFiltre || s.niveau.id === niveauFiltre)
+            .map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.niveau.nom} {s.nom}
+              </option>
+            ))}
+        </select>
+
         <form onSubmit={handleSearchSubmit} className="flex flex-1 min-w-[220px] gap-2">
           <input
             type="search"
@@ -222,6 +318,66 @@ export default function UtilisateursPage() {
             Rechercher
           </button>
         </form>
+      </div>
+
+      <div className="flex flex-col gap-3 rounded-2xl bg-white p-4 ring-1 ring-fh-sable" aria-label="Actions de communication">
+        <div className="flex flex-wrap items-center gap-2">
+          <label className="flex items-center gap-2 text-sm font-medium text-fh-bleu">
+            <input
+              type="checkbox"
+              checked={pageEntiere}
+              disabled={idsPage.length === 0}
+              onChange={() => {
+                setTousLesFiltres(false);
+                setIdsSelection((cur) => basculerPage(cur, idsPage));
+              }}
+              className="h-5 w-5 accent-fh-orange"
+            />
+            Sélectionner cette page
+          </label>
+          <span className="text-sm font-semibold text-fh-bleu" aria-live="polite">
+            {nbSelectionnes} destinataire(s) sélectionné(s)
+          </span>
+          <div className="flex flex-wrap gap-2 sm:ml-auto">
+            <button
+              type="button"
+              onClick={() => setEnvoiGroupe("sms")}
+              className="rounded-full bg-fh-orange px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-fh-orange-fonce"
+            >
+              Envoyer SMS
+            </button>
+            <button
+              type="button"
+              onClick={() => setEnvoiGroupe("invitation_whatsapp")}
+              className="rounded-full bg-green-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-green-700"
+            >
+              Inviter WhatsApp
+            </button>
+          </div>
+        </div>
+        {data && pageEntiere && !tousLesFiltres && data.count > idsPage.length && (
+          <p className="rounded-lg bg-fh-accent px-3 py-2 text-sm text-fh-bleu">
+            Les {idsPage.length} comptes de cette page sont sélectionnés.{" "}
+            <button type="button" onClick={() => setTousLesFiltres(true)} className="font-semibold underline">
+              Sélectionner les {data.count} comptes correspondant aux filtres
+            </button>
+          </p>
+        )}
+        {data && tousLesFiltres && (
+          <p className="rounded-lg bg-fh-accent px-3 py-2 text-sm text-fh-bleu">
+            Les {data.count} comptes correspondant aux filtres sont sélectionnés, sur toutes les pages.{" "}
+            <button
+              type="button"
+              onClick={() => {
+                setTousLesFiltres(false);
+                setIdsSelection([]);
+              }}
+              className="font-semibold underline"
+            >
+              Tout désélectionner
+            </button>
+          </p>
+        )}
       </div>
 
       {chargement ? (
@@ -252,6 +408,19 @@ export default function UtilisateursPage() {
               onReactiver={reactiver}
               onModifier={setCompteAModifier}
               onReinitialiserMdp={compte.telephone === moi?.telephone ? undefined : setCompteAReinitialiser}
+              coche={tousLesFiltres || idsSelection.includes(compte.id)}
+              onBasculerSelection={(id) => {
+                if (tousLesFiltres) {
+                  // Décocher un compte quitte le mode « tous les filtrés » : on garde la page affichée, moins ce compte.
+                  setTousLesFiltres(false);
+                  setIdsSelection(idsPage.filter((x) => x !== id));
+                } else {
+                  setIdsSelection((cur) => basculerId(cur, id));
+                }
+              }}
+              onEnvoyerSms={setCompteSms}
+              indicateurSms={indicateurs[String(compte.id)] ?? "non_envoye"}
+              onNotifierActivation={setCompteActivation}
             />
           ))}
         </div>
@@ -321,6 +490,31 @@ export default function UtilisateursPage() {
           }}
           onSubmit={handleModifierCompte}
           onClose={() => setCompteAModifier(null)}
+        />
+      )}
+
+      {compteApprouve && (
+        <ActivationFlow compte={compteApprouve} onClose={fermerApprobation} onTermine={() => setRafraichir((n) => n + 1)} />
+      )}
+
+      {compteActivation && (
+        <ComposerModal
+          type="activation"
+          destinataire={compteActivation}
+          texteInitial={TEXTE_ACTIVATION}
+          onClose={() => setCompteActivation(null)}
+          onTermine={() => setRafraichir((n) => n + 1)}
+        />
+      )}
+
+      {compteSms && <ComposerModal type="sms" destinataire={compteSms} onClose={() => setCompteSms(null)} />}
+
+      {envoiGroupe && (
+        <ComposerModal
+          type={envoiGroupe}
+          cibles={{ ids: idsSelection, filtres: filtresActuels, totalFiltres: data?.count ?? 0 }}
+          modeInitial={tousLesFiltres ? "filtres" : idsSelection.length > 0 ? "ids" : "filtres"}
+          onClose={() => setEnvoiGroupe(null)}
         />
       )}
 

@@ -20,8 +20,8 @@ export default function Topbar({ title, onOpenMenu }: TopbarProps) {
   }
 
   return (
-    <header className="flex items-center justify-between gap-4 border-b border-fh-sable bg-white px-4 py-4 sm:px-6">
-      <div className="flex items-center gap-3">
+    <header className="flex items-center justify-between gap-2 border-b border-fh-sable bg-white px-4 py-4 sm:px-6">
+      <div className="flex min-w-0 items-center gap-2 sm:gap-3">
         {onOpenMenu && (
           <button
             type="button"
@@ -43,10 +43,10 @@ export default function Topbar({ title, onOpenMenu }: TopbarProps) {
             </svg>
           </button>
         )}
-        <h1 className="text-lg font-bold text-fh-bleu sm:text-xl">{title}</h1>
+        <h1 className="min-w-0 break-words text-base font-bold text-fh-bleu sm:text-xl">{title}</h1>
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex shrink-0 items-center gap-3">
         {user && (
           <span className="hidden text-sm text-fh-ardoise sm:inline">
             {user.prenom} {user.nom}
@@ -55,7 +55,7 @@ export default function Topbar({ title, onOpenMenu }: TopbarProps) {
         <button
           type="button"
           onClick={handleLogout}
-          className="rounded-full border border-fh-bleu/20 px-4 py-2 text-sm font-medium text-fh-bleu transition-colors hover:bg-fh-sable/60"
+          className="rounded-full border border-fh-bleu/20 px-3 py-2 text-sm font-medium text-fh-bleu transition-colors hover:bg-fh-sable/60 sm:px-4"
         >
           Déconnexion
         </button>

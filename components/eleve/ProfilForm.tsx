@@ -21,6 +21,7 @@ import {
 import { ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { getProfilEleve, majProfilEleve, type GenreEleve, type ProfilEleve } from "@/lib/eleveApi";
+import PreferencesCommunication from "@/components/eleve/PreferencesCommunication";
 import { aDesModifications, champsModifies, classeDe, initiales } from "@/lib/profil";
 
 const LIBELLES_GENRE: Record<GenreEleve, string> = {
@@ -430,6 +431,8 @@ export default function ProfilForm() {
             {enregistrementEnCours ? "Enregistrement…" : "Enregistrer"}
           </button>
         </form>
+
+        <PreferencesCommunication />
       </div>
     </div>
   );

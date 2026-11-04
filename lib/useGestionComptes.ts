@@ -17,6 +17,8 @@ export interface FiltresComptes {
   statut?: Statut;
   role?: Role;
   search?: string;
+  niveau?: number;
+  serie?: number;
 }
 
 interface ToastEtat {
@@ -40,6 +42,8 @@ export function useGestionComptes(filtres: FiltresComptes, page: number) {
   const [idEnCours, setIdEnCours] = useState<number | null>(null);
   const [compteARejeter, setCompteARejeter] = useState<Compte | null>(null);
   const [toast, setToast] = useState<ToastEtat | null>(null);
+  /** Dernier compte approuvé avec succès : sert uniquement à PROPOSER une notification (rien n'est envoyé). */
+  const [compteApprouve, setCompteApprouve] = useState<Compte | null>(null);
 
   useEffect(() => {
     let actif = true;
@@ -68,7 +72,7 @@ export function useGestionComptes(filtres: FiltresComptes, page: number) {
     // Dépendances volontairement sur les champs primitifs de `filtres` (un
     // nouvel objet littéral à chaque rendu ne doit pas redéclencher l'effet).
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filtres.statut, filtres.role, filtres.search, page, refreshCle]);
+  }, [filtres.statut, filtres.role, filtres.search, filtres.niveau, filtres.serie, page, refreshCle]);
 
   const recharger = useCallback(() => setRefreshCle((cle) => cle + 1), []);
 
@@ -77,6 +81,8 @@ export function useGestionComptes(filtres: FiltresComptes, page: number) {
     try {
       await approuverCompte(id);
       setToast({ message: "Compte approuvé.", tone: "succes" });
+      const approuve = data?.results.find((c) => c.id === id);
+      if (approuve) setCompteApprouve({ ...approuve, statut: "actif" });
       recharger();
     } catch (error) {
       setToast({
@@ -153,6 +159,8 @@ export function useGestionComptes(filtres: FiltresComptes, page: number) {
     setToast,
     fermerToast: () => setToast(null),
     recharger,
+    compteApprouve,
+    fermerApprobation: () => setCompteApprouve(null),
     approuver,
     confirmerRejet,
     suspendre,

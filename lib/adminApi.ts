@@ -39,6 +39,8 @@ export interface ListerComptesParams {
   statut?: Statut;
   role?: Role;
   search?: string;
+  niveau?: number;
+  serie?: number;
   /** Page DRF (1-indexée). Omis si 1 (comportement par défaut de l'API). */
   page?: number;
 }
@@ -48,6 +50,8 @@ export function listerComptes(params: ListerComptesParams = {}): Promise<CompteP
   if (params.statut) query.set("statut", params.statut);
   if (params.role) query.set("role", params.role);
   if (params.search) query.set("search", params.search);
+  if (params.niveau) query.set("niveau", String(params.niveau));
+  if (params.serie) query.set("serie", String(params.serie));
   if (params.page && params.page > 1) query.set("page", String(params.page));
 
   const queryString = query.toString();

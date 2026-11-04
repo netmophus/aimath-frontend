@@ -13,6 +13,7 @@ export const ADMIN_NAV_ITEMS: readonly AdminNavItem[] = [
   { href: "/admin/lecons", label: "Leçons" },
   { href: "/admin/glossaire", label: "Glossaire" },
   { href: "/admin/demandes", label: "Demandes d'aide" },
+  { href: "/admin/communications", label: "Communications" },
   { href: "/admin/cartes", label: "Cartes" },
   { href: "/admin/vendeurs", label: "Vendeurs" },
 ];

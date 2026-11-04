@@ -7,6 +7,7 @@ import { useGestionComptes } from "@/lib/useGestionComptes";
 import CompteRow from "@/components/admin/CompteRow";
 import RejeterModal from "@/components/admin/RejeterModal";
 import Toast from "@/components/admin/Toast";
+import ActivationFlow from "@/components/admin/communications/ActivationFlow";
 
 interface Onglet {
   value: Statut;
@@ -43,6 +44,8 @@ export default function ValidationsPage() {
     annulerRejet,
     toast,
     fermerToast,
+    compteApprouve,
+    fermerApprobation,
     approuver,
     confirmerRejet,
     suspendre,
@@ -162,6 +165,8 @@ export default function ValidationsPage() {
           onClose={annulerRejet}
         />
       )}
+
+      {compteApprouve && <ActivationFlow compte={compteApprouve} onClose={fermerApprobation} />}
 
       {toast && <Toast message={toast.message} tone={toast.tone} onClose={fermerToast} />}
     </div>
