@@ -1,5 +1,5 @@
-import PagePlaceholder from "@/components/eleve/PagePlaceholder";
+import AideAccueil from "@/components/eleve/aide/AideAccueil";
 
 export default function AidePage() {
-  return <PagePlaceholder titre="Aide prof" emoji="💬" />;
+  return <AideAccueil />;
 }
