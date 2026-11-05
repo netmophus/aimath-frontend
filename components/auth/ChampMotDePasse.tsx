@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { IconEye, IconEyeOff } from "@tabler/icons-react";
 
 interface ChampMotDePasseProps {
@@ -12,6 +12,10 @@ interface ChampMotDePasseProps {
   idErreur?: string;
   /** Nom du champ pour le libellé du bouton (ex. « le mot de passe », « la confirmation »). */
   designation?: string;
+  /** Texte d'aide affiché dans le champ vide (facultatif ; sans effet sur les autres écrans). */
+  placeholder?: string;
+  /** Petite icône décorative à gauche du champ (facultatif). */
+  icone?: ReactNode;
 }
 
 /**
@@ -28,6 +32,8 @@ export default function ChampMotDePasse({
   invalide = false,
   idErreur,
   designation = "le mot de passe",
+  placeholder,
+  icone,
 }: ChampMotDePasseProps) {
   const [visible, setVisible] = useState(false);
 
@@ -37,15 +43,21 @@ export default function ChampMotDePasse({
         invalide ? "border-red-400" : "border-[#C7D2E5]"
       }`}
     >
+      {icone && (
+        <span aria-hidden="true" className="flex shrink-0 items-center pl-4 text-[#64748B]">
+          {icone}
+        </span>
+      )}
       <input
         id={id}
         type={visible ? "text" : "password"}
         autoComplete={autoComplete}
+        placeholder={placeholder}
         value={value}
         onChange={(event) => onChange(event.target.value)}
         aria-invalid={invalide}
         aria-describedby={idErreur}
-        className="min-h-[52px] min-w-0 flex-1 bg-transparent px-4 text-base text-[#102A66] outline-none"
+        className={`min-h-[52px] min-w-0 flex-1 bg-transparent text-base text-[#102A66] outline-none placeholder:text-[#94A3B8] ${icone ? "pl-3 pr-4" : "px-4"}`}
       />
       <button
         type="button"

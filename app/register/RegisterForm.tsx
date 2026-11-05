@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import type { ChangeEvent, FormEvent } from "react";
+import { useEffect, useRef, useState } from "react";
+import type { ChangeEvent, FormEvent, ReactNode } from "react";
 import Link from "next/link";
+import { IconLock, IconUser, IconUserPlus } from "@tabler/icons-react";
 import {
   ApiError,
   getClasses,
@@ -29,10 +30,53 @@ interface Recap {
   message: string;
 }
 
-const LABEL = "mb-1.5 block text-sm font-semibold text-[#102A66]";
+const LABEL = "mb-2 block text-base font-bold text-[#102A66]";
 const CHAMP =
   "min-h-[52px] w-full rounded-xl border border-[#C7D2E5] bg-white px-4 text-base text-[#102A66] outline-none transition-shadow placeholder:text-[#94A3B8] focus:border-[#1D4ED8] focus:ring-2 focus:ring-[#1D4ED8]/20 disabled:cursor-not-allowed disabled:bg-[#F1F5F9] disabled:text-[#64748B]";
 const ERREUR = "mt-1.5 text-sm font-medium text-[#B03A10]";
+const AIDE = "mt-1.5 text-sm text-[#475A7A]";
+
+/** Champ texte avec petite icône décorative à gauche (même look que les champs téléphone et mot de passe). */
+function ChampTexte({
+  id,
+  valeur,
+  onChange,
+  autoComplete,
+  placeholder,
+  erreur,
+  icone,
+}: {
+  id: string;
+  valeur: string;
+  onChange: (v: string) => void;
+  autoComplete: string;
+  placeholder: string;
+  erreur?: string;
+  icone: ReactNode;
+}) {
+  return (
+    <div
+      className={`flex w-full items-center overflow-hidden rounded-xl border bg-white transition-shadow focus-within:border-[#1D4ED8] focus-within:ring-2 focus-within:ring-[#1D4ED8]/20 ${
+        erreur ? "border-red-400" : "border-[#C7D2E5]"
+      }`}
+    >
+      <span aria-hidden="true" className="flex shrink-0 items-center pl-4 text-[#64748B]">
+        {icone}
+      </span>
+      <input
+        id={id}
+        type="text"
+        autoComplete={autoComplete}
+        placeholder={placeholder}
+        value={valeur}
+        onChange={(event) => onChange(event.target.value)}
+        aria-invalid={Boolean(erreur)}
+        aria-describedby={erreur ? `${id}-error` : undefined}
+        className="min-h-[52px] min-w-0 flex-1 bg-transparent pl-3 pr-4 text-base text-[#102A66] outline-none placeholder:text-[#94A3B8]"
+      />
+    </div>
+  );
+}
 
 export default function RegisterForm() {
   const [cycles, setCycles] = useState<ClasseCycle[]>([]);
@@ -52,6 +96,7 @@ export default function RegisterForm() {
   const [erreurGenerale, setErreurGenerale] = useState<string | null>(null);
   const [envoiEnCours, setEnvoiEnCours] = useState(false);
   const [recap, setRecap] = useState<Recap | null>(null);
+  const verrou = useRef(false); // protection contre les doubles soumissions (avant même le re-rendu)
 
   useEffect(() => {
     let actif = true;
@@ -117,6 +162,8 @@ export default function RegisterForm() {
       return;
     }
 
+    if (verrou.current) return;
+    verrou.current = true;
     setEnvoiEnCours(true);
     try {
       const data = await inscrireEleve({
@@ -149,6 +196,7 @@ export default function RegisterForm() {
         setErreurGenerale("Impossible de créer le compte. Réessaie plus tard.");
       }
     } finally {
+      verrou.current = false;
       setEnvoiEnCours(false);
     }
   }
@@ -194,9 +242,12 @@ export default function RegisterForm() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-2xl">
-      <h1 className="text-3xl font-bold text-[#102A66]">Créer un compte élève</h1>
-      <span aria-hidden="true" className="mt-3 mb-7 block h-1 w-12 rounded-full bg-[#F4511E]" />
+    <div className="mx-auto w-full">
+      <h1 className="text-3xl font-extrabold text-[#102A66] sm:text-4xl">
+        Créer un compte <span className="text-[#FF5A1F]">élève</span>
+      </h1>
+      <span aria-hidden="true" className="mt-3 block h-1.5 w-[70px] rounded-full bg-[#FF5A1F]" />
+      <p className="mt-4 mb-6 text-base text-[#1E2F55] sm:text-lg">Rejoins Fahimta et accède à des ressources pour ta réussite.</p>
 
       {erreurGenerale && (
         <p role="alert" className="mb-4 rounded-xl bg-[#FFF1EC] px-4 py-3 text-sm font-medium text-[#B03A10]">
@@ -210,15 +261,14 @@ export default function RegisterForm() {
             <label htmlFor="prenom" className={LABEL}>
               Prénom
             </label>
-            <input
+            <ChampTexte
               id="prenom"
-              type="text"
+              valeur={prenom}
+              onChange={setPrenom}
               autoComplete="given-name"
-              value={prenom}
-              onChange={(event) => setPrenom(event.target.value)}
-              aria-invalid={Boolean(errors.prenom)}
-              aria-describedby={errors.prenom ? "prenom-error" : undefined}
-              className={CHAMP}
+              placeholder="Ex. : Moussa"
+              erreur={errors.prenom}
+              icone={<IconUser size={20} />}
             />
             {errors.prenom && (
               <p id="prenom-error" className={ERREUR}>
@@ -231,15 +281,14 @@ export default function RegisterForm() {
             <label htmlFor="nom" className={LABEL}>
               Nom
             </label>
-            <input
+            <ChampTexte
               id="nom"
-              type="text"
+              valeur={nom}
+              onChange={setNom}
               autoComplete="family-name"
-              value={nom}
-              onChange={(event) => setNom(event.target.value)}
-              aria-invalid={Boolean(errors.nom)}
-              aria-describedby={errors.nom ? "nom-error" : undefined}
-              className={CHAMP}
+              placeholder="Ex. : Hamani"
+              erreur={errors.nom}
+              icone={<IconUser size={20} />}
             />
             {errors.nom && (
               <p id="nom-error" className={ERREUR}>
@@ -260,6 +309,7 @@ export default function RegisterForm() {
             invalide={Boolean(errors.telephone)}
             idErreur={errors.telephone ? "telephone-error" : undefined}
           />
+          <p className={AIDE}>Format : +227 90 00 00 00</p>
           {errors.telephone && (
             <p id="telephone-error" className={ERREUR}>
               {errors.telephone}
@@ -268,7 +318,7 @@ export default function RegisterForm() {
         </div>
 
         {chargementClasses ? (
-          <p className="text-sm text-[#475A7A]">Chargement des classes…</p>
+          <p role="status" className="text-sm text-[#475A7A]">Chargement des classes…</p>
         ) : erreurClasses ? (
           <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{erreurClasses}</p>
         ) : (
@@ -312,7 +362,7 @@ export default function RegisterForm() {
                 aria-describedby={errors.niveau ? "niveau-error" : undefined}
                 className={CHAMP}
               >
-                <option value="">{cycle ? "Choisir un niveau" : "Choisis d'abord un cycle"}</option>
+                <option value="">{cycle ? "Choisir un niveau" : "Choisis un cycle"}</option>
                 {cycle?.niveaux.map((niveauOption) => (
                   <option key={niveauOption.id} value={niveauOption.id}>
                     {niveauOption.nom}
@@ -355,7 +405,7 @@ export default function RegisterForm() {
                 </>
               ) : (
                 <select id="serie" disabled className={CHAMP}>
-                  <option>{niveau ? "Pas de série pour ce niveau" : "—"}</option>
+                  <option>{niveau ? "Pas de série" : "—"}</option>
                 </select>
               )}
             </div>
@@ -375,7 +425,10 @@ export default function RegisterForm() {
               invalide={Boolean(errors.motDePasse)}
               idErreur={errors.motDePasse ? "motDePasse-error" : undefined}
               designation="le mot de passe"
+              placeholder="Choisis un mot de passe"
+              icone={<IconLock size={20} />}
             />
+            <p className={AIDE}>8 caractères minimum, pas uniquement des chiffres, pas trop courant.</p>
             {errors.motDePasse && (
               <p id="motDePasse-error" className={ERREUR}>
                 {errors.motDePasse}
@@ -385,7 +438,7 @@ export default function RegisterForm() {
 
           <div>
             <label htmlFor="confirmation" className={LABEL}>
-              Confirmation du mot de passe
+              Confirmer le mot de passe
             </label>
             <ChampMotDePasse
               id="confirmation"
@@ -395,6 +448,8 @@ export default function RegisterForm() {
               invalide={Boolean(errors.confirmation)}
               idErreur={errors.confirmation ? "confirmation-error" : undefined}
               designation="la confirmation du mot de passe"
+              placeholder="Répète ton mot de passe"
+              icone={<IconLock size={20} />}
             />
             {errors.confirmation && (
               <p id="confirmation-error" className={ERREUR}>
@@ -407,17 +462,24 @@ export default function RegisterForm() {
         <button
           type="submit"
           disabled={envoiEnCours || chargementClasses}
-          className="mt-1 min-h-[52px] w-full rounded-xl bg-gradient-to-r from-[#FB6A2B] to-[#F4511E] px-6 py-3 text-base font-bold text-white shadow-[0_8px_20px_rgba(244,81,30,0.3)] transition-opacity hover:opacity-90 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+          aria-busy={envoiEnCours}
+          className="mt-1 inline-flex min-h-[58px] w-full items-center justify-center gap-3 rounded-xl bg-gradient-to-r from-[#FF8A1F] to-[#F4511E] px-6 py-3 text-lg font-bold text-white shadow-[0_8px_20px_rgba(244,81,30,0.25)] transition-opacity hover:opacity-90 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
         >
+          <IconUserPlus size={24} aria-hidden="true" />
           {envoiEnCours ? "Création en cours…" : "Créer mon compte"}
         </button>
       </form>
 
-      <p className="mt-6 text-center text-sm text-[#475A7A]">
-        Déjà un compte ?{" "}
-        <Link href="/login" className="font-bold text-[#F4511E] underline-offset-2 hover:underline">
+      <p className="mt-7 text-center text-base text-[#475A7A]">
+        Tu as déjà un compte ?{" "}
+        <Link href="/login" className="inline-flex min-h-11 items-center font-bold text-[#FF5A1F] underline-offset-2 hover:underline focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-blue-700">
           Se connecter
         </Link>
+      </p>
+
+      <p className="mt-4 flex items-center justify-center gap-2 text-sm text-[#475A7A]">
+        <IconLock size={18} aria-hidden="true" />
+        Inscription sécurisée
       </p>
     </div>
   );
