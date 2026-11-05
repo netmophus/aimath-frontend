@@ -10,6 +10,7 @@ import { remarkGlossaire } from "@/lib/remarkGlossaire";
 import { remarkCourbe } from "@/lib/remarkCourbe";
 import { remarkVariations } from "@/lib/remarkVariations";
 import { remarkHorloge } from "@/lib/remarkHorloge";
+import { remarkCongruence } from "@/lib/remarkCongruence";
 import { remarkBinaire } from "@/lib/remarkBinaire";
 import { remarkCercleTrigo } from "@/lib/remarkCercleTrigo";
 import { remarkRacines } from "@/lib/remarkRacines";
@@ -20,6 +21,7 @@ import { remarkChimie } from "@/lib/remarkChimie";
 import CourbeFonctionBloc from "@/components/CourbeFonctionBloc";
 import TableauVariationsBloc from "@/components/TableauVariationsBloc";
 import HorlogeModulaireBloc from "@/components/HorlogeModulaireBloc";
+import CalculateurCongruenceBloc from "@/components/CalculateurCongruenceBloc";
 import ConvertisseurBinaireBloc from "@/components/ConvertisseurBinaireBloc";
 import CercleTrigonometriqueBloc from "@/components/CercleTrigonometriqueBloc";
 import RacinesNiemesBloc from "@/components/RacinesNiemesBloc";
@@ -53,6 +55,7 @@ interface PropsDfnTerme {
 interface PropsFigureCourbe {
   "data-courbe-source"?: string;
   "data-horloge-source"?: string;
+  "data-congruence-source"?: string;
   "data-binaire-source"?: string;
   "data-cercletrigo-source"?: string;
   "data-racines-source"?: string;
@@ -83,13 +86,14 @@ export default function RenduMarkdown({ contenu, className = "", onTermeClick }:
       <ReactMarkdown
         // remarkGfm (tableaux) ajoute seulement des extensions de syntaxe au parseur : il ne touche pas aux nœuds
         // `code` que remarkCourbe…remarkChimie transforment ensuite. `~texte~` simple n'est pas du barré (≈, ~).
-        remarkPlugins={[remarkMath, [remarkGfm, { singleTilde: false }], remarkGlossaire, remarkCourbe, remarkVariations, remarkHorloge, remarkBinaire, remarkCercleTrigo, remarkRacines, remarkMouvement, remarkCirculaire, remarkPlanIncline, remarkChimie]}
+        remarkPlugins={[remarkMath, [remarkGfm, { singleTilde: false }], remarkGlossaire, remarkCourbe, remarkVariations, remarkHorloge, remarkCongruence, remarkBinaire, remarkCercleTrigo, remarkRacines, remarkMouvement, remarkCirculaire, remarkPlanIncline, remarkChimie]}
         rehypePlugins={[rehypeKatex]}
         components={{
           figure: (props) => {
             const {
               "data-courbe-source": sourceCourbe,
               "data-horloge-source": sourceHorloge,
+              "data-congruence-source": sourceCongruence,
               "data-binaire-source": sourceBinaire,
               "data-cercletrigo-source": sourceCercleTrigo,
               "data-racines-source": sourceRacines,
@@ -106,6 +110,7 @@ export default function RenduMarkdown({ contenu, className = "", onTermeClick }:
             // côté plugins).
             if (sourceCourbe !== undefined) return <CourbeFonctionBloc source={sourceCourbe} />;
             if (sourceHorloge !== undefined) return <HorlogeModulaireBloc source={sourceHorloge} />;
+            if (sourceCongruence !== undefined) return <CalculateurCongruenceBloc source={sourceCongruence} />;
             if (sourceBinaire !== undefined) return <ConvertisseurBinaireBloc source={sourceBinaire} />;
             if (sourceCercleTrigo !== undefined) return <CercleTrigonometriqueBloc source={sourceCercleTrigo} />;
             if (sourceRacines !== undefined) return <RacinesNiemesBloc source={sourceRacines} />;

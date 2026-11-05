@@ -29,6 +29,8 @@ interface ChampMarkdownProps {
   /** Affiche "+ Insérer une horloge modulaire" : insère un squelette de bloc
    * ```horloge pré-rempli (voir docs/syntaxe-horloge.md). */
   avecInsertionHorloge?: boolean;
+  /** Affiche "+ Insérer un calculateur de congruence" : insère un bloc ```congruence (voir docs/syntaxe-congruence.md). */
+  avecInsertionCongruence?: boolean;
   /** Affiche "+ Insérer un convertisseur binaire" : insère un squelette de
    * bloc ```binaire pré-rempli (voir docs/syntaxe-binaire.md). */
   avecInsertionBinaire?: boolean;
@@ -88,6 +90,17 @@ const SQUELETTE_HORLOGE = `
 
 \`\`\`horloge
 modulo: 12
+\`\`\`
+
+`;
+
+/** Gabarit inséré par "+ Insérer un calculateur de congruence" — voir docs/syntaxe-congruence.md. */
+const SQUELETTE_CONGRUENCE = `
+
+\`\`\`congruence
+a: 17
+b: 3
+n: 5
 \`\`\`
 
 `;
@@ -182,6 +195,7 @@ export default function ChampMarkdown({
   avecInsertionCourbe = false,
   avecInsertionVariations = false,
   avecInsertionHorloge = false,
+  avecInsertionCongruence = false,
   avecInsertionBinaire = false,
   avecInsertionCercleTrigo = false,
   avecInsertionRacines = false,
@@ -221,6 +235,7 @@ export default function ChampMarkdown({
         avecInsertionCourbe ||
         avecInsertionVariations ||
         avecInsertionHorloge ||
+        avecInsertionCongruence ||
         avecInsertionBinaire ||
         avecInsertionCercleTrigo ||
         avecInsertionRacines ||
@@ -260,6 +275,16 @@ export default function ChampMarkdown({
                 className="rounded-full border border-fh-bleu-vif/40 px-3 py-1 text-xs font-medium text-fh-bleu-vif transition-colors hover:bg-fh-bleu-vif/10"
               >
                 + Insérer une horloge modulaire
+              </button>
+            )}
+            {avecInsertionCongruence && (
+              <button
+                type="button"
+                onClick={() => insererMarqueur(SQUELETTE_CONGRUENCE, "Bloc calculateur de congruence inséré — adapte a, b et n.")}
+                title="Insère un calculateur de congruence à adapter"
+                className="rounded-full border border-fh-bleu-vif/40 px-3 py-1 text-xs font-medium text-fh-bleu-vif transition-colors hover:bg-fh-bleu-vif/10"
+              >
+                + Insérer un calculateur de congruence
               </button>
             )}
             {avecInsertionBinaire && (

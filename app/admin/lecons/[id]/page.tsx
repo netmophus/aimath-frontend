@@ -641,6 +641,7 @@ export default function LeconEditeurPage() {
           avecInsertionCourbe
           avecInsertionVariations
           avecInsertionHorloge
+          avecInsertionCongruence
           avecInsertionBinaire
           avecInsertionCercleTrigo
           avecInsertionRacines
