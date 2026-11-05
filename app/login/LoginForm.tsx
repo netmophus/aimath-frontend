@@ -68,6 +68,11 @@ export default function LoginForm() {
             onChange={setMotDePasse}
             autoComplete="current-password"
           />
+          <div className="mt-2 text-right">
+            <Link href="/mot-de-passe-oublie" className="text-sm font-semibold text-[#1D4ED8] underline-offset-2 hover:underline">
+              Mot de passe oublié ?
+            </Link>
+          </div>
         </div>
 
         {erreur && (

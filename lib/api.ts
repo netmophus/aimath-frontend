@@ -375,10 +375,72 @@ export function login(telephone: string, password: string): Promise<LoginRespons
   });
 }
 
-export function changerMotDePasse(nouveauMotDePasse: string): Promise<{ message: string }> {
-  return apiRequest<{ message: string }>("/api/auth/changer-mot-de-passe/", {
+interface MotDePasseModifieResponse {
+  message: string;
+  access: string;
+  refresh: string;
+}
+
+/**
+ * Changement FORCÉ (après réinitialisation par un admin). Le backend invalide les anciens jetons et en renvoie de
+ * nouveaux : on les enregistre pour que l'appareil courant reste connecté.
+ */
+export async function changerMotDePasse(nouveauMotDePasse: string): Promise<{ message: string }> {
+  const data = await apiRequest<MotDePasseModifieResponse>("/api/auth/changer-mot-de-passe/", {
     method: "POST",
     body: { nouveau_mot_de_passe: nouveauMotDePasse },
+  });
+  if (data.access && data.refresh) tokenStorage.set(data.access, data.refresh);
+  return { message: data.message };
+}
+
+/**
+ * Changement VOLONTAIRE depuis « Mon profil » : mot de passe actuel obligatoire. Aucun champ « doit changer » n'est
+ * envoyé. Les autres appareils sont déconnectés ; les nouveaux jetons gardent celui-ci connecté.
+ */
+export async function modifierMotDePasse(entree: {
+  motDePasseActuel: string;
+  nouveauMotDePasse: string;
+  confirmation: string;
+}): Promise<{ message: string }> {
+  const data = await apiRequest<MotDePasseModifieResponse>("/api/auth/modifier-mot-de-passe/", {
+    method: "POST",
+    body: {
+      mot_de_passe_actuel: entree.motDePasseActuel,
+      nouveau_mot_de_passe: entree.nouveauMotDePasse,
+      confirmation: entree.confirmation,
+    },
+  });
+  if (data.access && data.refresh) tokenStorage.set(data.access, data.refresh);
+  return { message: data.message };
+}
+
+/** Mot de passe oublié, étape 1 : demande du code SMS. Réponse neutre, quel que soit le numéro. */
+export function demanderCodeMotDePasse(telephone: string): Promise<{ message: string; delai_renvoi_secondes: number }> {
+  return rawRequest("/api/auth/mot-de-passe-oublie/demander/", { method: "POST", body: { telephone }, auth: false });
+}
+
+/** Étape 2 : vérification du code ; renvoie une autorisation temporaire à usage unique (gardée en mémoire seulement). */
+export function verifierCodeMotDePasse(telephone: string, code: string): Promise<{ autorisation: string; expire_dans_secondes: number }> {
+  return rawRequest("/api/auth/mot-de-passe-oublie/verifier/", { method: "POST", body: { telephone, code }, auth: false });
+}
+
+/** Étape 3 : nouveau mot de passe. Aucune connexion automatique. */
+export function reinitialiserMotDePasse(entree: {
+  telephone: string;
+  autorisation: string;
+  nouveauMotDePasse: string;
+  confirmation: string;
+}): Promise<{ message: string }> {
+  return rawRequest("/api/auth/mot-de-passe-oublie/reinitialiser/", {
+    method: "POST",
+    auth: false,
+    body: {
+      telephone: entree.telephone,
+      autorisation: entree.autorisation,
+      nouveau_mot_de_passe: entree.nouveauMotDePasse,
+      confirmation: entree.confirmation,
+    },
   });
 }
 

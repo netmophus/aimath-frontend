@@ -22,6 +22,7 @@ import { ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { getProfilEleve, majProfilEleve, type GenreEleve, type ProfilEleve } from "@/lib/eleveApi";
 import PreferencesCommunication from "@/components/eleve/PreferencesCommunication";
+import ModaleModifierMotDePasse from "@/components/eleve/ModaleModifierMotDePasse";
 import { aDesModifications, champsModifies, classeDe, initiales } from "@/lib/profil";
 
 const LIBELLES_GENRE: Record<GenreEleve, string> = {
@@ -104,6 +105,7 @@ export default function ProfilForm() {
   const verrou = useRef(false);
   const [erreurEnregistrement, setErreurEnregistrement] = useState<string | null>(null);
   const [succes, setSucces] = useState<string | null>(null);
+  const [modaleMdp, setModaleMdp] = useState(false);
 
   function appliquer(data: ProfilEleve) {
     setProfil(data);
@@ -388,7 +390,7 @@ export default function ProfilForm() {
             </section>
           </div>
 
-          {/* Mot de passe : bouton inactif. Le changement volontaire exige d'abord, côté backend, la saisie de l'ancien mot de passe. */}
+          {/* Mot de passe : la modale a son propre formulaire et sa propre API (mot de passe actuel exigé côté serveur). */}
           <section aria-labelledby="titre-mdp" className={`${CARTE} flex flex-col gap-4 sm:flex-row sm:items-center`}>
             <Pastille couleur="#102A66">
               <IconLock size={30} stroke={1.8} />
@@ -397,13 +399,12 @@ export default function ProfilForm() {
               <h2 id="titre-mdp" className="text-lg font-extrabold text-[#102A66]">
                 Mot de passe
               </h2>
-              <p className="text-base text-slate-700">Bientôt disponible.</p>
+              <p className="text-base text-slate-700">Sécurise ton compte.</p>
             </div>
             <button
               type="button"
-              disabled
-              aria-disabled="true"
-              className="inline-flex min-h-12 w-full items-center justify-center rounded-2xl bg-slate-200 px-6 text-base font-bold text-slate-600 sm:w-fit"
+              onClick={() => setModaleMdp(true)}
+              className="inline-flex min-h-12 w-full items-center justify-center rounded-2xl bg-[#C2410C] px-6 text-base font-bold text-white shadow-sm transition-colors hover:bg-[#9A3412] focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-[#102A66] sm:w-fit"
             >
               Modifier
             </button>
@@ -431,6 +432,8 @@ export default function ProfilForm() {
             {enregistrementEnCours ? "Enregistrement…" : "Enregistrer"}
           </button>
         </form>
+
+        {modaleMdp && <ModaleModifierMotDePasse onFermer={() => setModaleMdp(false)} onSucces={() => setSucces("Mot de passe modifié.")} />}
 
         <PreferencesCommunication />
       </div>
