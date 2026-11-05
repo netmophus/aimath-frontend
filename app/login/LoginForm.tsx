@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { IconLock, IconLogin2 } from "@tabler/icons-react";
 
 import ChampMotDePasse from "@/components/auth/ChampMotDePasse";
 import ChampTelephone from "@/components/auth/ChampTelephone";
@@ -11,7 +12,7 @@ import { redirectionApresConnexion, messageErreurConnexion } from "@/lib/authFor
 import { useAuth } from "@/lib/auth";
 import { construireTelephone } from "@/lib/telephone";
 
-const LABEL = "mb-1.5 block text-sm font-semibold text-[#102A66]";
+const LABEL = "mb-2 block text-base font-bold text-[#102A66]";
 
 export default function LoginForm() {
   const router = useRouter();
@@ -47,8 +48,11 @@ export default function LoginForm() {
 
   return (
     <div className="mx-auto w-full max-w-md">
-      <h1 className="text-3xl font-bold text-[#102A66]">Se connecter</h1>
-      <span aria-hidden="true" className="mt-3 mb-8 block h-1 w-12 rounded-full bg-[#F4511E]" />
+      <h1 className="text-4xl font-extrabold text-[#102A66] sm:text-5xl">
+        Se <span className="text-[#FF5A1F]">connecter</span>
+      </h1>
+      <span aria-hidden="true" className="mt-3 block h-1.5 w-[70px] rounded-full bg-[#FF5A1F]" />
+      <p className="mt-5 mb-7 text-lg text-[#1E2F55]">Accède à ton compte Fahimta.</p>
 
       <form noValidate onSubmit={handleSubmit} className="flex flex-col gap-5">
         <div>
@@ -67,9 +71,10 @@ export default function LoginForm() {
             value={motDePasse}
             onChange={setMotDePasse}
             autoComplete="current-password"
+            placeholder="Ton mot de passe"
           />
-          <div className="mt-2 text-right">
-            <Link href="/mot-de-passe-oublie" className="text-sm font-semibold text-[#1D4ED8] underline-offset-2 hover:underline">
+          <div className="mt-1 text-right">
+            <Link href="/mot-de-passe-oublie" className="inline-flex min-h-11 items-center text-sm font-bold text-[#FF5A1F] underline-offset-2 hover:underline focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-blue-700 sm:text-base">
               Mot de passe oublié ?
             </Link>
           </div>
@@ -84,17 +89,24 @@ export default function LoginForm() {
         <button
           type="submit"
           disabled={envoiEnCours}
-          className="mt-1 min-h-[52px] w-full rounded-xl bg-gradient-to-r from-[#FB6A2B] to-[#F4511E] px-6 py-3 text-base font-bold text-white shadow-[0_8px_20px_rgba(244,81,30,0.3)] transition-opacity hover:opacity-90 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+          aria-busy={envoiEnCours}
+          className="mt-1 inline-flex min-h-[58px] w-full items-center justify-center gap-3 rounded-xl bg-gradient-to-r from-[#FF8A1F] to-[#F4511E] px-6 py-3 text-lg font-bold text-white shadow-[0_8px_20px_rgba(244,81,30,0.25)] transition-opacity hover:opacity-90 focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
         >
+          <IconLogin2 size={24} aria-hidden="true" />
           {envoiEnCours ? "Connexion…" : "Se connecter"}
         </button>
       </form>
 
-      <p className="mt-6 text-center text-sm text-[#475A7A]">
+      <p className="mt-7 text-center text-base text-[#475A7A]">
         Pas encore de compte ?{" "}
-        <Link href="/register" className="font-bold text-[#F4511E] underline-offset-2 hover:underline">
+        <Link href="/register" className="inline-flex min-h-11 items-center font-bold text-[#FF5A1F] underline-offset-2 hover:underline focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-blue-700">
           Créer un compte élève
         </Link>
+      </p>
+
+      <p className="mt-6 flex items-center justify-center gap-2 text-sm text-[#475A7A]">
+        <IconLock size={18} aria-hidden="true" />
+        Connexion sécurisée
       </p>
     </div>
   );
