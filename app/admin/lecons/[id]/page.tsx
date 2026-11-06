@@ -643,6 +643,7 @@ export default function LeconEditeurPage() {
           avecInsertionHorloge
           avecInsertionCongruence
           avecInsertionLaboPgcd
+          avecInsertionLaboPremiers
           avecInsertionBinaire
           avecInsertionCercleTrigo
           avecInsertionRacines

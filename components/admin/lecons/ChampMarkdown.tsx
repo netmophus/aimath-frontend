@@ -33,6 +33,8 @@ interface ChampMarkdownProps {
   avecInsertionCongruence?: boolean;
   /** Affiche "+ Insérer le laboratoire PGCD & PPCM" : insère un bloc ```pgcd (voir docs/syntaxe-pgcd.md). */
   avecInsertionLaboPgcd?: boolean;
+  /** Affiche "+ Insérer le labo Nombres premiers" : insère un bloc ```premiers (voir docs/syntaxe-premiers.md), sans doublon. */
+  avecInsertionLaboPremiers?: boolean;
   /** Affiche "+ Insérer un convertisseur binaire" : insère un squelette de
    * bloc ```binaire pré-rempli (voir docs/syntaxe-binaire.md). */
   avecInsertionBinaire?: boolean;
@@ -112,6 +114,15 @@ const SQUELETTE_LABO_PGCD = `
 
 \`\`\`pgcd
 onglet: euclide
+\`\`\`
+
+`;
+
+/** Gabarit inséré par "+ Insérer le labo Nombres premiers" — voir docs/syntaxe-premiers.md. */
+const SQUELETTE_LABO_PREMIERS = `
+
+\`\`\`premiers
+onglet: crible
 \`\`\`
 
 `;
@@ -208,6 +219,7 @@ export default function ChampMarkdown({
   avecInsertionHorloge = false,
   avecInsertionCongruence = false,
   avecInsertionLaboPgcd = false,
+  avecInsertionLaboPremiers = false,
   avecInsertionBinaire = false,
   avecInsertionCercleTrigo = false,
   avecInsertionRacines = false,
@@ -249,6 +261,7 @@ export default function ChampMarkdown({
         avecInsertionHorloge ||
         avecInsertionCongruence ||
         avecInsertionLaboPgcd ||
+        avecInsertionLaboPremiers ||
         avecInsertionBinaire ||
         avecInsertionCercleTrigo ||
         avecInsertionRacines ||
@@ -308,6 +321,22 @@ export default function ChampMarkdown({
                 className="rounded-full border border-fh-bleu-vif/40 px-3 py-1 text-xs font-medium text-fh-bleu-vif transition-colors hover:bg-fh-bleu-vif/10"
               >
                 + Insérer le laboratoire PGCD &amp; PPCM
+              </button>
+            )}
+            {avecInsertionLaboPremiers && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (/^\s*```premiers\b/m.test(valeur)) {
+                    setMessageToast("Le laboratoire Nombres premiers est déjà présent dans cette rubrique : aucune insertion en double.");
+                    return;
+                  }
+                  insererMarqueur(SQUELETTE_LABO_PREMIERS, "Laboratoire Nombres premiers inséré — choisis l'onglet affiché à l'ouverture.");
+                }}
+                title="Insère le laboratoire interactif des nombres premiers (six simulations)"
+                className="rounded-full border border-fh-bleu-vif/40 px-3 py-1 text-xs font-medium text-fh-bleu-vif transition-colors hover:bg-fh-bleu-vif/10"
+              >
+                + Insérer le labo Nombres premiers
               </button>
             )}
             {avecInsertionBinaire && (
