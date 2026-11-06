@@ -249,7 +249,42 @@ export default function SimDiviseurs() {
       </div>
       {partie === "diviseurs" ? <ConstructeurDiviseur /> : <ExtensionPgcdPpcm />}
       <Conclusion>
-        Avec n = p₁^α₁ × … × pᵣ^αᵣ, chaque diviseur positif correspond à un choix d&apos;exposants βᵢ entre 0 et αᵢ : il y en a (α₁ + 1) × … × (αᵣ + 1). Le PGCD prend le plus petit exposant, le PPCM le plus grand, et PGCD × PPCM = a × b.
+        <div className="flex flex-col gap-2">
+          <p>Si un entier se décompose en</p>
+          <Tex bloc expr={"n = p_1^{\\alpha_1}\\times p_2^{\\alpha_2}\\times\\cdots\\times p_r^{\\alpha_r}"} />
+          <p>
+            alors chaque diviseur positif de n correspond à un choix d&apos;exposants <Tex expr={"\\beta_i"} /> avec <Tex expr={"0\\leq\\beta_i\\leq\\alpha_i"} />.
+          </p>
+          <p>Nombre de diviseurs positifs :</p>
+          <Tex bloc className="whitespace-nowrap" expr={"(\\alpha_1+1)(\\alpha_2+1)\\cdots(\\alpha_r+1)"} />
+          <ul className="flex list-disc flex-col gap-1 pl-5">
+            <li>PGCD : on prend le plus petit exposant de chaque facteur commun.</li>
+            <li>PPCM : on prend le plus grand exposant de chaque facteur.</li>
+          </ul>
+          <p>Relation :</p>
+          <Tex bloc className="whitespace-nowrap" expr={"\\mathrm{PGCD}(a,b)\\times\\mathrm{PPCM}(a,b)=a\\times b"} />
+          <div className="mt-1 flex flex-col gap-1 rounded-lg border border-emerald-300 bg-white p-3" aria-label="Exemple concret">
+            <p className="font-semibold text-emerald-900">Exemple concret</p>
+            <p>
+              Prenons <Tex className="whitespace-nowrap" expr={"n = 360 = 2^3\\times3^2\\times5"} />.
+            </p>
+            <p>Nombre de diviseurs :</p>
+            <Tex bloc className="whitespace-nowrap" expr={"(3+1)(2+1)(1+1) = 4\\times3\\times2 = 24"} />
+            <p>24 diviseurs.</p>
+            <p>Avec :</p>
+            <Tex bloc className="whitespace-nowrap" expr={"a = 360 = 2^3\\times3^2\\times5"} />
+            <Tex bloc className="whitespace-nowrap" expr={"b = 150 = 2\\times3\\times5^2"} />
+            <p>PGCD, exposants min :</p>
+            <Tex bloc className="whitespace-nowrap" expr={"2^{\\min(3,1)}\\times3^{\\min(2,1)}\\times5^{\\min(1,2)}"} />
+            <Tex bloc className="whitespace-nowrap" expr={"= 2\\times3\\times5 = 30"} />
+            <p>PPCM, exposants max :</p>
+            <Tex bloc className="whitespace-nowrap" expr={"2^{\\max(3,1)}\\times3^{\\max(2,1)}\\times5^{\\max(1,2)}"} />
+            <Tex bloc className="whitespace-nowrap" expr={"= 2^3\\times3^2\\times5^2 = 1\\,800"} />
+            <p>Vérification :</p>
+            <Tex bloc className="whitespace-nowrap" expr={"30\\times1\\,800 = 54\\,000 = 360\\times150"} />
+            <p>Les deux produits valent 54 000. ✓</p>
+          </div>
+        </div>
       </Conclusion>
     </div>
   );

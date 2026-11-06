@@ -142,7 +142,7 @@ function ModeTable() {
           <p className="text-sm text-fh-ardoise">Choisis une case de la table.</p>
         )}
       </Zone>
-      <Conclusion>La table de Z/{m}Z se lit avec les restes des divisions par {m}. Les produits égaux à 1 donnent les inverses ; les produits nuls de classes non nulles signalent des diviseurs de zéro.</Conclusion>
+      <Conclusion>La table de <Tex expr={`\\mathbb{Z}/${m}\\mathbb{Z}`} /> se lit avec les restes des divisions par {m}. Les produits égaux à 1 donnent les inverses ; les produits nuls de classes non nulles signalent des diviseurs de zéro. Exemple : dans <Tex expr={"\\mathbb{Z}/6\\mathbb{Z}"} />, <Tex expr={"2\\times3 = 6\\equiv0\\pmod{6}"} /> (2 et 3 sont des diviseurs de zéro) et <Tex expr={"5\\times5 = 25\\equiv1\\pmod{6}"} /> (5 est son propre inverse).</Conclusion>
     </div>
   );
 }
@@ -233,7 +233,7 @@ function ModeInverse() {
       <Defi>
         <p className="text-sm text-fh-ardoise">Parmi les classes de Z/{m}Z, lesquelles ont un inverse ? Teste plusieurs classes et compare avec PGCD(a, {m}).</p>
       </Defi>
-      <Conclusion>L&apos;inverse de a modulo n existe exactement quand PGCD(a, n) = 1 ; on le lit alors dans la table, comme le produit congru à 1.</Conclusion>
+      <Conclusion>L&apos;inverse de a modulo n existe exactement quand <Tex expr={"\\mathrm{PGCD}(a,n)=1"} /> ; on le lit alors dans la table, comme le produit congru à 1. Exemple : <Tex expr={"\\mathrm{PGCD}(5,6)=1"} /> et <Tex expr={"5\\times5\\equiv1\\pmod{6}"} />, donc 5 est inversible ; <Tex expr={"\\mathrm{PGCD}(2,6)=2"} />, donc 2 n&apos;a pas d&apos;inverse.</Conclusion>
     </div>
   );
 }
@@ -376,7 +376,27 @@ function ModeEquation() {
           )}
         </>
       )}
-      <Conclusion>L&apos;équation ax ≡ c (mod n) a 0 solution si PGCD(a, n) ne divise pas c, sinon PGCD(a, n) classes solutions modulo n (une seule quand a est inversible).</Conclusion>
+      <Conclusion>
+        <div className="flex flex-col gap-2">
+          <p>L&apos;équation</p>
+          <Tex bloc className="whitespace-nowrap" expr={"ax\\equiv c\\pmod{n}"} />
+          <p>
+            a 0 solution si <Tex className="whitespace-nowrap" expr={"\\mathrm{PGCD}(a,n)"} /> ne divise pas c, sinon <Tex className="whitespace-nowrap" expr={"\\mathrm{PGCD}(a,n)"} /> classes solutions modulo n (une seule quand a est inversible).
+          </p>
+          <p className="font-semibold">Exemples modulo 6 :</p>
+          <ul className="flex list-disc flex-col gap-1 pl-5">
+            <li>
+              <Tex className="whitespace-nowrap" expr={"2x\\equiv1\\pmod{6}"} /> : aucune solution (2 ne divise pas 1).
+            </li>
+            <li>
+              <Tex className="whitespace-nowrap" expr={"2x\\equiv4\\pmod{6}"} /> : 2 classes solutions, <Tex className="whitespace-nowrap" expr={"x\\equiv2"} /> et <Tex className="whitespace-nowrap" expr={"x\\equiv5\\pmod{6}"} />.
+            </li>
+            <li>
+              <Tex className="whitespace-nowrap" expr={"5x\\equiv1\\pmod{6}"} /> : une seule solution, <Tex className="whitespace-nowrap" expr={"x\\equiv5\\pmod{6}"} />.
+            </li>
+          </ul>
+        </div>
+      </Conclusion>
     </div>
   );
 }

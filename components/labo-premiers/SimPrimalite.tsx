@@ -210,7 +210,7 @@ export default function SimPrimalite() {
           </Zone>
 
           <Conclusion>
-            Un entier n ≥ 2 est premier si et seulement si aucun nombre premier p avec p² ≤ n ne le divise. Les carrés de nombres premiers (49 = 7², 121 = 11², 169 = 13²) sont composés : le candidat p = √n doit bien être testé.
+            Un entier <Tex expr={"n\\geq2"} /> est premier si et seulement si aucun nombre premier p avec <Tex expr={"p^2\\leq n"} /> ne le divise. Les carrés de nombres premiers (<Tex expr={"49 = 7^2"} />, <Tex expr={"121 = 11^2"} />, <Tex expr={"169 = 13^2"} />) sont composés : le candidat <Tex expr={"p=\\sqrt{n}"} /> doit bien être testé. Exemple : pour <Tex expr={"n = 97"} />, on teste 2, 3, 5, 7 (car <Tex className="whitespace-nowrap" expr={"7^2 = 49\\leq97 < 11^2 = 121"} />) : aucun ne divise 97, donc 97 est premier.
           </Conclusion>
         </>
       )}

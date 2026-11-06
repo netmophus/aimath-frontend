@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 
 import { MAX_CRIBLE, cribleEratosthene, elimines, lireNaturel, racineEntiere } from "@/lib/premiers";
-import { Bouton, ChampNombre, Commandes, Conclusion, Defi, Intro, Message, Pastille, TroisQuestions, Zone, borner } from "./ui";
+import { Bouton, ChampNombre, Commandes, Conclusion, Defi, Intro, Message, Pastille, Tex, TroisQuestions, Zone, borner } from "./ui";
 
 const LIMITES = [30, 50, 100, 200];
 
@@ -181,7 +181,7 @@ export default function SimCrible() {
           )}
 
           <Conclusion>
-            Le crible fournit <strong>exactement</strong> la liste des nombres premiers. Il s&apos;arrête dès que p² dépasse la limite, car tout nombre composé ≤ {limite} possède un diviseur premier p avec p² ≤ {limite}. Le nombre 1 n&apos;est jamais premier et 2 est toujours conservé.
+            Le crible fournit <strong>exactement</strong> la liste des nombres premiers. Il s&apos;arrête dès que <Tex expr={"p^2"} /> dépasse la limite, car tout nombre composé <Tex expr={`\\leq ${limite}`} /> possède un diviseur premier p avec <Tex expr={`p^2\\leq ${limite}`} />. Le nombre 1 n&apos;est jamais premier et 2 est toujours conservé. Exemple : pour la limite 30, on barre les multiples de 2, 3 et 5, puis on s&apos;arrête car <Tex className="whitespace-nowrap" expr={"7^2 = 49 > 30"} />.
           </Conclusion>
         </>
       )}
