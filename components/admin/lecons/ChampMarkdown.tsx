@@ -31,6 +31,8 @@ interface ChampMarkdownProps {
   avecInsertionHorloge?: boolean;
   /** Affiche "+ Insérer un calculateur de congruence" : insère un bloc ```congruence (voir docs/syntaxe-congruence.md). */
   avecInsertionCongruence?: boolean;
+  /** Affiche "+ Insérer le laboratoire PGCD & PPCM" : insère un bloc ```pgcd (voir docs/syntaxe-pgcd.md). */
+  avecInsertionLaboPgcd?: boolean;
   /** Affiche "+ Insérer un convertisseur binaire" : insère un squelette de
    * bloc ```binaire pré-rempli (voir docs/syntaxe-binaire.md). */
   avecInsertionBinaire?: boolean;
@@ -101,6 +103,15 @@ const SQUELETTE_CONGRUENCE = `
 a: 17
 b: 3
 n: 5
+\`\`\`
+
+`;
+
+/** Gabarit inséré par "+ Insérer le laboratoire PGCD & PPCM" — voir docs/syntaxe-pgcd.md. */
+const SQUELETTE_LABO_PGCD = `
+
+\`\`\`pgcd
+onglet: euclide
 \`\`\`
 
 `;
@@ -196,6 +207,7 @@ export default function ChampMarkdown({
   avecInsertionVariations = false,
   avecInsertionHorloge = false,
   avecInsertionCongruence = false,
+  avecInsertionLaboPgcd = false,
   avecInsertionBinaire = false,
   avecInsertionCercleTrigo = false,
   avecInsertionRacines = false,
@@ -236,6 +248,7 @@ export default function ChampMarkdown({
         avecInsertionVariations ||
         avecInsertionHorloge ||
         avecInsertionCongruence ||
+        avecInsertionLaboPgcd ||
         avecInsertionBinaire ||
         avecInsertionCercleTrigo ||
         avecInsertionRacines ||
@@ -285,6 +298,16 @@ export default function ChampMarkdown({
                 className="rounded-full border border-fh-bleu-vif/40 px-3 py-1 text-xs font-medium text-fh-bleu-vif transition-colors hover:bg-fh-bleu-vif/10"
               >
                 + Insérer un calculateur de congruence
+              </button>
+            )}
+            {avecInsertionLaboPgcd && (
+              <button
+                type="button"
+                onClick={() => insererMarqueur(SQUELETTE_LABO_PGCD, "Laboratoire PGCD & PPCM inséré — choisis l'onglet affiché à l'ouverture.")}
+                title="Insère le laboratoire interactif PGCD & PPCM (six simulations)"
+                className="rounded-full border border-fh-bleu-vif/40 px-3 py-1 text-xs font-medium text-fh-bleu-vif transition-colors hover:bg-fh-bleu-vif/10"
+              >
+                + Insérer le laboratoire PGCD &amp; PPCM
               </button>
             )}
             {avecInsertionBinaire && (
