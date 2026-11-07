@@ -290,7 +290,7 @@ async function rawRequestFlux(
   surEvenement: (evenement: unknown) => void,
   signal?: AbortSignal
 ): Promise<void> {
-  const headers: Record<string, string> = { "Content-Type": "application/json", Accept: "text/event-stream" };
+  const headers: Record<string, string> = { "Content-Type": "application/json", Accept: "text/event-stream, application/json;q=0.9" };
   const access = tokenStorage.getAccess();
   if (access) headers.Authorization = `Bearer ${access}`;
 
