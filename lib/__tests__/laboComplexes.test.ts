@@ -19,6 +19,7 @@ import LaboComplexes from "@/components/labo-complexes/LaboComplexes";
 import LaboComplexesBloc from "@/components/labo-complexes/LaboComplexesBloc";
 import { devDiv, devMul } from "@/components/labo-complexes/SimCalculs";
 import { cx } from "@/lib/complexes";
+import ChampMarkdown from "@/components/admin/lecons/ChampMarkdown";
 
 type Noeud = { type: string; value?: string; lang?: string; data?: { hName?: string; hProperties?: Record<string, string> }; children?: Noeud[] };
 
@@ -82,6 +83,13 @@ describe("insertion depuis l'administration", () => {
     expect(contientLaboComplexes("Texte\n\n```complexes\nonglet: calculs\n```\n")).toBe(true);
     expect(contientLaboComplexes("```premiers\nonglet: crible\n```")).toBe(false);
     expect(contientLaboComplexes("Parle de complexes dans le texte")).toBe(false);
+  });
+  it("l'éditeur affiche le bouton seulement quand avecInsertionLaboComplexes est actif", () => {
+    const props = { valeur: "", onChange: () => {} };
+    const avec = renderToStaticMarkup(createElement(ChampMarkdown, { ...props, avecInsertionLaboComplexes: true }));
+    expect(avec).toContain("+ Insérer le labo Nombres complexes");
+    const sans = renderToStaticMarkup(createElement(ChampMarkdown, { ...props, avecInsertionLaboPremiers: true }));
+    expect(sans).not.toContain("Nombres complexes");
   });
   it("l'insertion ne modifie pas le reste du contenu (ajout en fin)", () => {
     const avant = "Un texte avec $z = a + ib$.\n";
