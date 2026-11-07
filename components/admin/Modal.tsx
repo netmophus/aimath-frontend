@@ -9,29 +9,33 @@ interface ModalProps {
   /** "md" (défaut, 28rem) convient à la plupart des formulaires ; "lg" (42rem)
    * pour un contenu plus riche (ex. un éditeur Markdown côte à côte). */
   taille?: "md" | "lg";
+  /** true : ni le fond ni Échap ne ferment la boîte, seule la croix le fait
+   * (ex. génération IA en cours : pas d'annulation par clic fortuit). */
+  fermetureParCroixSeulement?: boolean;
 }
 
 /** Petite boîte de dialogue générique, sans dépendance externe. */
-export default function Modal({ titre, onClose, children, taille = "md" }: ModalProps) {
+export default function Modal({ titre, onClose, children, taille = "md", fermetureParCroixSeulement = false }: ModalProps) {
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     closeButtonRef.current?.focus();
 
     function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") onClose();
+      if (event.key === "Escape" && !fermetureParCroixSeulement) onClose();
     }
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [onClose]);
+  }, [onClose, fermetureParCroixSeulement]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <button
         type="button"
         aria-label="Fermer"
-        onClick={onClose}
+        onClick={fermetureParCroixSeulement ? undefined : onClose}
+        tabIndex={fermetureParCroixSeulement ? -1 : undefined}
         className="absolute inset-0 bg-fh-bleu-charbon/60"
       />
       <div

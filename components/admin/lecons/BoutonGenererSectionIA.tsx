@@ -42,6 +42,10 @@ export default function BoutonGenererSectionIA({
   const [erreur, setErreur] = useState<string | null>(null);
   // Aperçu progressif (sections lues en flux, ex. sujet type examen) : texte reçu jusqu'ici.
   const [texteLive, setTexteLive] = useState<string | null>(null);
+  // Échec d'un flux : message RÉEL de l'erreur + texte reçu jusqu'ici, affichés dans une fenêtre qui reste ouverte
+  // (un toast s'efface et l'avalait : on veut voir la cause et jusqu'où le flux est allé).
+  const [echecFlux, setEchecFlux] = useState<{ message: string; texteRecu: string } | null>(null);
+  const dernierTexte = useRef("");
   const annulation = useRef<AbortController | null>(null);
   const enFlux = estSectionEnFlux(section);
 
@@ -53,17 +57,28 @@ export default function BoutonGenererSectionIA({
     setEnCours(true);
     const controleur = new AbortController();
     annulation.current = controleur;
+    dernierTexte.current = "";
     if (enFlux) setTexteLive("");
     try {
       const { contenu, tronque: reponseTronquee } = await genererSection(notionId, section, {
-        surTexte: enFlux ? setTexteLive : undefined,
+        surTexte: enFlux
+          ? (texte) => {
+              dernierTexte.current = texte;
+              setTexteLive(texte);
+            }
+          : undefined,
         signal: controleur.signal,
       });
       setContenuGenere(contenu);
       setTronque(!!reponseTronquee);
     } catch (error) {
       if (!controleur.signal.aborted) {
-        setErreur(error instanceof ApiError ? error.message : "La génération a échoué.");
+        const message =
+          error instanceof ApiError
+            ? error.message
+            : `La génération a échoué : ${error instanceof Error ? error.message : "erreur inconnue"}`;
+        if (enFlux) setEchecFlux({ message, texteRecu: dernierTexte.current });
+        else setErreur(message);
       }
     } finally {
       annulation.current = null;
@@ -99,7 +114,7 @@ export default function BoutonGenererSectionIA({
       </button>
 
       {texteLive !== null && (
-        <Modal titre="Génération en cours…" onClose={annulerGeneration} taille="lg">
+        <Modal titre="Génération en cours…" onClose={annulerGeneration} taille="lg" fermetureParCroixSeulement>
           <div className="flex flex-col gap-3">
             <p className="text-xs text-fh-ardoise/70">
               Le texte s&apos;affiche au fur et à mesure. Fermer cette fenêtre annule la génération.
@@ -108,6 +123,26 @@ export default function BoutonGenererSectionIA({
               <RenduMarkdown contenu={texteLive} />
             ) : (
               <p className="text-sm text-fh-ardoise/70">En attente des premiers mots…</p>
+            )}
+          </div>
+        </Modal>
+      )}
+
+      {echecFlux && (
+        <Modal titre="La génération s'est interrompue" onClose={() => setEchecFlux(null)} taille="lg" fermetureParCroixSeulement>
+          <div className="flex flex-col gap-3">
+            <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm font-medium text-red-700">
+              {echecFlux.message}
+            </p>
+            {echecFlux.texteRecu ? (
+              <>
+                <p className="text-xs text-fh-ardoise/70">
+                  Texte reçu avant l&apos;interruption ({echecFlux.texteRecu.length} caractères) — non inséré dans le champ :
+                </p>
+                <RenduMarkdown contenu={echecFlux.texteRecu} />
+              </>
+            ) : (
+              <p className="text-xs text-fh-ardoise/70">Aucun texte n&apos;a été reçu avant l&apos;interruption.</p>
             )}
           </div>
         </Modal>
