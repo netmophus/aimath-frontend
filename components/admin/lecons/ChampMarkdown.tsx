@@ -6,6 +6,7 @@ import RenduMarkdown from "@/components/RenduMarkdown";
 import Toast from "@/components/admin/Toast";
 import SelecteurTermeModal from "./SelecteurTermeModal";
 import { SQUELETTE_LABO_COMPLEXES, contientLaboComplexes } from "@/lib/laboComplexes";
+import { SQUELETTE_LABO_MOIVRE, contientLaboMoivre } from "@/lib/laboMoivre";
 
 interface ChampMarkdownProps {
   /** Omis quand le champ vit déjà sous un titre de section porteur du même sens. */
@@ -38,6 +39,8 @@ interface ChampMarkdownProps {
   avecInsertionLaboPremiers?: boolean;
   /** Affiche "+ Insérer le labo Nombres complexes" : insère un bloc ```complexes (voir docs/syntaxe-complexes.md), sans doublon. */
   avecInsertionLaboComplexes?: boolean;
+  /** Affiche "+ Insérer le labo Moivre" : insère un bloc ```labo-moivre (Moivre, Euler, racines n-ièmes ; voir docs/syntaxe-labo-moivre.md). */
+  avecInsertionLaboMoivre?: boolean;
   /** Affiche "+ Insérer un convertisseur binaire" : insère un squelette de
    * bloc ```binaire pré-rempli (voir docs/syntaxe-binaire.md). */
   avecInsertionBinaire?: boolean;
@@ -224,6 +227,7 @@ export default function ChampMarkdown({
   avecInsertionLaboPgcd = false,
   avecInsertionLaboPremiers = false,
   avecInsertionLaboComplexes = false,
+  avecInsertionLaboMoivre = false,
   avecInsertionBinaire = false,
   avecInsertionCercleTrigo = false,
   avecInsertionRacines = false,
@@ -267,6 +271,7 @@ export default function ChampMarkdown({
         avecInsertionLaboPgcd ||
         avecInsertionLaboPremiers ||
         avecInsertionLaboComplexes ||
+        avecInsertionLaboMoivre ||
         avecInsertionBinaire ||
         avecInsertionCercleTrigo ||
         avecInsertionRacines ||
@@ -358,6 +363,22 @@ export default function ChampMarkdown({
                 className="rounded-full border border-fh-bleu-vif/40 px-3 py-1 text-xs font-medium text-fh-bleu-vif transition-colors hover:bg-fh-bleu-vif/10"
               >
                 + Insérer le labo Nombres complexes
+              </button>
+            )}
+            {avecInsertionLaboMoivre && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (contientLaboMoivre(valeur)) {
+                    setMessageToast("Le laboratoire Moivre est déjà présent dans cette rubrique : aucune insertion en double.");
+                    return;
+                  }
+                  insererMarqueur(SQUELETTE_LABO_MOIVRE, "Laboratoire Moivre inséré — choisis l'onglet affiché à l'ouverture.");
+                }}
+                title="Insère le laboratoire interactif Moivre, Euler et racines n-ièmes (six simulations)"
+                className="rounded-full border border-fh-bleu-vif/40 px-3 py-1 text-xs font-medium text-fh-bleu-vif transition-colors hover:bg-fh-bleu-vif/10"
+              >
+                + Insérer le labo Moivre
               </button>
             )}
             {avecInsertionBinaire && (

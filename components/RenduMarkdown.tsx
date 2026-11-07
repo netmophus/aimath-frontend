@@ -14,6 +14,7 @@ import { remarkCongruence } from "@/lib/remarkCongruence";
 import { remarkLaboPgcd } from "@/lib/remarkLaboPgcd";
 import { remarkLaboPremiers } from "@/lib/remarkLaboPremiers";
 import { remarkLaboComplexes } from "@/lib/remarkLaboComplexes";
+import { remarkLaboMoivre } from "@/lib/remarkLaboMoivre";
 import { remarkBinaire } from "@/lib/remarkBinaire";
 import { remarkCercleTrigo } from "@/lib/remarkCercleTrigo";
 import { remarkRacines } from "@/lib/remarkRacines";
@@ -28,6 +29,7 @@ import CalculateurCongruenceBloc from "@/components/CalculateurCongruenceBloc";
 import LaboPgcdBloc from "@/components/labo-pgcd/LaboPgcdBloc";
 import LaboPremiersBloc from "@/components/labo-premiers/LaboPremiersBloc";
 import LaboComplexesBloc from "@/components/labo-complexes/LaboComplexesBloc";
+import LaboMoivreBloc from "@/components/labo-moivre/LaboMoivreBloc";
 import ConvertisseurBinaireBloc from "@/components/ConvertisseurBinaireBloc";
 import CercleTrigonometriqueBloc from "@/components/CercleTrigonometriqueBloc";
 import RacinesNiemesBloc from "@/components/RacinesNiemesBloc";
@@ -65,6 +67,7 @@ interface PropsFigureCourbe {
   "data-pgcd-source"?: string;
   "data-premiers-source"?: string;
   "data-complexes-source"?: string;
+  "data-labomoivre-source"?: string;
   "data-binaire-source"?: string;
   "data-cercletrigo-source"?: string;
   "data-racines-source"?: string;
@@ -95,7 +98,7 @@ export default function RenduMarkdown({ contenu, className = "", onTermeClick }:
       <ReactMarkdown
         // remarkGfm (tableaux) ajoute seulement des extensions de syntaxe au parseur : il ne touche pas aux nœuds
         // `code` que remarkCourbe…remarkChimie transforment ensuite. `~texte~` simple n'est pas du barré (≈, ~).
-        remarkPlugins={[remarkMath, [remarkGfm, { singleTilde: false }], remarkGlossaire, remarkCourbe, remarkVariations, remarkHorloge, remarkCongruence, remarkLaboPgcd, remarkLaboPremiers, remarkLaboComplexes, remarkBinaire, remarkCercleTrigo, remarkRacines, remarkMouvement, remarkCirculaire, remarkPlanIncline, remarkChimie]}
+        remarkPlugins={[remarkMath, [remarkGfm, { singleTilde: false }], remarkGlossaire, remarkCourbe, remarkVariations, remarkHorloge, remarkCongruence, remarkLaboPgcd, remarkLaboPremiers, remarkLaboComplexes, remarkLaboMoivre, remarkBinaire, remarkCercleTrigo, remarkRacines, remarkMouvement, remarkCirculaire, remarkPlanIncline, remarkChimie]}
         rehypePlugins={[rehypeKatex]}
         components={{
           figure: (props) => {
@@ -106,6 +109,7 @@ export default function RenduMarkdown({ contenu, className = "", onTermeClick }:
               "data-pgcd-source": sourcePgcd,
               "data-premiers-source": sourcePremiers,
               "data-complexes-source": sourceComplexes,
+              "data-labomoivre-source": sourceLaboMoivre,
               "data-binaire-source": sourceBinaire,
               "data-cercletrigo-source": sourceCercleTrigo,
               "data-racines-source": sourceRacines,
@@ -126,6 +130,7 @@ export default function RenduMarkdown({ contenu, className = "", onTermeClick }:
             if (sourcePgcd !== undefined) return <LaboPgcdBloc source={sourcePgcd} />;
             if (sourcePremiers !== undefined) return <LaboPremiersBloc source={sourcePremiers} />;
             if (sourceComplexes !== undefined) return <LaboComplexesBloc source={sourceComplexes} />;
+            if (sourceLaboMoivre !== undefined) return <LaboMoivreBloc source={sourceLaboMoivre} />;
             if (sourceBinaire !== undefined) return <ConvertisseurBinaireBloc source={sourceBinaire} />;
             if (sourceCercleTrigo !== undefined) return <CercleTrigonometriqueBloc source={sourceCercleTrigo} />;
             if (sourceRacines !== undefined) return <RacinesNiemesBloc source={sourceRacines} />;

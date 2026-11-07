@@ -117,9 +117,11 @@ export interface Outils {
   P: (z: Cx) => string;
   /** Pixels par unité. */
   u: number;
+  /** Longueur (unités) convertie en pixels, arrondie au centième : à utiliser pour les rayons et les distances. */
+  L: (v: number) => number;
 }
 
-const U = 38;
+const U_DEFAUT = 38;
 
 /** Pas de graduation « joli » pour une étendue donnée. */
 export function pasGraduation(etendue: number): number {
@@ -143,6 +145,7 @@ export function PlanSvg({
   dessous,
   dessus,
   pas,
+  unite,
 }: {
   bornes: Bornes;
   points: PointPlan[];
@@ -153,14 +156,20 @@ export function PlanSvg({
   dessous?: (o: Outils) => ReactNode;
   dessus?: (o: Outils) => ReactNode;
   pas?: number;
+  /** Pixels par unité du repère (38 par défaut). Permet de garder des points et des étiquettes lisibles quand le cadre est très grand ou très petit. */
+  unite?: number;
 }) {
+  const U = unite ?? U_DEFAUT;
   const { xmin, xmax, ymin, ymax } = bornes;
   const W = (xmax - xmin) * U;
   const H = (ymax - ymin) * U;
-  const X = (x: number) => (x - xmin) * U;
-  const Y = (y: number) => (ymax - y) * U;
+  // Coordonnées arrondies au centième de pixel : le rendu serveur (Node) et le rendu navigateur peuvent différer au dernier
+  // chiffre des fonctions trigonométriques, ce qui provoquerait un avertissement d'hydratation sur les attributs SVG.
+  const arrondi = (v: number) => Math.round(v * 100) / 100;
+  const X = (x: number) => arrondi((x - xmin) * U);
+  const Y = (y: number) => arrondi((ymax - y) * U);
   const P = (z: Cx) => `${X(z.re)},${Y(z.im)}`;
-  const outils: Outils = { X, Y, P, u: U };
+  const outils: Outils = { X, Y, P, u: U, L: (v: number) => arrondi(v * U) };
   const g = pas ?? pasGraduation(Math.max(xmax - xmin, ymax - ymin));
   const svgRef = useRef<SVGSVGElement>(null);
   const [actif, setActif] = useState<string | null>(null);
