@@ -277,6 +277,84 @@ export async function apiRequestBlob(path: string): Promise<Blob> {
   }
 }
 
+/**
+ * POST JSON dont la réponse est un flux Server-Sent Events (`data: {json}\n\n`).
+ * Chaque message JSON décodé est passé à `surEvenement` au fur et à mesure.
+ * Sert aux générations IA longues : le serveur envoie des octets en continu,
+ * ce qui évite le H12 (30 s sans réponse) du routeur Heroku. Un refus avant
+ * le flux (budget, clé...) reste une erreur HTTP JSON classique → ApiError.
+ */
+async function rawRequestFlux(
+  path: string,
+  body: unknown,
+  surEvenement: (evenement: unknown) => void,
+  signal?: AbortSignal
+): Promise<void> {
+  const headers: Record<string, string> = { "Content-Type": "application/json", Accept: "text/event-stream" };
+  const access = tokenStorage.getAccess();
+  if (access) headers.Authorization = `Bearer ${access}`;
+
+  const response = await fetch(`${API_BASE_URL}${path}`, { method: "POST", headers, body: JSON.stringify(body), signal });
+
+  if (!response.ok || !response.body) {
+    const text = await response.text();
+    let data: unknown = null;
+    try {
+      data = text ? JSON.parse(text) : null;
+    } catch {
+      // pas du JSON (ex. page d'erreur du routeur) : message générique ci-dessous
+    }
+    throw new ApiError(response.status, extractErrorMessage(data) ?? "Une erreur est survenue.", data);
+  }
+
+  const lecteur = response.body.getReader();
+  const decodeur = new TextDecoder("utf-8");
+  let tampon = "";
+
+  function traiterMessages(final: boolean) {
+    const messages = tampon.split("\n\n");
+    tampon = final ? "" : (messages.pop() ?? "");
+    for (const message of messages) {
+      for (const ligne of message.split("\n")) {
+        // Les lignes ": ..." sont des commentaires (battements), ignorées.
+        if (ligne.startsWith("data: ")) surEvenement(JSON.parse(ligne.slice(6)));
+      }
+    }
+  }
+
+  for (;;) {
+    const { done, value } = await lecteur.read();
+    if (done) break;
+    tampon += decodeur.decode(value, { stream: true });
+    traiterMessages(false);
+  }
+  tampon += decodeur.decode();
+  traiterMessages(true);
+}
+
+/** Équivalent flux de apiRequest : même retry automatique sur un access token expiré. */
+export async function apiRequestFlux(
+  path: string,
+  body: unknown,
+  surEvenement: (evenement: unknown) => void,
+  signal?: AbortSignal
+): Promise<void> {
+  try {
+    return await rawRequestFlux(path, body, surEvenement, signal);
+  } catch (error) {
+    const shouldRetry = error instanceof ApiError && error.status === 401;
+    if (!shouldRetry) throw error;
+
+    try {
+      await refreshAccessToken();
+    } catch {
+      tokenStorage.clear();
+      throw error;
+    }
+    return rawRequestFlux(path, body, surEvenement, signal);
+  }
+}
+
 // --- Types du domaine ---
 
 export type Role = "eleve" | "enseignant" | "admin" | "partenaire" | "vendeur";

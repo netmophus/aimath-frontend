@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import { ApiError } from "@/lib/api";
-import { genererSection, type SectionTexteIA } from "@/lib/iaApi";
+import { estSectionEnFlux, genererSection, type SectionTexteIA } from "@/lib/iaApi";
+import Modal from "@/components/admin/Modal";
 import Toast from "@/components/admin/Toast";
+import RenduMarkdown from "@/components/RenduMarkdown";
 import ModaleApercuIA from "./ModaleApercuIA";
 
 interface BoutonGenererSectionIAProps {
@@ -38,16 +40,34 @@ export default function BoutonGenererSectionIA({
   const [contenuGenere, setContenuGenere] = useState<string | null>(null);
   const [tronque, setTronque] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
+  // Aperçu progressif (sections lues en flux, ex. sujet type examen) : texte reçu jusqu'ici.
+  const [texteLive, setTexteLive] = useState<string | null>(null);
+  const annulation = useRef<AbortController | null>(null);
+  const enFlux = estSectionEnFlux(section);
+
+  function annulerGeneration() {
+    annulation.current?.abort();
+  }
 
   async function lancerGeneration() {
     setEnCours(true);
+    const controleur = new AbortController();
+    annulation.current = controleur;
+    if (enFlux) setTexteLive("");
     try {
-      const { contenu, tronque: reponseTronquee } = await genererSection(notionId, section);
+      const { contenu, tronque: reponseTronquee } = await genererSection(notionId, section, {
+        surTexte: enFlux ? setTexteLive : undefined,
+        signal: controleur.signal,
+      });
       setContenuGenere(contenu);
       setTronque(!!reponseTronquee);
     } catch (error) {
-      setErreur(error instanceof ApiError ? error.message : "La génération a échoué.");
+      if (!controleur.signal.aborted) {
+        setErreur(error instanceof ApiError ? error.message : "La génération a échoué.");
+      }
     } finally {
+      annulation.current = null;
+      setTexteLive(null);
       setEnCours(false);
     }
   }
@@ -77,6 +97,21 @@ export default function BoutonGenererSectionIA({
           <>✨ {valeurActuelle.trim() ? "Régénérer avec l'IA" : "Générer avec l'IA"}</>
         )}
       </button>
+
+      {texteLive !== null && (
+        <Modal titre="Génération en cours…" onClose={annulerGeneration} taille="lg">
+          <div className="flex flex-col gap-3">
+            <p className="text-xs text-fh-ardoise/70">
+              Le texte s&apos;affiche au fur et à mesure. Fermer cette fenêtre annule la génération.
+            </p>
+            {texteLive ? (
+              <RenduMarkdown contenu={texteLive} />
+            ) : (
+              <p className="text-sm text-fh-ardoise/70">En attente des premiers mots…</p>
+            )}
+          </div>
+        </Modal>
+      )}
 
       {contenuGenere !== null && (
         <ModaleApercuIA

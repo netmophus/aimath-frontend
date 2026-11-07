@@ -10,7 +10,7 @@
  * BoutonGenererSectionIA / ModaleApercuExercicesIA).
  */
 
-import { apiRequest } from "./api";
+import { ApiError, apiRequest, apiRequestFlux } from "./api";
 import type { Difficulte } from "./leconApi";
 
 /** Sections dont le contenu généré est un texte Markdown+LaTeX brut. */
@@ -64,17 +64,72 @@ interface GenerationExercices {
 }
 
 /**
+ * Sections dont la génération est lue en flux SSE (contre le H12 Heroku : le
+ * routeur coupe toute requête sans réponse après 30 s). Le « sujet type
+ * examen » (2 à 4 exercices + corrigé détaillé) dépasse ce délai. Les autres
+ * sections gardent l'appel JSON d'un bloc, inchangé.
+ */
+const SECTIONS_EN_FLUX: ReadonlySet<SectionIA> = new Set<SectionIA>(["sujet_examen"]);
+
+/** Cette section est-elle lue en flux (aperçu progressif possible via `surTexte`) ? */
+export function estSectionEnFlux(section: SectionIA): boolean {
+  return SECTIONS_EN_FLUX.has(section);
+}
+
+/** Options facultatives : `surTexte` reçoit le texte cumulé au fil du flux (sections en flux seulement) ; `signal` permet d'annuler. */
+export interface OptionsGeneration {
+  surTexte?: (texteCumule: string) => void;
+  signal?: AbortSignal;
+}
+
+async function genererEnFlux<T extends GenerationTexte | GenerationExercices>(
+  notionId: number,
+  section: SectionIA,
+  options: OptionsGeneration
+): Promise<T> {
+  let cumule = "";
+  let resultat: T | null = null;
+  await apiRequestFlux(
+    "/api/admin/ia/generer/",
+    { notion_id: notionId, section, stream: true },
+    (evenement) => {
+      const e = evenement as { type?: string; texte?: string; detail?: string; status?: number };
+      if (e.type === "delta" && typeof e.texte === "string") {
+        cumule += e.texte;
+        options.surTexte?.(cumule);
+      } else if (e.type === "fin") {
+        const { type: _type, ...corps } = e as Record<string, unknown>;
+        void _type;
+        resultat = corps as unknown as T;
+      } else if (e.type === "erreur") {
+        throw new ApiError(e.status ?? 502, e.detail ?? "La génération a échoué.", e);
+      }
+    },
+    options.signal
+  );
+  if (resultat === null) {
+    throw new ApiError(502, "La génération a été interrompue avant la fin. Réessaie.", null);
+  }
+  return resultat;
+}
+
+/**
  * Génère UNE section pour la notion donnée. Le type de retour dépend de
  * `section` — deux signatures (plutôt qu'un type conditionnel) pour que
  * chaque site d'appel obtienne directement le bon type sans cast :
  * `genererSection(id, "cours")` → { contenu }, `genererSection(id, "exercices")` → { exercices }.
+ * Le résultat final a la même forme qu'on lise en flux ou d'un bloc.
  */
-export function genererSection(notionId: number, section: SectionTexteIA): Promise<GenerationTexte>;
-export function genererSection(notionId: number, section: "exercices"): Promise<GenerationExercices>;
+export function genererSection(notionId: number, section: SectionTexteIA, options?: OptionsGeneration): Promise<GenerationTexte>;
+export function genererSection(notionId: number, section: "exercices", options?: OptionsGeneration): Promise<GenerationExercices>;
 export function genererSection(
   notionId: number,
-  section: SectionIA
+  section: SectionIA,
+  options: OptionsGeneration = {}
 ): Promise<GenerationTexte | GenerationExercices> {
+  if (SECTIONS_EN_FLUX.has(section)) {
+    return genererEnFlux<GenerationTexte | GenerationExercices>(notionId, section, options);
+  }
   return apiRequest<GenerationTexte | GenerationExercices>("/api/admin/ia/generer/", {
     method: "POST",
     body: { notion_id: notionId, section },
