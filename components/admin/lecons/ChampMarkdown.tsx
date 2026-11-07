@@ -5,6 +5,7 @@ import { useRef, useState, type ReactNode } from "react";
 import RenduMarkdown from "@/components/RenduMarkdown";
 import Toast from "@/components/admin/Toast";
 import SelecteurTermeModal from "./SelecteurTermeModal";
+import { SQUELETTE_LABO_COMPLEXES, contientLaboComplexes } from "@/lib/laboComplexes";
 
 interface ChampMarkdownProps {
   /** Omis quand le champ vit déjà sous un titre de section porteur du même sens. */
@@ -35,6 +36,8 @@ interface ChampMarkdownProps {
   avecInsertionLaboPgcd?: boolean;
   /** Affiche "+ Insérer le labo Nombres premiers" : insère un bloc ```premiers (voir docs/syntaxe-premiers.md), sans doublon. */
   avecInsertionLaboPremiers?: boolean;
+  /** Affiche "+ Insérer le labo Nombres complexes" : insère un bloc ```complexes (voir docs/syntaxe-complexes.md), sans doublon. */
+  avecInsertionLaboComplexes?: boolean;
   /** Affiche "+ Insérer un convertisseur binaire" : insère un squelette de
    * bloc ```binaire pré-rempli (voir docs/syntaxe-binaire.md). */
   avecInsertionBinaire?: boolean;
@@ -220,6 +223,7 @@ export default function ChampMarkdown({
   avecInsertionCongruence = false,
   avecInsertionLaboPgcd = false,
   avecInsertionLaboPremiers = false,
+  avecInsertionLaboComplexes = false,
   avecInsertionBinaire = false,
   avecInsertionCercleTrigo = false,
   avecInsertionRacines = false,
@@ -262,6 +266,7 @@ export default function ChampMarkdown({
         avecInsertionCongruence ||
         avecInsertionLaboPgcd ||
         avecInsertionLaboPremiers ||
+        avecInsertionLaboComplexes ||
         avecInsertionBinaire ||
         avecInsertionCercleTrigo ||
         avecInsertionRacines ||
@@ -337,6 +342,22 @@ export default function ChampMarkdown({
                 className="rounded-full border border-fh-bleu-vif/40 px-3 py-1 text-xs font-medium text-fh-bleu-vif transition-colors hover:bg-fh-bleu-vif/10"
               >
                 + Insérer le labo Nombres premiers
+              </button>
+            )}
+            {avecInsertionLaboComplexes && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (contientLaboComplexes(valeur)) {
+                    setMessageToast("Le laboratoire Nombres complexes est déjà présent dans cette rubrique : aucune insertion en double.");
+                    return;
+                  }
+                  insererMarqueur(SQUELETTE_LABO_COMPLEXES, "Laboratoire Nombres complexes inséré — choisis l'onglet affiché à l'ouverture.");
+                }}
+                title="Insère le laboratoire interactif des nombres complexes (six simulations)"
+                className="rounded-full border border-fh-bleu-vif/40 px-3 py-1 text-xs font-medium text-fh-bleu-vif transition-colors hover:bg-fh-bleu-vif/10"
+              >
+                + Insérer le labo Nombres complexes
               </button>
             )}
             {avecInsertionBinaire && (

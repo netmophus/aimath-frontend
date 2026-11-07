@@ -20,10 +20,10 @@ const sse = (o: unknown) => `data: ${JSON.stringify(o)}\n\n`;
 afterEach(() => vi.unstubAllGlobals());
 
 describe("génération IA en flux (sujet type examen)", () => {
-  it("seul le sujet type examen passe en flux", () => {
-    expect(estSectionEnFlux("sujet_examen")).toBe(true);
-    expect(estSectionEnFlux("cours")).toBe(false);
-    expect(estSectionEnFlux("exercices")).toBe(false);
+  it("toutes les sections de génération passent en flux (contre le H12 Heroku)", () => {
+    for (const s of ["histoire", "objectifs", "prerequis", "cours", "demonstrations", "a_retenir", "sujet_examen", "exercices"] as const) {
+      expect(estSectionEnFlux(s), s).toBe(true);
+    }
   });
 
   it("assemble les deltas (même coupés au milieu d'un message) et renvoie le corps final", async () => {
@@ -66,11 +66,24 @@ describe("génération IA en flux (sujet type examen)", () => {
     await expect(genererSection(1, "sujet_examen")).rejects.toMatchObject({ status: 503, message: "Budget épuisé" });
   });
 
-  it("les autres sections gardent l'appel JSON d'un bloc, sans stream", async () => {
-    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ contenu: "x", tronque: false }), { status: 200 }));
+  it("le cours est lu en flux : stream:true, deltas assemblés, même corps final qu'en JSON", async () => {
+    const tout = ": ouverture\n\n" + sse({ type: "delta", texte: "## Cours " }) + sse({ type: "delta", texte: "PGCD" }) + sse({ type: "fin", tronque: false, contenu: "## Cours PGCD" });
+    const fetchMock = vi.fn().mockResolvedValue(reponseFlux([tout]));
     vi.stubGlobal("fetch", fetchMock);
-    const r = await genererSection(1, "cours");
-    expect(r).toEqual({ contenu: "x", tronque: false });
-    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({ notion_id: 1, section: "cours" });
+    const vus: string[] = [];
+    const r = await genererSection(1, "cours", { surTexte: (t) => vus.push(t) });
+    expect(vus).toEqual(["## Cours ", "## Cours PGCD"]);
+    expect(r).toEqual({ tronque: false, contenu: "## Cours PGCD" });
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({ notion_id: 1, section: "cours", stream: true });
+    expect(fetchMock.mock.calls[0][1].headers.Accept).toBe("text/event-stream, application/json;q=0.9");
+  });
+
+  it("les exercices (JSON) sont aussi lus en flux et renvoient la liste des exercices", async () => {
+    const exos = [{ enonce: "E", corrige: "C", difficulte: "facile" }];
+    const fetchMock = vi.fn().mockResolvedValue(reponseFlux([sse({ type: "delta", texte: "[" }) + sse({ type: "fin", tronque: false, exercices: exos })]));
+    vi.stubGlobal("fetch", fetchMock);
+    const r = await genererSection(1, "exercices");
+    expect(r).toEqual({ tronque: false, exercices: exos });
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({ notion_id: 1, section: "exercices", stream: true });
   });
 });
