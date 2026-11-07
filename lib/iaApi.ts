@@ -65,11 +65,21 @@ interface GenerationExercices {
 
 /**
  * Sections dont la génération est lue en flux SSE (contre le H12 Heroku : le
- * routeur coupe toute requête sans réponse après 30 s). Le « sujet type
- * examen » (2 à 4 exercices + corrigé détaillé) dépasse ce délai. Les autres
- * sections gardent l'appel JSON d'un bloc, inchangé.
+ * routeur coupe toute requête sans réponse après 30 s). Un appel JSON d'un
+ * bloc dépasse vite ce délai (25 à 80 s observées en prod pour le cours, le
+ * sujet type examen, les exercices...) : TOUTES les sections passent donc en
+ * flux. Le résultat final (`contenu` / `exercices`) a la même forme qu'en bloc.
  */
-const SECTIONS_EN_FLUX: ReadonlySet<SectionIA> = new Set<SectionIA>(["sujet_examen"]);
+const SECTIONS_EN_FLUX: ReadonlySet<SectionIA> = new Set<SectionIA>([
+  "histoire",
+  "objectifs",
+  "prerequis",
+  "cours",
+  "demonstrations",
+  "a_retenir",
+  "sujet_examen",
+  "exercices",
+]);
 
 /** Cette section est-elle lue en flux (aperçu progressif possible via `surTexte`) ? */
 export function estSectionEnFlux(section: SectionIA): boolean {
@@ -146,15 +156,36 @@ export interface VerificationIA {
  * liste au préalable (voir serialiserExercicesPourVerification ci-dessous).
  * L'avis est FAILLIBLE et indicatif — jamais une validation, voir AvisVerificationIA.
  */
-export function verifierContenu(
+export async function verifierContenu(
   section: SectionVerifiableIA,
   contenu: string,
-  notionId?: number
+  notionId?: number,
+  options: OptionsGeneration = {}
 ): Promise<VerificationIA> {
-  return apiRequest<VerificationIA>("/api/admin/ia/verifier/", {
-    method: "POST",
-    body: { section, contenu, notion_id: notionId },
-  });
+  // Lu en flux SSE (contre le H12 Heroku : un long contenu dépasse 30 s d'un bloc). Pas d'aperçu progressif
+  // par défaut : l'indicateur de chargement des modales reste affiché ; `surTexte` permet d'en brancher un.
+  let cumule = "";
+  let avis: string | null = null;
+  await apiRequestFlux(
+    "/api/admin/ia/verifier/",
+    { section, contenu, notion_id: notionId, stream: true },
+    (evenement) => {
+      const e = evenement as { type?: string; texte?: string; avis?: string; detail?: string; status?: number };
+      if (e.type === "delta" && typeof e.texte === "string") {
+        cumule += e.texte;
+        options.surTexte?.(cumule);
+      } else if (e.type === "fin" && typeof e.avis === "string") {
+        avis = e.avis;
+      } else if (e.type === "erreur") {
+        throw new ApiError(e.status ?? 502, e.detail ?? "La vérification a échoué.", e);
+      }
+    },
+    options.signal
+  );
+  if (avis === null) {
+    throw new ApiError(502, "La vérification a été interrompue avant la fin. Réessaie.", null);
+  }
+  return { avis };
 }
 
 /** Représentation texte lisible d'un lot d'exercices générés, pour le
