@@ -8,6 +8,7 @@ import SelecteurTermeModal from "./SelecteurTermeModal";
 import { SQUELETTE_LABO_COMPLEXES, contientLaboComplexes } from "@/lib/laboComplexes";
 import { SQUELETTE_LABO_MOIVRE, contientLaboMoivre } from "@/lib/laboMoivre";
 import { SQUELETTE_LABO_EQUATIONS, contientLaboEquations } from "@/lib/laboEquations";
+import { SQUELETTE_LABO_CINEMATIQUE, contientLaboCinematique } from "@/lib/laboCinematique";
 
 interface ChampMarkdownProps {
   /** Omis quand le champ vit déjà sous un titre de section porteur du même sens. */
@@ -44,6 +45,8 @@ interface ChampMarkdownProps {
   avecInsertionLaboMoivre?: boolean;
   /** Affiche "+ Insérer le labo Équations complexes" : insère un bloc ```labo-equations-complexes (voir docs/syntaxe-labo-equations-complexes.md). */
   avecInsertionLaboEquations?: boolean;
+  /** Affiche "+ Insérer le labo Cinématique" (rubrique « Simuler pour comprendre »). */
+  avecInsertionLaboCinematique?: boolean;
   /** Affiche "+ Insérer un convertisseur binaire" : insère un squelette de
    * bloc ```binaire pré-rempli (voir docs/syntaxe-binaire.md). */
   avecInsertionBinaire?: boolean;
@@ -232,6 +235,7 @@ export default function ChampMarkdown({
   avecInsertionLaboComplexes = false,
   avecInsertionLaboMoivre = false,
   avecInsertionLaboEquations = false,
+  avecInsertionLaboCinematique = false,
   avecInsertionBinaire = false,
   avecInsertionCercleTrigo = false,
   avecInsertionRacines = false,
@@ -277,6 +281,7 @@ export default function ChampMarkdown({
         avecInsertionLaboComplexes ||
         avecInsertionLaboMoivre ||
         avecInsertionLaboEquations ||
+        avecInsertionLaboCinematique ||
         avecInsertionBinaire ||
         avecInsertionCercleTrigo ||
         avecInsertionRacines ||
@@ -400,6 +405,22 @@ export default function ChampMarkdown({
                 className="rounded-full border border-fh-bleu-vif/40 px-3 py-1 text-xs font-medium text-fh-bleu-vif transition-colors hover:bg-fh-bleu-vif/10"
               >
                 + Insérer le labo Équations complexes
+              </button>
+            )}
+            {avecInsertionLaboCinematique && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (contientLaboCinematique(valeur)) {
+                    setMessageToast("Le laboratoire Cinématique est déjà présent dans cette rubrique : aucune insertion en double.");
+                    return;
+                  }
+                  insererMarqueur(SQUELETTE_LABO_CINEMATIQUE, "Laboratoire Cinématique inséré — choisis l'onglet affiché à l'ouverture.");
+                }}
+                title="Insère le laboratoire interactif de cinématique (six simulations)"
+                className="rounded-full border border-fh-bleu-vif/40 px-3 py-1 text-xs font-medium text-fh-bleu-vif transition-colors hover:bg-fh-bleu-vif/10"
+              >
+                + Insérer le labo Cinématique
               </button>
             )}
             {avecInsertionBinaire && (

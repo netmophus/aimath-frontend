@@ -647,6 +647,7 @@ export default function LeconEditeurPage() {
           avecInsertionLaboComplexes
           avecInsertionLaboMoivre
           avecInsertionLaboEquations
+          avecInsertionLaboCinematique
           avecInsertionBinaire
           avecInsertionCercleTrigo
           avecInsertionRacines
