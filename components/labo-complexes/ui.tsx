@@ -146,6 +146,7 @@ export function PlanSvg({
   dessus,
   pas,
   unite,
+  etiquettesIntelligentes = false,
 }: {
   bornes: Bornes;
   points: PointPlan[];
@@ -158,6 +159,8 @@ export function PlanSvg({
   pas?: number;
   /** Pixels par unité du repère (38 par défaut). Permet de garder des points et des étiquettes lisibles quand le cadre est très grand ou très petit. */
   unite?: number;
+  /** Étiquettes ancrées à gauche du point près du bord droit, et sous le point près du bord haut : jamais coupées. Désactivé par défaut. */
+  etiquettesIntelligentes?: boolean;
 }) {
   const U = unite ?? U_DEFAUT;
   const { xmin, xmax, ymin, ymax } = bornes;
@@ -284,7 +287,17 @@ export function PlanSvg({
               />
             )}
             <circle cx={cx0} cy={cy0} r={6.5} fill={p.couleur} stroke="#fff" strokeWidth={2} />
-            <text x={cx0 + 10} y={cy0 - 9} fontSize={13} fontWeight={700} fill={p.couleur} stroke="#fff" strokeWidth={3} paintOrder="stroke">
+            <text
+              x={etiquettesIntelligentes && cx0 > W * 0.6 ? cx0 - 10 : cx0 + 10}
+              y={etiquettesIntelligentes && cy0 < 22 ? cy0 + 22 : cy0 - 9}
+              textAnchor={etiquettesIntelligentes && cx0 > W * 0.6 ? "end" : undefined}
+              fontSize={13}
+              fontWeight={700}
+              fill={p.couleur}
+              stroke="#fff"
+              strokeWidth={3}
+              paintOrder="stroke"
+            >
               {p.etiquette}
             </text>
             {mobile && (
