@@ -234,6 +234,7 @@ export function Graphique({
   t,
   onT,
   reperes = [],
+  compact = false,
 }: {
   titre: string;
   unite: string;
@@ -242,9 +243,12 @@ export function Graphique({
   t: number;
   onT?: (t: number) => void;
   reperes?: Array<{ t: number; libelle: string }>;
+  /** Cadre plus étroit (440 × 250) et police plus grande : lisible sur téléphone quand le graphique occupe toute la largeur. */
+  compact?: boolean;
 }) {
-  const W = 560;
-  const H = 230;
+  const W = compact ? 440 : 560;
+  const H = compact ? 250 : 230;
+  const FS = compact ? 15 : 14;
   const ML = 56;
   const MR = 14;
   const MT = 14;
@@ -316,7 +320,7 @@ export function Graphique({
         {tx.map((x) => (
           <g key={`x${x}`}>
             <line x1={X(x)} y1={MT} x2={X(x)} y2={H - MB} stroke="#e8edf5" strokeWidth={1} />
-            <text x={X(x)} y={H - 11} textAnchor="middle" fontSize={14} fill="#64748b">
+            <text x={X(x)} y={H - 11} textAnchor="middle" fontSize={FS} fill="#64748b">
               {fr(x, dx)}
             </text>
           </g>
@@ -324,23 +328,23 @@ export function Graphique({
         {ty.map((y) => (
           <g key={`y${y}`}>
             <line x1={ML} y1={Y(y)} x2={W - MR} y2={Y(y)} stroke="#e8edf5" strokeWidth={1} />
-            <text x={ML - 6} y={Y(y) + 4} textAnchor="end" fontSize={14} fill="#64748b">
+            <text x={ML - 6} y={Y(y) + 4} textAnchor="end" fontSize={FS} fill="#64748b">
               {fr(y, dy)}
             </text>
           </g>
         ))}
         <line x1={ML} y1={Y(0)} x2={W - MR} y2={Y(0)} stroke="#334155" strokeWidth={1.4} />
         <line x1={ML} y1={MT} x2={ML} y2={H - MB} stroke="#334155" strokeWidth={1.4} />
-        <text x={W - MR} y={H - 1} textAnchor="end" fontSize={14} fontWeight={700} fill="#334155">
+        <text x={W - MR} y={H - 1} textAnchor="end" fontSize={FS} fontWeight={700} fill="#334155">
           t (s)
         </text>
-        <text x={ML + 6} y={MT + 4} fontSize={14} fontWeight={700} fill="#334155">
+        <text x={ML + 6} y={MT + 4} fontSize={FS} fontWeight={700} fill="#334155">
           {unite}
         </text>
         {reperes.map((r) => (
           <g key={r.libelle}>
             <line x1={X(r.t)} y1={MT} x2={X(r.t)} y2={H - MB} stroke="#94a3b8" strokeWidth={1.2} strokeDasharray="4 3" />
-            <text x={X(r.t) + 4} y={MT + 12} fontSize={10.5} fill="#475569">
+            <text x={X(r.t) + 4} y={MT + 12} fontSize={compact ? 13 : 10.5} fill="#475569">
               {r.libelle}
             </text>
           </g>

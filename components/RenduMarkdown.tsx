@@ -17,6 +17,7 @@ import { remarkLaboComplexes } from "@/lib/remarkLaboComplexes";
 import { remarkLaboMoivre } from "@/lib/remarkLaboMoivre";
 import { remarkLaboEquations } from "@/lib/remarkLaboEquations";
 import { remarkLaboCinematique } from "@/lib/remarkLaboCinematique";
+import { remarkLaboDynamique } from "@/lib/remarkLaboDynamique";
 import { remarkBinaire } from "@/lib/remarkBinaire";
 import { remarkCercleTrigo } from "@/lib/remarkCercleTrigo";
 import { remarkRacines } from "@/lib/remarkRacines";
@@ -34,6 +35,7 @@ import LaboComplexesBloc from "@/components/labo-complexes/LaboComplexesBloc";
 import LaboMoivreBloc from "@/components/labo-moivre/LaboMoivreBloc";
 import LaboEquationsBloc from "@/components/labo-equations/LaboEquationsBloc";
 import LaboCinematiqueBloc from "@/components/labo-cinematique/LaboCinematiqueBloc";
+import LaboDynamiqueBloc from "@/components/labo-dynamique/LaboDynamiqueBloc";
 import ConvertisseurBinaireBloc from "@/components/ConvertisseurBinaireBloc";
 import CercleTrigonometriqueBloc from "@/components/CercleTrigonometriqueBloc";
 import RacinesNiemesBloc from "@/components/RacinesNiemesBloc";
@@ -74,6 +76,8 @@ interface PropsFigureCourbe {
   "data-labomoivre-source"?: string;
   "data-laboequations-source"?: string;
   "data-labocinematique-source"?: string;
+  "data-labodynamique-lang"?: string;
+  "data-labodynamique-source"?: string;
   "data-binaire-source"?: string;
   "data-cercletrigo-source"?: string;
   "data-racines-source"?: string;
@@ -104,7 +108,7 @@ export default function RenduMarkdown({ contenu, className = "", onTermeClick }:
       <ReactMarkdown
         // remarkGfm (tableaux) ajoute seulement des extensions de syntaxe au parseur : il ne touche pas aux nœuds
         // `code` que remarkCourbe…remarkChimie transforment ensuite. `~texte~` simple n'est pas du barré (≈, ~).
-        remarkPlugins={[remarkMath, [remarkGfm, { singleTilde: false }], remarkGlossaire, remarkCourbe, remarkVariations, remarkHorloge, remarkCongruence, remarkLaboPgcd, remarkLaboPremiers, remarkLaboComplexes, remarkLaboMoivre, remarkLaboEquations, remarkLaboCinematique, remarkBinaire, remarkCercleTrigo, remarkRacines, remarkMouvement, remarkCirculaire, remarkPlanIncline, remarkChimie]}
+        remarkPlugins={[remarkMath, [remarkGfm, { singleTilde: false }], remarkGlossaire, remarkCourbe, remarkVariations, remarkHorloge, remarkCongruence, remarkLaboPgcd, remarkLaboPremiers, remarkLaboComplexes, remarkLaboMoivre, remarkLaboEquations, remarkLaboCinematique, remarkLaboDynamique, remarkBinaire, remarkCercleTrigo, remarkRacines, remarkMouvement, remarkCirculaire, remarkPlanIncline, remarkChimie]}
         rehypePlugins={[rehypeKatex]}
         components={{
           figure: (props) => {
@@ -118,6 +122,8 @@ export default function RenduMarkdown({ contenu, className = "", onTermeClick }:
               "data-labomoivre-source": sourceLaboMoivre,
               "data-laboequations-source": sourceLaboEquations,
               "data-labocinematique-source": sourceLaboCinematique,
+              "data-labodynamique-lang": langLaboDynamique,
+              "data-labodynamique-source": sourceLaboDynamique,
               "data-binaire-source": sourceBinaire,
               "data-cercletrigo-source": sourceCercleTrigo,
               "data-racines-source": sourceRacines,
@@ -141,6 +147,7 @@ export default function RenduMarkdown({ contenu, className = "", onTermeClick }:
             if (sourceLaboMoivre !== undefined) return <LaboMoivreBloc source={sourceLaboMoivre} />;
             if (sourceLaboEquations !== undefined) return <LaboEquationsBloc source={sourceLaboEquations} />;
             if (sourceLaboCinematique !== undefined) return <LaboCinematiqueBloc source={sourceLaboCinematique} />;
+            if (sourceLaboDynamique !== undefined) return <LaboDynamiqueBloc langage={langLaboDynamique ?? ""} source={sourceLaboDynamique} />;
             if (sourceBinaire !== undefined) return <ConvertisseurBinaireBloc source={sourceBinaire} />;
             if (sourceCercleTrigo !== undefined) return <CercleTrigonometriqueBloc source={sourceCercleTrigo} />;
             if (sourceRacines !== undefined) return <RacinesNiemesBloc source={sourceRacines} />;
