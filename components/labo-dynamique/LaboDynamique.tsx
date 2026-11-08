@@ -100,7 +100,7 @@ export default function LaboDynamique({ onglet = "plan", initial }: { onglet?: O
   );
 }
 
-/** Une seule simulation dans le cadre du laboratoire (blocs dédiés : plan-incline, machine-atwood, …). */
+/** Une seule simulation dans le cadre du laboratoire (blocs dédiés : machine-atwood, pendule-conique, …). */
 export function LaboDynamiqueSimple({ onglet, initial }: { onglet: OngletDynamique; initial?: InitialDynamique }) {
   return (
     <div className={CADRE}>

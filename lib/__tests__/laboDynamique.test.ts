@@ -14,6 +14,7 @@ import { ATWOOD_DEFAUT, MONTE_DEFAUT, PENDULE_DEFAUT, PLAN_DEFAUT, SPHERE_DEFAUT
 import LaboDynamique, { LaboDynamiqueSimple } from "@/components/labo-dynamique/LaboDynamique";
 import LaboDynamiqueBloc from "@/components/labo-dynamique/LaboDynamiqueBloc";
 import RenduMarkdown from "@/components/RenduMarkdown";
+import SimulationPlanInclineBloc from "@/components/SimulationPlanInclineBloc";
 
 type Noeud = { type: string; value?: string; lang?: string; data?: { hName?: string; hProperties?: Record<string, string> }; children?: Noeud[] };
 function transformer(markdown: string, ...plugins: Array<() => (tree: Root) => void>): Noeud {
@@ -29,16 +30,15 @@ function trouver(n: Noeud, pred: (x: Noeud) => boolean, acc: Noeud[] = []): Noeu
 const rendu = (md: string) => renderToStaticMarkup(createElement(RenduMarkdown, { contenu: md }));
 
 describe("analyse des blocs de dynamique", () => {
-  it("reconnaît les sept blocs", () => {
-    expect(Object.keys(BLOCS_DYNAMIQUE).sort()).toEqual(["labo-dynamique", "machine-atwood", "monte-charge", "pendule-conique", "plan-incline", "solide-sphere", "vehicule-virage"]);
-    expect(estLangageDynamique("plan-incline")).toBe(true);
+  it("reconnaît les six blocs (plan-incline n'en fait pas partie)", () => {
+    expect(Object.keys(BLOCS_DYNAMIQUE).sort()).toEqual(["labo-dynamique", "machine-atwood", "monte-charge", "pendule-conique", "solide-sphere", "vehicule-virage"]);
+    expect(estLangageDynamique("plan-incline")).toBe(false);
     expect(estLangageDynamique("mouvement")).toBe(false);
     expect(estLangageDynamique("labo-cinematique")).toBe(false);
     expect(estLangageDynamique(null)).toBe(false);
     expect(ONGLETS_DYNAMIQUE).toEqual(["plan", "atwood", "pendule", "monte-charge", "virage", "sphere"]);
   });
   it("valeurs par défaut valides pour un bloc vide", () => {
-    expect(parserBlocDynamique("plan-incline", "")).toEqual({ kind: "plan", params: PLAN_DEFAUT });
     expect(parserBlocDynamique("machine-atwood", "")).toEqual({ kind: "atwood", params: ATWOOD_DEFAUT });
     expect(parserBlocDynamique("pendule-conique", "")).toEqual({ kind: "pendule", params: PENDULE_DEFAUT });
     expect(parserBlocDynamique("monte-charge", "")).toEqual({ kind: "monte-charge", params: MONTE_DEFAUT });
@@ -47,8 +47,7 @@ describe("analyse des blocs de dynamique", () => {
     expect(parserBlocDynamique("labo-dynamique", "")).toEqual({ kind: "labo", onglet: "plan" });
   });
   it("lit les paramètres des exemples de la spécification (SI, virgule décimale acceptée, casse libre)", () => {
-    expect(parserBlocDynamique("plan-incline", "angle: 30\nmasse: 2")).toEqual({ kind: "plan", params: PLAN_DEFAUT });
-    expect(parserBlocDynamique("plan-incline", "angle: 45\nmasse: 3,5\ngravite: 9.8\ndistance: 8\nvitesse: 1")).toEqual({ kind: "plan", params: { m: 3.5, alpha: 45, g: 9.8, v0: 1, distance: 8 } });
+    expect(parserBlocDynamique("solide-sphere", "masse: 3,5\nrayon: 1.5")).toMatchObject({ params: { m: 3.5, R: 1.5 } });
     expect(parserBlocDynamique("machine-atwood", "masse1: 0.5\nmasse2: 0.3\ngravite: 9.8")).toEqual({ kind: "atwood", params: ATWOOD_DEFAUT });
     const pend = parserBlocDynamique("pendule-conique", "masse: 0.1\nlongueur: 0.5\nangle: 30\ngravite: 10");
     expect(pend).toMatchObject({ kind: "pendule", params: { m: 0.1, l: 0.5, theta: 30, g: 10, mode: "angle" } });
@@ -64,18 +63,18 @@ describe("analyse des blocs de dynamique", () => {
   it("valide strictement les unités : les valeurs doivent être des nombres SI sans unité écrite", () => {
     expect(() => parserBlocDynamique("monte-charge", "masse: 500 g")).toThrow(LaboDynamiqueSyntaxeError);
     expect(() => parserBlocDynamique("monte-charge", "masse: 500 g")).toThrow(/unités SI/);
-    expect(() => parserBlocDynamique("plan-incline", "distance: 5 cm")).toThrow(/sans unité écrite/);
-    expect(() => parserBlocDynamique("plan-incline", "masse: lourd")).toThrow(/nombre/);
-    expect(() => parserBlocDynamique("plan-incline", "masse: 0")).toThrow(/strictement/);
-    expect(() => parserBlocDynamique("plan-incline", "masse: -2")).toThrow();
-    expect(() => parserBlocDynamique("plan-incline", "angle: 80")).toThrow(/compris entre 0 et 75/);
-    expect(() => parserBlocDynamique("plan-incline", "gravite: 0")).toThrow();
+    expect(() => parserBlocDynamique("solide-sphere", "rayon: 5 cm")).toThrow(/sans unité écrite/);
+    expect(() => parserBlocDynamique("solide-sphere", "masse: lourd")).toThrow(/nombre/);
+    expect(() => parserBlocDynamique("solide-sphere", "masse: 0")).toThrow(/strictement/);
+    expect(() => parserBlocDynamique("solide-sphere", "masse: -2")).toThrow();
+    expect(() => parserBlocDynamique("solide-sphere", "angleInitial: 80")).toThrow(/compris entre 0.1 et 60/);
+    expect(() => parserBlocDynamique("solide-sphere", "gravite: 0")).toThrow();
     expect(() => parserBlocDynamique("vehicule-virage", "rayon: 0.5")).toThrow();
   });
   it("messages explicites en français pour les erreurs de syntaxe", () => {
-    expect(() => parserBlocDynamique("plan-incline", "vitesse initiale 3")).toThrow(/Ligne invalide/);
-    expect(() => parserBlocDynamique("plan-incline", "couleur: bleu")).toThrow(/Directive inconnue/);
-    expect(() => parserBlocDynamique("plan-incline", "angle: 30\nangle: 40")).toThrow(/répétée/);
+    expect(() => parserBlocDynamique("solide-sphere", "vitesse initiale 3")).toThrow(/Ligne invalide/);
+    expect(() => parserBlocDynamique("solide-sphere", "couleur: bleu")).toThrow(/Directive inconnue/);
+    expect(() => parserBlocDynamique("solide-sphere", "angleInitial: 3\nangleInitial: 4")).toThrow(/répétée/);
     expect(() => parserBlocDynamique("labo-dynamique", "onglet: bille")).toThrow(/Onglet inconnu/);
     expect(() => parserBlocDynamique("labo-dynamique", "autre: 1")).toThrow(/Directive inconnue/);
   });
@@ -88,7 +87,7 @@ describe("analyse des blocs de dynamique", () => {
 });
 
 describe("plugin remark du laboratoire de dynamique", () => {
-  it("transforme chacun des sept blocs en figure avec le nom du bloc et sa source", () => {
+  it("transforme chacun des six blocs en figure avec le nom du bloc et sa source", () => {
     for (const lang of Object.keys(BLOCS_DYNAMIQUE)) {
       const arbre = transformer(`Avant\n\n\`\`\`${lang}\nmasse: 2\n\`\`\`\n\nAprès`, remarkLaboDynamique);
       const figures = trouver(arbre, (n) => n.data?.hName === "figure");
@@ -104,13 +103,12 @@ describe("plugin remark du laboratoire de dynamique", () => {
     expect(trouver(arbre, (n) => n.type === "code")).toHaveLength(5);
     expect(trouver(arbre, (n) => n.data?.hName === "figure")).toHaveLength(0);
   });
-  it("placé avant remarkPlanIncline, il capte plan-incline : l'ancien plugin n'a plus rien à traiter", () => {
+  it("ne touche pas à plan-incline : l'ancien plugin le traite comme avant", () => {
     const arbre = transformer("```plan-incline\nangle: 30\nmasse: 2\n```", remarkLaboDynamique, remarkPlanIncline);
     const figures = trouver(arbre, (n) => n.data?.hName === "figure");
     expect(figures).toHaveLength(1);
-    expect(figures[0].data?.hProperties?.["data-labodynamique-lang"]).toBe("plan-incline");
-    expect(figures[0].data?.hProperties?.["data-plan-incline-source"]).toBeUndefined();
-    // les deux plugins combinés avec le plugin cinématique n'interfèrent pas
+    expect(figures[0].data?.hProperties?.["data-labodynamique-lang"]).toBeUndefined();
+    expect(figures[0].data?.hProperties?.["data-plan-incline-source"]).toBe("angle: 30\nmasse: 2");
     const deux = transformer("```plan-incline\nangle: 30\n```\n\n```labo-cinematique\nonglet: frenet\n```", remarkLaboDynamique, remarkPlanIncline, remarkLaboCinematique);
     expect(trouver(deux, (n) => n.data?.hName === "figure")).toHaveLength(2);
   });
@@ -181,7 +179,6 @@ describe("rendu du laboratoire de dynamique", () => {
 describe("intégration dans RenduMarkdown", () => {
   it("les six blocs dédiés et le laboratoire complet s'affichent dans une même leçon", () => {
     const md = [
-      "```plan-incline\nangle: 30\nmasse: 2\n```",
       "```machine-atwood\nmasse1: 0.5\nmasse2: 0.3\n```",
       "```pendule-conique\nangle: 30\n```",
       "```monte-charge\nacceleration: 1\n```",
@@ -190,15 +187,21 @@ describe("intégration dans RenduMarkdown", () => {
       "```labo-dynamique\nonglet: virage\n```",
     ].join("\n\n");
     const html = rendu(md);
-    expect((html.match(/Laboratoire de dynamique/g) ?? []).length).toBe(7);
-    for (const t of ["Plan incliné sans frottement", "Machine d&#x27;Atwood", "Pendule conique", "Monte-charge", "Véhicule dans un virage", "Solide glissant sur une sphère"]) expect(html).toContain(t);
+    expect((html.match(/Laboratoire de dynamique/g) ?? []).length).toBe(6);
+    for (const t of ["Machine d&#x27;Atwood", "Pendule conique", "Monte-charge", "Véhicule dans un virage", "Solide glissant sur une sphère"]) expect(html).toContain(t);
     expect(html).not.toContain("labo-dynamique");
   });
-  it("le bloc plan-incline existant est raccordé au nouveau laboratoire (et plus à l'ancien rendu)", () => {
+  it("le bloc plan-incline reste rendu par l'ancien composant, à l'identique", () => {
     const html = rendu("```plan-incline\nangle: 30\nmasse: 2\n```");
+    const ancien = renderToStaticMarkup(createElement(SimulationPlanInclineBloc, { source: "angle: 30\nmasse: 2" }));
+    expect(html).toContain(ancien);
+    expect(html).toContain("g·sin(α)");
+    expect(html).not.toContain("Laboratoire de dynamique");
+  });
+  it("le bloc labo-dynamique affiche le laboratoire complet (six onglets)", () => {
+    const html = rendu("```labo-dynamique\nonglet: plan\n```");
     expect(html).toContain("Laboratoire de dynamique");
-    expect(html).toContain("17,32 N");
-    expect(html).not.toContain("g·sin(α)"); // notation de l'ancien composant
+    expect((html.match(/role="tab"/g) ?? []).length).toBe(6);
   });
   it("un bloc mal configuré produit un message explicite sans casser le reste de la leçon", () => {
     const html = rendu("Avant la simulation.\n\n```machine-atwood\nmasse1: 500 g\n```\n\nAprès la simulation.");

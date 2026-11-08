@@ -31,7 +31,7 @@ function Rendu({ d }: { d: DonneesDynamique }) {
 }
 
 /**
- * Pont Markdown vers le Laboratoire de dynamique : `langage` est le nom du bloc (plan-incline, machine-atwood,
+ * Pont Markdown vers le Laboratoire de dynamique : `langage` est le nom du bloc (machine-atwood,
  * pendule-conique, monte-charge, vehicule-virage, solide-sphere, labo-dynamique), `source` son texte brut.
  */
 export default function LaboDynamiqueBloc({ langage, source }: { langage: string; source: string }) {

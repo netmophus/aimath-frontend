@@ -1,5 +1,5 @@
 /**
- * Blocs Markdown du Laboratoire de dynamique : plan-incline (raccordé), machine-atwood, pendule-conique, monte-charge,
+ * Blocs Markdown du Laboratoire de dynamique : machine-atwood, pendule-conique, monte-charge,
  * vehicule-virage, solide-sphere et labo-dynamique (six onglets). Une directive par ligne « clé: valeur », valeurs
  * numériques en unités SI SANS unité écrite, valeurs par défaut valides, validation stricte avec messages en français.
  */
@@ -7,13 +7,11 @@ import {
   ATWOOD_DEFAUT,
   MONTE_DEFAUT,
   PENDULE_DEFAUT,
-  PLAN_DEFAUT,
   SPHERE_DEFAUT,
   VIRAGE_DEFAUT,
   type ParamsAtwood,
   type ParamsMonteCharge,
   type ParamsPendule,
-  type ParamsPlan,
   type ParamsSphere,
   type ParamsVirage,
 } from "@/lib/dynamique";
@@ -25,7 +23,6 @@ export type OngletDynamique = (typeof ONGLETS_DYNAMIQUE)[number];
 
 /** Langages de blocs gérés (le premier de chaque paire est le nom du bloc Markdown). */
 export const BLOCS_DYNAMIQUE = {
-  "plan-incline": "plan",
   "machine-atwood": "atwood",
   "pendule-conique": "pendule",
   "monte-charge": "monte-charge",
@@ -37,7 +34,6 @@ export type LangageDynamique = keyof typeof BLOCS_DYNAMIQUE;
 export const estLangageDynamique = (l: string | null | undefined): l is LangageDynamique => !!l && Object.prototype.hasOwnProperty.call(BLOCS_DYNAMIQUE, l);
 
 export type DonneesDynamique =
-  | { kind: "plan"; params: ParamsPlan }
   | { kind: "atwood"; params: ParamsAtwood }
   | { kind: "pendule"; params: ParamsPendule }
   | { kind: "monte-charge"; params: ParamsMonteCharge }
@@ -90,13 +86,6 @@ function lireDirectives(source: string, table: Table): Record<string, number> {
 
 const G: Spec = { champ: "g", unite: "m/s²", min: 1, max: 20 };
 
-const T_PLAN: Table = {
-  angle: { champ: "alpha", unite: "degrés", min: 0, max: 75 },
-  masse: { champ: "m", unite: "kg", min: 0, max: 1000, strictMin: true },
-  gravite: G,
-  vitesse: { champ: "v0", unite: "m/s", min: 0, max: 10 },
-  distance: { champ: "distance", unite: "m", min: 1, max: 20 },
-};
 const T_ATWOOD: Table = {
   masse1: { champ: "m1", unite: "kg", min: 0, max: 1000, strictMin: true },
   masse2: { champ: "m2", unite: "kg", min: 0, max: 1000, strictMin: true },
@@ -140,8 +129,6 @@ function appliquer<T extends object>(defaut: T, table: Table, lues: Record<strin
 
 export function parserBlocDynamique(langage: LangageDynamique, source: string): DonneesDynamique {
   switch (langage) {
-    case "plan-incline":
-      return { kind: "plan", params: appliquer(PLAN_DEFAUT, T_PLAN, lireDirectives(source, T_PLAN)) };
     case "machine-atwood":
       return { kind: "atwood", params: appliquer(ATWOOD_DEFAUT, T_ATWOOD, lireDirectives(source, T_ATWOOD)) };
     case "pendule-conique": {

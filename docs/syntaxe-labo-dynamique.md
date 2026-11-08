@@ -9,7 +9,6 @@ Le moteur physique est dans `lib/dynamique.ts` (fonctions pures, testées, **uni
 
 | Bloc | Simulation | Directives (toutes facultatives) |
 |---|---|---|
-| `plan-incline` | Plan incliné sans frottement | `angle` (0 à 75, °), `masse` (kg), `gravite` (1 à 20, m/s²), `vitesse` (0 à 10, m/s), `distance` (1 à 20, m) |
 | `machine-atwood` | Machine d'Atwood | `masse1`, `masse2` (kg), `gravite` (m/s²), `course` (0,2 à 5, m) |
 | `pendule-conique` | Pendule conique | `masse` (kg), `longueur` (0,1 à 5, m), `gravite`, puis **soit** `angle` (1 à 85, °) **soit** `omega` (rad/s) |
 | `monte-charge` | Monte-charge | `masse` (kg), `gravite`, `acceleration` (m/s², algébrique, > −g), `vitesse` (m/s, algébrique), `hauteur` (5 à 200, m) |
@@ -20,13 +19,6 @@ Le moteur physique est dans `lib/dynamique.ts` (fonctions pures, testées, **uni
 Chaque bloc reçoit ses valeurs par défaut s'il est vide.
 
 ````
-```plan-incline
-angle: 30
-masse: 2
-gravite: 10
-distance: 5
-```
-
 ```machine-atwood
 masse1: 0.5
 masse2: 0.3
@@ -71,13 +63,14 @@ angleInitial: 1
 - L'élève peut sortir de ces bornes avec les curseurs : l'interface signale alors la configuration non valide (pendule : ℓω² ≤ g ; monte-charge :
   câble détendu ; virage : adhérence insuffisante).
 
-## Raccordement du bloc `plan-incline`
+## Bloc `plan-incline` et emplacement du laboratoire
 
-Le bloc existant `plan-incline` (angle, masse) est désormais rendu par le nouveau laboratoire (une simulation dans le cadre du laboratoire).
-`remarkLaboDynamique` est placé avant `remarkPlanIncline` dans `RenduMarkdown` : il capte ce bloc, l'ancien plugin n'a plus rien à traiter. Les
-anciens fichiers (`lib/planIncline.ts`, `components/SimulationPlanIncline*.tsx`, `lib/remarkPlanIncline.ts`) sont conservés intacts. Les leçons
-existantes gardent leur syntaxe ; l'ancienne plage `angle: 5..75` reste acceptée (nouvelle plage 0 à 75), et les masses sont acceptées jusqu'à 1000 kg.
-Les blocs `mouvement`, `circulaire`, `courbe` et `labo-cinematique` ne sont pas concernés.
+Le bloc `plan-incline` n'est **pas** géré ici : il reste rendu par l'ancienne simulation (`lib/planIncline.ts`, `components/SimulationPlanIncline*.tsx`,
+`lib/remarkPlanIncline.ts`, voir `docs/syntaxe-plan-incline.md`), strictement inchangée.
+
+Le laboratoire complet (six onglets) s'affiche uniquement là où un bloc ```` ```labo-dynamique ```` est écrit. Il est destiné à la rubrique « Simulation »
+de la leçon « Théorème du centre d'inertie » : le contenu des leçons étant stocké en base, le bloc doit être inséré dans le contenu de cette rubrique
+via l'éditeur d'administration (pas dans le cours). Les blocs `mouvement`, `circulaire`, `courbe` et `labo-cinematique` ne sont pas concernés.
 
 ## Modèles et situations limites
 
