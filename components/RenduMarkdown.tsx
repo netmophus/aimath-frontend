@@ -165,6 +165,25 @@ export default function RenduMarkdown({ contenu, className = "", onTermeClick }:
             // jamais pour autant) — on rend ses enfants tels quels.
             return <figure>{props.children}</figure>;
           },
+          // Image Markdown ![texte alternatif](url "légende") : adaptée à la lecture (responsive, proportions
+          // conservées, légende visible sous l'image). Rendue en <span> pour rester valide dans le <p> que
+          // react-markdown ouvre autour d'une image. Aucune animation, aucun zoom modal.
+          img: ({ src, alt, title }) => {
+            if (typeof src !== "string" || !src) return null;
+            return (
+              <span className="my-4 block">
+                {/* eslint-disable-next-line @next/next/no-img-element -- dimensions inconnues dans un contenu Markdown */}
+                <img
+                  src={src}
+                  alt={alt ?? ""}
+                  loading="lazy"
+                  decoding="async"
+                  className="mx-auto block h-auto max-h-[70vh] w-auto max-w-full rounded-lg border border-fh-ardoise/10 object-contain"
+                />
+                {title ? <span className="mx-auto mt-1.5 block max-w-prose text-center text-xs italic leading-snug text-fh-ardoise/70">{title}</span> : null}
+              </span>
+            );
+          },
           table: (props) => {
             const { "data-variations-source": source } = props as PropsTableVariations;
             // `source` absent : un vrai tableau Markdown (syntaxe GFM | a | b |, remarkGfm) : <table> HTML,
